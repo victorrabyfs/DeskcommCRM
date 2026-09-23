@@ -77,3 +77,23 @@
   --color-neutral-900: #0B0D10;
   --color-neutral-950: #06080A;
 }
+
+/* ── Fontes (spec 7.2.2) ─────────────────────────────────────────────────
+   Inter no texto chega pelo `--font-atkinson` (app/layout.tsx mantém o nome
+   da variável do original: `--font-sans` e o `body` do globals.css o leem).
+   Títulos h1–h3 em Lexend Deca. DENTRO de `@layer base`, de propósito: um
+   utilitário como `font-mono` (os <h1> de auditoria, incidentes e LGPD)
+   continua vencendo. `CardTitle` é <div> e fica na Inter (spec seção 3). */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-lexend), var(--font-atkinson), sans-serif;
+  }
+}
+
+/* O globals.css liga o "ss01" no body (em `@layer base`); na Inter ele troca
+   o desenho dos dígitos. FORA de camada, para vencer aquela regra. */
+body {
+  font-feature-settings: normal;
+}

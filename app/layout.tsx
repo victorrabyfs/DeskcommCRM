@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Lexend_Deca } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
@@ -28,11 +28,22 @@ import "./globals.css";
 // dele, de propósito. CONVEXY.md, "Paleta, fontes e barra do navegador".
 import "./convexy/tema.css";
 
-const atkinson = Atkinson_Hyperlegible({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "700"],
+// Convexy: Inter no lugar da Atkinson Hyperlegible, com o NOME de variável do
+// original de propósito — `--font-sans` (@theme inline) e o `body` do
+// globals.css leem `--font-atkinson`. Títulos h1–h3 em Lexend Deca pelo
+// app/convexy/tema.css. CONVEXY.md, "Paleta, fontes e barra do navegador".
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-atkinson",
+});
+
+const lexend = Lexend_Deca({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-lexend",
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -281,7 +292,7 @@ export default function RootLayout({
       lang="pt-BR"
       data-theme="light"
       suppressHydrationWarning
-      className={`${atkinson.variable} ${plexMono.variable}`}
+      className={`${inter.variable} ${lexend.variable} ${plexMono.variable}`}
     >
       <head>
         {/* Primeiro de tudo: a cor da instalação, antes do CSS e do script de tema. */}

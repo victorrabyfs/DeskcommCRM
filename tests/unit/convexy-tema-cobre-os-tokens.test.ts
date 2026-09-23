@@ -7,6 +7,7 @@ import {
   CAMINHO_DO_TEMA,
   PALETA_DA_SPEC,
   RAIZ,
+  dentroDaCamada,
   foraDeCamada,
   lerBlocosDoGlobals,
   lerTemaConvexy,
@@ -107,5 +108,30 @@ describe("tema da Convexy cobre os tokens do original", () => {
     expect(convexy, "app/layout.tsx não importa ./convexy/tema.css depois do globals.css").toBeGreaterThan(
       globais,
     );
+  });
+});
+
+describe("fontes da Convexy (spec 7.2.2)", () => {
+  const css = fs.readFileSync(path.join(RAIZ, CAMINHO_DO_TEMA), "utf8");
+  const layout = fs.readFileSync(path.join(RAIZ, "app/layout.tsx"), "utf8");
+
+  it("h1–h3 em Lexend DENTRO de @layer base — utilitário (ex.: font-mono) continua vencendo", () => {
+    const base = dentroDaCamada(css, "base");
+    expect(base, "tema.css sem @layer base").not.toBeNull();
+    expect((base ?? "").replace(/\s+/g, " ")).toContain(
+      "h1, h2, h3 { font-family: var(--font-lexend), var(--font-atkinson), sans-serif; }",
+    );
+    expect(foraDeCamada(css), "regra de título fora de camada venceria o font-mono").not.toMatch(/\bh[1-3]\b/);
+  });
+
+  it("o ss01 do original é anulado FORA de camada (na Inter ele troca o desenho dos dígitos)", () => {
+    expect(foraDeCamada(css).replace(/\s+/g, " ")).toContain("body { font-feature-settings: normal; }");
+  });
+
+  it("o layout usa Inter com a variável do original e Lexend Deca em --font-lexend", () => {
+    expect(layout).not.toMatch(/Atkinson_Hyperlegible/);
+    expect(layout).toMatch(/Inter\(\{[^}]*variable: "--font-atkinson"/);
+    expect(layout).toMatch(/Lexend_Deca\(\{[^}]*variable: "--font-lexend"/);
+    expect(layout).toContain("className={`${inter.variable} ${lexend.variable} ${plexMono.variable}`}");
   });
 });
