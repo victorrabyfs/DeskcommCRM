@@ -1,7 +1,7 @@
 # Identidade Convexy no fork do DeskcommCRM — design
 
 - **Data:** 2026-09-22 (revisão 2, 2026-09-23, depois de quatro revisões independentes)
-- **Status:** aguardando revisão
+- **Status:** aguardando revisão do Victor (autorrevisão da revisão 2 concluída em 2026-09-23)
 - **Repositório:** `victorrabyfs/DeskcommCRM` (fork de `melgarafael/DeskcommCRM`)
 - **Base:** release `v1.43.0` do original, em produção em `https://<dominio-de-producao>`
 
@@ -257,10 +257,14 @@ editar `globals.css`. Desvio aceito em relação ao CRM atual (popover `#171E2A`
 
 ### 7.7 Migration Convexy
 
-- Faixa própria de numeração (proposta: `9001` em diante,
-  `AAAAMMDDHHMMSS_9001_logo_escuro_da_instalacao.sql`) para nunca colidir com a sequência do
-  original. **O plano confere antes** que nenhum teste/script exige sequência contígua
-  (`scripts/checar-colisao-de-migration.sh`, `tests/unit/main-sem-migration-duplicada.test.ts`).
+- Faixa própria de numeração: `9001` em diante
+  (`AAAAMMDDHHMMSS_9001_logo_escuro_da_instalacao.sql`), para nunca colidir com a sequência do
+  original. Conferido na v1.43.0: nenhum guarda exige sequência contígua — o passo do `ci.yml`
+  coberto por `tests/unit/main-sem-migration-duplicada.test.ts` só reprova NNNN ou timestamp
+  **repetido**, e `scripts/checar-colisao-de-migration.sh` (só `vigia-de-colisao.yml`, desligado
+  no fork, e `pnpm checar:colisao-de-migration`) usa o maior NNNN apenas para sugerir o
+  "próximo livre" — no fork a sugestão passa a ser `9002`, o que é o desejado para migrations
+  Convexy.
 - Tripla do projeto: arquivo em `supabase/migrations/`, bloco rotulado no apêndice de
   `supabase/baseline.sql` (é o que o `update.sh` reaplica na VPS — `update.sh:258-281`) e linha no
   `MANIFEST.md`; `pnpm test:db` verde.
