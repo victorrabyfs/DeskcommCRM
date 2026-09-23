@@ -1,212 +1,337 @@
 # Identidade Convexy no fork do DeskcommCRM — design
 
-- **Data:** 2026-09-22
+- **Data:** 2026-09-22 (revisão 2, 2026-09-23, depois de quatro revisões independentes)
 - **Status:** aguardando revisão
 - **Repositório:** `victorrabyfs/DeskcommCRM` (fork de `melgarafael/DeskcommCRM`)
-- **Base:** release `v1.42.0` do original (a versão em produção em `https://<dominio-de-producao>`)
+- **Base:** release `v1.43.0` do original, em produção em `https://<dominio-de-producao>`
 
 ## 1. Objetivo
 
-Fazer a plataforma inteira aparecer como **Convexy**, com a mesma identidade visual do CRM
-atual da Convexy (`<frontend-atual>` na VPS): nome, cores, fontes, logos claro e
-escuro e ícones. A identidade é **uma só, para todas as clínicas e organizações**.
+A plataforma inteira aparece como **Convexy** — nome, cores, fontes, logo claro e escuro — com
+**uma identidade só para todas as clínicas**. A restrição que governa o desenho: **continuar
+recebendo as atualizações do original sem perder a identidade**. Por isso: configuração antes de
+código; código da Convexy em arquivos novos; alteração em arquivo do original só quando não há
+outro caminho, pequena e registrada em `CONVEXY.md`.
 
-A restrição que governa todo o desenho: **continuar recebendo as atualizações do original sem
-perder a identidade**. Por isso, preferência absoluta por configuração e por arquivos novos da
-Convexy; alteração em arquivo do original só quando não há outro caminho, pequena e registrada.
-
-## 2. Decisões já tomadas
+## 2. Decisões
 
 | Decisão | Escolha |
 |---|---|
-| Onde vive o código próprio | Fork `victorrabyfs/DeskcommCRM`, com o original como remoto `upstream` |
-| Contribuir de volta ao original | **Não** — a função de logo claro/escuro fica só no fork |
-| Marca por clínica | **Desligada** — identidade única da Convexy para todos |
-| Domínio próprio por clínica | Fora de escopo (a plataforma é só SaaS em `<dominio-de-producao>`) |
-| Logo claro/escuro | SVGs oficiais embutidos no código, não enviados pela tela |
+| Onde vive o código próprio | Fork `victorrabyfs/DeskcommCRM`; original como remoto `upstream` |
+| Contribuir de volta | **Não** |
+| Logo | Enviado pela tela `/admin/marca` (PNG/JPG): **um campo para o tema claro (o que já existe) e um novo para o tema escuro**. Nada de logo embutido no código |
+| Marca por clínica (`/app/settings/marca`) | **Desligada** por chave de instalação; todas as clínicas veem a marca da instalação |
+| Domínio por clínica | Fora (só SaaS em `<dominio-de-producao>`) |
+| Entrega | Três etapas (seção 5): configuração → fork só com infraestrutura → identidade visual |
 
 ## 3. Fora de escopo
 
-- Funções de SaaS (teste de 7/14/30 dias, planos, cobrança) — spec própria.
-- Instagram direto pela Meta — spec própria.
-- Marca por plano (Enterprise personalizar) — a chave da seção 6.5 deixa o caminho aberto, mas
-  nada disso é construído agora.
-- Logo dentro dos e-mails de acesso: os e-mails recebem nome e cor (seção 6.1); imagem no corpo
-  do e-mail fica para depois.
-- A página interna de design system (`app/design/`), que tem as próprias referências de fonte.
+- SaaS (teste 7/14/30 dias, planos, cobrança) e Instagram direto — specs próprias.
+- Ícone próprio na barra lateral recolhida e no favicon: continuam a inicial "C" sobre a cor da
+  marca, que é o que o produto já desenha quando a marca não é a do DeskcommCRM
+  (`app/icon.tsx`, `components/shell/Sidebar.tsx:163-171`).
+- Números de destaque em Lexend Deca: exigiria classe em componentes do original.
+- Fundo dos e-mails (convite, LGPD, GoTrue) e régua de contraste do produto: continuam os
+  neutros do original (seção 7.5 lista o que isso afeta).
+- `app/design/` (vitrine interna do design system), `public/llms.txt`, textos do kit de
+  instalação e `global-error.tsx` (HTML próprio, fora do layout raiz).
 
-## 4. Identidade de origem (medida no CRM atual)
+## 4. Identidade de origem
 
-**Fontes:** Inter (texto) e Lexend Deca (títulos e números de destaque), ambas do Google Fonts.
+Medida no CRM atual (`<frontend-atual>` na VPS): fontes **Inter** (texto) e **Lexend
+Deca** (títulos); marca `#146BFF`; tinta `#0B0D10`; fundo claro `#F8FAFC`; escuro: fundo
+`#0B0D10`, cartão `#131923`, popover `#171E2A`. Logos em SVG (`logo-light-v3.svg`,
+`logo-dark-v3.svg`) — **exportar em PNG** (altura ≥ 96 px, fundo transparente) para enviar pela
+tela, que recusa SVG por segurança.
 
-**Cores** (`src/index.css` e `tailwind.config.js` do CRM atual):
+## 5. Entregas
 
-| Papel | Claro | Escuro |
-|---|---|---|
-| Ação / marca | `#146BFF` (hover `#0754F8`) | mesma |
-| Acento secundário | `#12D6E8` | mesma |
-| Fundo da página | `#F8FAFC` | `#0B0D10` |
-| Barra lateral | `#FFFFFF` | `#0B0D10` |
-| Cartão / superfície | `#FFFFFF` | `#131923` |
-| Popover | `#FFFFFF` | `#171E2A` |
-| Campo de formulário | `#FFFFFF` | `#111720` |
-| Texto principal | `#0B0D10` | `#FFFFFF` |
+### Etapa 1 — Configuração, sem código (feita em 2026-09-23)
 
-**Arquivos de marca** (`public/branding/` do CRM atual): `logo-light-v3.svg`,
-`logo-dark-v3.svg`, `icon-v2.svg`, `icon-white-v2.svg`, `logo-email.png`.
+- `/admin/marca`: nome **Convexy**, cor **#146bff**, logo claro enviado.
+- `.env` da VPS: `APP_NAME="Convexy"` (lido direto por login, cadastro, boas-vindas e textos
+  legais — `lib/branding.ts:99-105`), `APP_ACCENT_HEX="#146bff"`, `RESEND_API_KEY`,
+  `RESEND_FROM_EMAIL="nao-responda@convexy.tech"`.
+- Pendente do operador: SMTP do Resend no Supabase e os dois modelos de e-mail
+  (`marca-emails.sh --render-em`).
 
-## 5. Como o DeskcommCRM monta a marca hoje (v1.42.0)
+**Pronto quando:** título da aba e texto do login dizem "Convexy"; convite de equipe chega por
+e-mail pelo Resend; e-mails de acesso chegam com assunto "… — Convexy".
 
-- **Nome e cor** vêm do banco (`platform_branding`, tela `/admin/marca`), com o `.env`
-  (`APP_NAME`, `APP_ACCENT_HEX`) como semente. A cor gera sozinha a escala `--color-accent-*`
-  nos dois temas (`lib/branding/css.ts`).
-- **Tokens neutros** (fundo, superfície, texto, borda) são fixos em `app/globals.css`, blocos
-  `[data-theme="light"]` e `[data-theme="dark"]`, com paleta bege quente.
-- **Fontes** são carregadas por `next/font/google` em `app/layout.tsx` (Atkinson Hyperlegible
-  + IBM Plex Mono) e expostas como `--font-atkinson` / `--font-mono`; `app/globals.css` usa
-  `--font-atkinson` em `--font-sans` e no `font-family` do `body`.
-- **Logo**: um único logo (upload PNG/JPG ou `APP_LOGO_URL`). Aparece em
-  `components/shell/Sidebar.tsx` e em `app/(public)/layout.tsx`. SVG é recusado no upload por
-  segurança. No tema escuro o logo enviado ganha uma moldura clara.
-- **Ícone e manifest**: `app/icon.tsx` (gerado) e `app/manifest.ts`.
-- **Marca por organização**: lida de `organizations.settings.branding` por
-  `marcaDaOrganizacaoDeSettings()` em `lib/branding/organizacao.ts`. Esse é o ponto único
-  consumido por `app/app/layout.tsx`, `app/app/settings/marca/page.tsx`,
-  `app/api/v1/marca/logo/route.ts` e `lib/branding/saida.ts` (e-mails de convite e LGPD).
-  O menu aponta para a página em `lib/navigation/catalogo.ts`.
+### Etapa 2 — `v1.43.0-cvx.1`: fork só com infraestrutura
 
-## 6. Design
+Nenhuma mudança visual. Existe para ensaiar, com diff trivial, o que é arriscado: numeração,
+imagens próprias, botão "Atualizar", rollback. Conteúdo na seção 6.
 
-### 6.1 Configuração (sem código)
+### Etapa 3 — `v1.43.0-cvx.2`: identidade visual
 
-- Em `/admin/marca`: nome **Convexy**, cor **`#146BFF`**. A escala de acento sai do próprio
-  sistema.
-- No `.env` da VPS: `APP_NAME=Convexy`, `APP_ACCENT_HEX=#146bff` (semente e piso de rollback,
-  conforme `docs/white-label.md`), depois `bash hostgator-setup-kit/marca-emails.sh` para os
-  e-mails de acesso saírem com nome e cor da Convexy.
-- `SUPPORT_EMAIL` com o e-mail de suporte da Convexy.
+Paleta, fontes, logo escuro e marca das clínicas desligada. Conteúdo na seção 7.
 
-### 6.2 Camada Convexy (arquivos novos)
+## 6. Etapa 2 — infraestrutura do fork
 
-Tudo que é da Convexy mora em lugares que o original não conhece, para nunca conflitar:
+### 6.1 Repositório
 
-```
-app/convexy/tema.css          paleta neutra + fontes da Convexy (claro e escuro)
-components/convexy/LogoConvexy.tsx   logo e ícone com troca por tema
-public/convexy/               logo-light.svg, logo-dark.svg, icon.svg, icon-white.svg
-CONVEXY.md                    registro de toda alteração em arquivo do original
-```
+1. `main` do fork avança (fast-forward) para `v1.43.0`: o `main` atual não tem commit próprio e é
+   ancestral da tag.
+2. `git config remote.upstream.tagOpt --no-tags`. **Tag do original nunca vai para o fork**: o
+   agente anuncia a maior tag `v*` local sem olhar procedência (`agent.sh:131`,
+   `publish-image.yml:84-88`), então uma `v1.44.0` no fork seria oferecida no lugar da Convexy.
+3. Workflows desligados no fork, sem editar arquivo: `gh workflow disable release.yml` (roda em
+   todo push na `main`, falha sem os secrets do original e decide cortar tag por heurística de
+   fragmentos — `release.yml:21-24,65-215`), `relogio.yml`, `vigia-de-colisao.yml`.
+   `acolhida.yml` já é inerte fora do original. `ci.yml`, `e2e.yml`, `perf.yml` e
+   `publish-image.yml` seguem ligados.
+4. **Segurança da cadeia.** Depois da troca, quem cria tag `v*` no fork executa bash como root na
+   VPS após um clique (`agent.sh` → `update.sh:160,178,186`; sem verificação de assinatura).
+   Obrigatório: 2FA na conta, nenhum colaborador com escrita, regra de proteção de tag `v*` e
+   proteção da `main` exigindo os checks `verify`, `invariants`, `build-and-size`, `e2e`,
+   `imagens-ok`. O job `a-tag-veio-da-main` de `publish-image.yml` fica como está. Cada merge do
+   original (seção 8) é revisão de segurança, não só de conflito.
 
-**`app/convexy/tema.css`** sobrepõe os tokens de `app/globals.css` com a paleta da seção 4,
-nos seletores `[data-theme="light"]` e `[data-theme="dark"]`: `--color-bg`,
-`--color-surface`, `--color-surface-elevated`, `--color-text*`, `--color-border*`,
-`--color-overlay` e a escala `--color-neutral-*` (trocando o bege quente por cinza-azulado
-frio, derivado da tinta `#0B0D10` e do fundo `#F8FAFC`). **Não** mexe em `--color-accent-*`
-(vem da cor configurada) nem nas cores semânticas de sucesso/aviso/erro, exceto se o contraste
-com o fundo novo reprovar — nesse caso o ajuste entra no mesmo arquivo. Também redefine
-`--font-sans` e o `font-family` do `body` para Inter, e aplica Lexend Deca em títulos
-(`h1`–`h3`) e números de destaque. É importado **depois** de `globals.css`, então vence por
-ordem de cascata, sem `!important`.
+### 6.2 Troca de namespace das imagens
 
-**`LogoConvexy`** renderiza o logo claro e o escuro (e, recolhido, o ícone claro e o branco),
-escondendo o que não é do tema atual via CSS `[data-theme]` — sem JavaScript de detecção, sem
-piscar na troca de tema e sem divergência entre servidor e cliente (o erro React #418 que
-`Sidebar.tsx` documenta).
-
-### 6.3 Alterações pontuais em arquivos do original
-
-Cada uma entra em `CONVEXY.md` com o motivo e o trecho, para ser reconferida a cada
-atualização.
+Lista cobrada por `tests/unit/namespace-das-imagens.test.ts` (`RECADO_AO_FORK`) — sem ela
+`pnpm test:unit` reprova fora do Actions:
 
 | Arquivo | Alteração |
 |---|---|
-| `app/layout.tsx` | Carregar Inter e Lexend Deca por `next/font/google` (variáveis `--font-inter`, `--font-lexend`) no lugar de Atkinson; mantém IBM Plex Mono. Importar `app/convexy/tema.css` depois de `globals.css`. |
-| `components/shell/Sidebar.tsx` | O bloco que desenha o logo passa a usar `LogoConvexy`. |
-| `app/(public)/layout.tsx` | Idem, no logo da fachada (login, cadastro, recuperação de senha). |
-| `app/icon.tsx` / `app/manifest.ts` | Ícone da Convexy (`public/convexy/icon.svg`) no favicon e no ícone do app. |
-| `lib/branding/organizacao.ts` | `marcaDaOrganizacaoDeSettings()` devolve `null` quando a marca por organização está desligada (seção 6.5). |
-| `lib/navigation/catalogo.ts` | Item "Marca" das configurações da organização escondido quando desligada. |
-| `app/app/settings/marca/page.tsx` | `notFound()` quando desligada. |
-| `lib/env.ts` | Declarar `MARCA_POR_ORGANIZACAO` (`on`/`off`, padrão `on`). |
-| `hostgator-setup-kit/_common.sh` | `IMG_NS="ghcr.io/victorrabyfs"` (seção 7). |
-| `docker-compose.prod.yml` / `.env.hostgator.example` | Imagens padrão de `app`, `worker` e `scheduler` apontando para `ghcr.io/victorrabyfs` — a lista que o comentário de `IMG_NS` manda um fork trocar junto. |
+| `hostgator-setup-kit/_common.sh` | `IMG_NS="ghcr.io/victorrabyfs"`; URL padrão de `ultima_versao_publicada` para o fork |
+| `docker-compose.prod.yml` | `image:` padrão de `app`, `worker`, `scheduler` e `voice-agent` |
+| `.env.hostgator.example` | `*_IMAGE` |
+| `tests/unit/_identidade-deste-repo.ts` | `NAMESPACE_DESTE_REPO = "ghcr.io/victorrabyfs"` (e dono) |
+| `hostgator-setup-kit/install.sh`, `comecar.sh` | `REPO_URL` padrão |
+| `Dockerfile`, `Dockerfile.worker`, `Dockerfile.scheduler`, `Dockerfile.voice-agent` | label `org.opencontainers.image.source` → fork (vincula o pacote GHCR ao repositório) |
 
-O objetivo é manter essa tabela curta: se durante a implementação surgir outro arquivo do
-original, ele entra aqui e no `CONVEXY.md`, com justificativa.
+**Quatro imagens**: `deskcommcrm`, `deskcomm-worker`, `deskcomm-scheduler`,
+`deskcomm-voice-agent` — **todas públicas no GHCR** (pacote novo nasce privado). `docker login`
+não serve: `ghcr_status` consulta com token anônimo (`_common.sh:1072-1104`).
 
-### 6.4 Por que os SVGs podem entrar sem passar pela recusa de upload
+### 6.3 Versões
 
-A recusa de SVG existe porque arquivo enviado por terceiros pode carregar script num bucket
-público. Os SVGs da Convexy são arquivos do repositório, revisados em PR e servidos como
-estáticos de `public/` por `<img>`, o que não executa script. Antes de copiar, cada SVG é
-conferido para não conter `<script>`, `on*=` nem referências externas.
+- Formato `vX.Y.Z-cvx.N`, `X.Y.Z` = versão do original na base. Ensaio medido: `git tag -l 'v*'
+  --sort=-v:refname` ordena `v1.44.0 > v1.43.1 > v1.43.0-cvx.10 > v1.43.0-cvx.2 >
+  v1.43.0-cvx.1 > v1.43.0`. Na VPS, `git config --get versionsort.suffix` tem de estar vazio
+  (com `-`, a ordem inverte).
+- `publish-image.yml` publica só `1.43.0-cvx.1` (pré-release não gera `1.43`) e move `stable`
+  para ela; `latest` = topo da `main` do fork. `/api/v1/health` reporta `1.43.0-cvx.1`.
+- Tag criada à mão, depois do merge na `main`, sem fragmento em `.changes/`.
+- **Toda tag Convexy tem uma seção `## [X.Y.Z-cvx.N] — AAAA-MM-DD` no topo do `CHANGELOG.md`**,
+  escrita à mão: o botão "Atualizar" mostra as notas cortando o changelog nesse cabeçalho
+  (`agent.sh:222`, `lib/system/changelog.ts`). Sem ela, a tela anuncia a versão sem notas.
+- Instalação nova a partir do fork: `install.sh` descarta tag com hífen (`_common.sh:1048`) e
+  instala a base; em seguida `update.sh --to vX.Y.Z-cvx.N`.
 
-### 6.5 Chave da marca por organização
+### 6.4 Migração da VPS para o fork
 
-Variável `MARCA_POR_ORGANIZACAO` no `.env`, declarada em `lib/env.ts` com padrão `on` (o
-comportamento do original). Na Convexy, `off`. Com `off`:
+1. Pré-voo: as quatro imagens `:1.43.0-cvx.1` respondem 200 anônimo no GHCR.
+2. `cd /opt/deskcommcrm && git remote set-url origin https://github.com/victorrabyfs/DeskcommCRM.git`
+3. **Primeira atualização manual:** `bash hostgator-setup-kit/update.sh --to v1.43.0-cvx.1`. O
+   botão não aparece nesta transição: o `agent.sh` da v1.43.0 procura a imagem no namespace do
+   original e, sem achar, fica em silêncio (`agent.sh:181-194`). O `update.sh` funciona porque
+   re-carrega o `_common.sh` da tag nova depois do checkout (`update.sh:178`). O primeiro
+   `update.sh` completa o histórico raso a partir do fork.
+4. A partir de `-cvx.2`, o botão volta a funcionar.
 
-- `marcaDaOrganizacaoDeSettings()` devolve `null`, então **todo** consumidor (layout, logo,
-  e-mails de convite e LGPD) cai na marca da instalação. Marcas já gravadas por alguma
-  organização ficam no banco, ignoradas, e voltam se a chave for religada.
-- O item de menu some e a página `/app/settings/marca` responde 404.
-- `/admin/marca` (marca da instalação, só admin da plataforma) continua funcionando.
+**Rollback** para o original: `bash hostgator-setup-kit/update.sh --to v1.43.0 --force` — volta ao
+`_common.sh` da v1.43.0 e grava as imagens `ghcr.io/melgarafael/*:1.43.0` (públicas) no `.env`.
+Exige a tag `v1.43.0` no fork (mantida). O banco não volta (o baseline é idempotente e a etapa 2
+não tem migration). O botão só faz rollback automático de imagem quando a atualização veio dele e
+o `update.sh` falhou (`agent.sh:284-387`).
 
-A chave é o gancho para, no futuro, liberar a marca por plano sem refazer nada.
+**Pronto quando:** `/api/v1/health` responde `1.43.0-cvx.1`; `.env` da VPS aponta as quatro
+imagens para `ghcr.io/victorrabyfs`; uma `-cvx.2` de teste aparece no botão "Atualizar"; o
+rollback acima foi ensaiado numa branch/VM descartável ou documentado com a saída real.
 
-## 7. Infraestrutura do fork
+## 7. Etapa 3 — identidade visual
 
-1. **`main` do fork = v1.42.0 do original.** O `main` atual do fork é uma cópia antiga sem
-   commits próprios; ele é alinhado com a tag `v1.42.0` e a Camada Convexy entra por PR.
-2. **Remoto `upstream` sem tags automáticas** (`git config remote.upstream.tagOpt --no-tags`).
-   Tags do original **nunca** são enviadas ao fork: uma `v1.43.0` do original no fork seria
-   oferecida pelo botão "Atualizar" da VPS no lugar da versão Convexy.
-3. **Numeração das versões Convexy:** `vX.Y.Z-cvx.N`, onde `X.Y.Z` é a versão do original em
-   que ela se baseia (primeira: `v1.42.0-cvx.1`). É semver válido, então o
-   `publish-image.yml` publica `ghcr.io/victorrabyfs/deskcommcrm:1.42.0-cvx.1`, e o agente de
-   atualização (`git tag -l 'v*' --sort=-v:refname`) a ordena acima de `v1.42.0`. **O plano
-   de implementação ensaia essa ordenação e o fluxo do `update.sh` antes de publicar**, porque
-   o `install.sh` e partes da doutrina descartam tags com hífen — se o ensaio mostrar um
-   bloqueio, a numeração muda antes de qualquer VPS depender dela.
-4. **Imagens:** `IMG_NS` passa a `ghcr.io/victorrabyfs`; o CI do fork publica
-   `deskcommcrm`, `deskcomm-worker` e `deskcomm-scheduler`. Pacotes novos no GHCR nascem
-   privados: ficam **públicos**, ou a VPS faz `docker login` no GHCR.
-5. **VPS:** `/opt/deskcommcrm` troca o `origin` para o fork, remove as tags do original que
-   não sejam a base, e passa a atualizar pelo `update.sh`/botão como hoje.
-6. **Agente de atualização pela tela:** continua ligado; agora ele só enxerga versões Convexy.
+### 7.1 Arquivos novos da Convexy
 
-## 8. Como trazer uma atualização do original
+```
+app/convexy/tema.css     paleta e fontes (7.2, 7.3)
+CONVEXY.md               registro de toda alteração em arquivo do original, com trecho e motivo
+```
 
-1. `git fetch upstream tag vA.B.C --no-tags`
-2. Branch a partir do `main` do fork, `git merge vA.B.C`.
-3. Conflitos: só podem aparecer nos arquivos da tabela 6.3. Resolver com o `CONVEXY.md` à mão.
-4. CI verde + conferência em tela (claro e escuro).
-5. Merge no `main`, tag `vA.B.C-cvx.1`, CI publica, botão "Atualizar" aparece na VPS.
+### 7.2 Paleta — `app/convexy/tema.css`
 
-Automatizar os passos 1–2 (abrir PR sozinho quando sair versão nova) fica para depois de o
-fluxo manual rodar pelo menos uma vez.
+Sobrepõe os tokens de `app/globals.css` com **seletor de atributo dobrado**
+(`[data-theme="light"][data-theme="light"]`, `[data-theme="dark"][data-theme="dark"]`,
+especificidade 0,2,0): vence os blocos do original (0,1,0) em qualquer ordem de carga — a ordem
+de CSS difere entre dev e produção, como `lib/branding/css.ts:17-23` documenta — sem
+`!important`. Não toca em `--color-accent-*` (vem da cor configurada) nem nas cores semânticas.
 
-## 9. Verificação
+| Token | Claro | Escuro |
+|---|---|---|
+| `--color-bg` | `#F8FAFC` | `#0B0D10` |
+| `--color-surface` (cartão, popover, campo) | `#FFFFFF` | `#131923` |
+| `--color-surface-elevated` | `#F1F5F9` | `#171E2A` |
+| `--color-overlay` | `rgba(11, 13, 16, 0.42)` | `rgba(0, 0, 0, 0.60)` |
+| `--color-text` | `#0B0D10` | `#F8FAFC` |
+| `--color-text-muted` | `#475569` | `#94A3B8` |
+| `--color-text-subtle` | `#64748B` | `#64748B` |
+| `--color-border` | `#E2E8F0` | `#1E293B` |
+| `--color-border-strong` | `#CBD5E1` | `#334155` |
+| `--color-neutral-50` | `#F8FAFC` | `#F8FAFC` |
+| `--color-neutral-100` | `#F1F5F9` | `#E2E8F0` |
+| `--color-neutral-200` | `#E2E8F0` | `#CBD5E1` |
+| `--color-neutral-300` | `#CBD5E1` | `#94A3B8` |
+| `--color-neutral-400` | `#94A3B8` | `#64748B` |
+| `--color-neutral-500` | `#64748B` | `#334155` |
+| `--color-neutral-600` | `#475569` | `#1E293B` |
+| `--color-neutral-700` | `#334155` | `#171E2A` |
+| `--color-neutral-800` | `#1E293B` | `#131923` |
+| `--color-neutral-900` | `#0F172A` | `#0B0D10` |
+| `--color-neutral-950` | `#0B0D10` | `#06080A` |
+| `--shadow-xs … --shadow-xl` | mesmos valores do original com a tinta `rgba(11, 13, 16, α)` no lugar de `rgba(20, 18, 14, α)` | inalteradas (já são pretas) |
 
-- **Testes do projeto** (`pnpm typecheck`, `pnpm lint`, `pnpm test:unit`) verdes no fork.
-  Testes do original que afirmam a marca ou a fonte padrão (ex.: `tests/e2e/marca-logo.spec.ts`)
-  e que reprovarem por causa da Camada Convexy são ajustados e listados no `CONVEXY.md` —
-  nunca desligados em silêncio.
-- **Teste novo** para a chave da seção 6.5: com `off`, `marcaDaOrganizacaoDeSettings()` devolve
-  `null` mesmo com marca gravada; com `on`, comportamento original.
-- **Conferência em tela**, lado a lado com o CRM atual da Convexy, nos temas claro e escuro:
-  login, menu aberto e recolhido, uma página de lista, um formulário, um modal. Contraste de
-  texto sobre o fundo novo no mínimo AA.
-- **Ensaio de atualização**: merge de uma versão mais nova do original numa branch descartável
-  para medir quantos arquivos conflitam (esperado: só os da tabela 6.3, ou nenhum).
-- **Ensaio de versão** da seção 7.3 antes da primeira publicação.
+Popover, cartão e campo compartilham `--color-surface`: `--color-popover`/`--color-card` são
+aliases fixados pelo `@theme inline` do original (`globals.css:527-531`) e separá-los exigiria
+editar `globals.css`. Desvio aceito em relação ao CRM atual (popover `#171E2A`, campo `#111720`).
+
+### 7.3 Fontes
+
+- `app/layout.tsx`: `Inter` (pesos 400, 500, 600, 700) carregada com **`variable:
+  "--font-atkinson"`** no lugar de `Atkinson_Hyperlegible`. O nome da variável fica o do
+  original de propósito: `--font-sans` está dentro do `@theme inline` e é inlinado na compilação
+  (`globals.css:455,535`), o `body` usa `var(--font-atkinson)` direto (`globals.css:701`), e
+  `tests/unit/tailwind-tokens.test.ts:89-93` exige o literal no layout. Reaproveitar o nome
+  muda a fonte do produto inteiro sem tocar em `globals.css`.
+- `Lexend_Deca` (400–700) com `variable: "--font-lexend"`; `tema.css` aplica em `h1, h2, h3`
+  (`@layer base`).
+- `font-feature-settings: "ss01"` do `body` (`globals.css:703`) em Inter troca o desenho dos
+  dígitos: `tema.css` o anula (`normal`).
+- IBM Plex Mono continua.
+
+### 7.4 Logo escuro — campo novo em `/admin/marca`
+
+- **Banco:** coluna `platform_branding.logo_dark_path text null`, por migration Convexy (7.6),
+  com o mesmo tratamento do `logo_path` (bucket `brand-logos`, leitura pública da URL).
+- **Upload:** `app/api/v1/marca/logo/route.ts` aceita `variante: "escuro"` no escopo
+  `instalacao` — mesma validação por bytes (PNG/JPG ≤ 512 KB), mesmo apagar-o-anterior.
+- **Tela:** `app/admin/(protected)/marca/_form.tsx` ganha um segundo `CampoDeLogo`, "Logo para o
+  tema escuro", com prévia sobre o fundo escuro. Textos pelo dicionário de i18n.
+- **Leitura:** `lib/branding/instalacao.ts` seleciona a coluna; `MarcaResolvida` ganha
+  `logoDarkUrl: string | null`.
+- **Desenho** (`components/shell/Sidebar.tsx` e `app/(public)/layout.tsx`): com `logoDarkUrl`, o
+  `<img>` do logo claro, dentro da moldura `dark:bg-white` que já existe, ganha `dark:hidden`, e
+  um segundo `<img src={logoDarkUrl}>` sem moldura ganha `hidden dark:block`. Sem
+  `logoDarkUrl`, nada muda. A troca é por CSS — o tema está sempre gravado em `<html
+  data-theme>` pelo script do `<head>` (`app/layout.tsx:122`), inclusive no modo "sistema" —,
+  sem divergência de hidratação. O primeiro `<img>` continua sendo o logo claro, o que mantém
+  `tests/unit/logo-nao-some-no-tema-escuro.test.ts`, `marca-do-produto.test.tsx`,
+  `marca-sem-divergencia-de-hidratacao.test.tsx` e `marca-na-fachada-de-acesso.test.tsx`
+  válidos; teste novo cobre o segundo `<img>`.
+- E-mails usam o logo claro (fundo claro): nada muda neles.
+
+### 7.5 Barra do navegador e régua
+
+`lib/branding/regua-do-produto.ts` é gerado de `globals.css` e **não muda** (o teste
+`branding-regua-do-produto.test.ts` o prende ao original). Consequências aceitas e o que se faz:
+
+- `<meta name="theme-color">` (barra do navegador no celular): `app/layout.tsx` passa a emitir
+  `#F8FAFC`/`#0B0D10` a partir de constante em `app/convexy/`.
+- Derivação da escala do acento mede contraste contra o fundo antigo: para `#146BFF`, o fundo
+  escuro novo é mais escuro (contraste só sobe) e o claro é praticamente igual. Aceito.
+- Prévias em `/admin/marca` e fundo dos e-mails continuam nos neutros do original. Aceito.
+
+### 7.6 Marca das clínicas desligada
+
+- **Chave:** `ORG_BRANDING_ENABLED` em `lib/env.ts`, `z.string().optional().default("true")`;
+  **só o valor exato `false` desliga** (nunca `z.enum`: um valor inválido derrubaria a primeira
+  requisição com o contêiner `healthy` — `lib/env.ts:237-247`). Entra em `.env.example` e
+  `.env.hostgator.example`. Desvio deliberado da regra "banco acima do `.env`": é decisão de
+  instalação do fork, sem tela; registrado no `CONVEXY.md`.
+- **Leitura:** com `false`, `marcaDaOrganizacaoDeSettings()` (`lib/branding/organizacao.ts:73`)
+  devolve `null`. É o único parser de `settings.branding`; todos os consumidores — layout,
+  barra lateral, logo, e-mails (`marcaDaSaida(orgId)`) — caem na marca da instalação. Conferir
+  com `git grep -n "marcaDaOrganizacaoDeSettings(\|resolverMarcaDaOrganizacao(\|marcaDaSaida(" -- app lib`.
+  Marcas já gravadas ficam no banco, ignoradas.
+- **Escrita:** `app/actions/settings/updateMarcaDaOrganizacao.ts` devolve
+  `{ ok: false, error: "marca_por_organizacao_desligada" }` antes de tocar o banco;
+  `app/api/v1/marca/logo/route.ts` responde 404 para `escopo === "organizacao"`. As RPCs não
+  mudam (o banco não conhece o `.env`).
+- **Tela e menu:** `/app/settings/marca` responde `notFound()`. O item continua em `NAV_CATALOG`
+  (`tests/unit/navegacao-completude.test.ts:33` reprova tela sem porta); quem o esconde é o
+  filtro de `destinosDaInterface()` (`lib/navigation/interface.ts`), alimentado por um booleano
+  que `app/app/layout.tsx` calcula no servidor (o cliente não lê `env`).
+- `/admin/marca` não é afetada.
+
+### 7.7 Migration Convexy
+
+- Faixa própria de numeração (proposta: `9001` em diante,
+  `AAAAMMDDHHMMSS_9001_logo_escuro_da_instalacao.sql`) para nunca colidir com a sequência do
+  original. **O plano confere antes** que nenhum teste/script exige sequência contígua
+  (`scripts/checar-colisao-de-migration.sh`, `tests/unit/main-sem-migration-duplicada.test.ts`).
+- Tripla do projeto: arquivo em `supabase/migrations/`, bloco rotulado no apêndice de
+  `supabase/baseline.sql` (é o que o `update.sh` reaplica na VPS — `update.sh:258-281`) e linha no
+  `MANIFEST.md`; `pnpm test:db` verde.
+- Em conflito do `baseline.sql` num merge do original: prevalece o lado do original, e o bloco
+  Convexy é reaplicado ao fim do apêndice.
+
+### 7.8 Alterações em arquivos do original (etapa 3)
+
+| Arquivo | Alteração |
+|---|---|
+| `app/layout.tsx` | Fontes (7.3), import de `tema.css`, `theme-color` (7.5) |
+| `app/admin/(protected)/marca/_form.tsx` | Campo de logo escuro |
+| `app/api/v1/marca/logo/route.ts` | `variante: "escuro"`; 404 para organização com a chave desligada |
+| `lib/branding/instalacao.ts`, `lib/branding/resolve.ts` (tipo) | `logo_dark_path` / `logoDarkUrl` |
+| `components/shell/Sidebar.tsx`, `app/(public)/layout.tsx` | Segundo `<img>` (7.4) |
+| `lib/branding/organizacao.ts` | Chave na leitura (7.6) |
+| `app/actions/settings/updateMarcaDaOrganizacao.ts` | Chave na escrita |
+| `app/app/settings/marca/page.tsx`, `app/app/layout.tsx`, `lib/navigation/interface.ts` | Página e menu (7.6) |
+| `lib/env.ts`, `.env.example`, `.env.hostgator.example` | `ORG_BRANDING_ENABLED` |
+| `lib/i18n/…` | Textos do campo novo |
+| `supabase/baseline.sql`, `supabase/migrations/MANIFEST.md` | Migration 7.7 |
+| `CHANGELOG.md` | Seção da versão (6.3) |
+
+**Pronto quando:**
+- `getComputedStyle(document.body).fontFamily` começa com `Inter` e o de `h1` com `Lexend Deca`
+  em `/login` e `/app` (Playwright);
+- os tokens da tabela 7.2 medidos em `/app` nos dois temas batem com a tabela; teste novo lê
+  `app/convexy/tema.css` e exige contraste ≥ 4,5 para `text` e `text-muted` e ≥ 3 para
+  `text-subtle` sobre `bg` e `surface` (com `razaoDeContraste` de `lib/branding/contraste.ts`);
+- com os dois logos enviados, o claro aparece só no tema claro e o escuro só no escuro, na barra
+  lateral e no login;
+- com `ORG_BRANDING_ENABLED=false`: menu sem "Marca", `/app/settings/marca` 404, action e upload
+  de organização recusados, marca gravada de uma organização de teste não aparece;
+- `curl https://<dominio-de-producao>/login` traz `theme-color` `#F8FAFC` e `#0B0D10`;
+- `git diff --name-only v1.43.0 main` só lista arquivos das tabelas 6.2 e 7.8 e os novos.
+
+## 8. Trazer uma atualização do original
+
+1. `git fetch upstream tag vA.B.C --no-tags`; branch a partir da `main` do fork; `git merge vA.B.C`.
+2. Conflitos esperados: arquivos das tabelas 6.2 e 7.8, e sempre `CHANGELOG.md` (as duas seções
+   entram no topo). Resolver com o `CONVEXY.md` aberto; `baseline.sql` conforme 7.7.
+3. Revisar o diff do original como código que rodará como root na VPS.
+4. CI verde (obrigatório pela proteção da `main`) + conferência em tela, claro e escuro.
+5. Merge na `main`, seção `## [A.B.C-cvx.1]` no `CHANGELOG.md`, tag `vA.B.C-cvx.1`; o CI publica;
+   o botão "Atualizar" aparece.
+
+Automatizar os passos 1–2 fica para depois de o fluxo manual rodar uma vez.
+
+## 9. Testes do original afetados
+
+Ajustados (não desligados), cada um registrado no `CONVEXY.md` com o motivo:
+
+- `tests/unit/namespace-das-imagens.test.ts` e `_identidade-deste-repo.ts` (6.2);
+- `tests/e2e/aviso-de-caso-no-whatsapp.spec.ts:280`, `conversa-do-caso.spec.ts:340`,
+  `passagem-com-contexto.spec.ts:261` — esperam `fontFamily` `/Atkinson/` (7.3);
+- `tests/e2e/marca-logo.spec.ts` caso (3) e `tests/unit/sidebar-nome-da-organizacao.test.tsx`
+  — medem marca por organização, que a chave desliga: rodam com a chave ligada ou saem para
+  `FORA_DO_CI` com motivo (`tests/unit/e2e-cobertura-completa.test.ts` cobra o motivo);
+- `tests/e2e/icone-da-marca.spec.ts:51` — confere com nome e `.env` iguais a "Convexy".
+
+Suítes que o fork roda antes de cada tag: `pnpm typecheck`, `pnpm lint`, `pnpm test:unit`,
+`pnpm test:shell`, `pnpm test:db` (etapa 3) e `pnpm test:e2e`.
 
 ## 10. Riscos
 
 | Risco | Mitigação |
 |---|---|
-| O original reescreve `Sidebar.tsx` ou `app/(public)/layout.tsx` com frequência | Alteração mínima (troca de um bloco por `<LogoConvexy/>`); o `CONVEXY.md` diz o que reaplicar |
-| O original muda nomes de tokens em `globals.css` | `tema.css` deixa de sobrepor em silêncio; a conferência em tela da atualização pega |
-| Numeração `-cvx.N` recusada por algum ponto do kit | Ensaio obrigatório antes de publicar (7.3) |
-| GHCR privado bloqueia o `docker pull` da VPS | Pacotes públicos ou `docker login` (7.4) |
-| Botão "Atualizar" oferecer versão do original | Tags do original nunca vão para o fork (7.2) |
+| Push de tag no fork vira execução como root na VPS | 6.1.4 |
+| Botão "Atualizar" oferecer versão do original | Tags do original nunca no fork (6.1.2); `release.yml` desligado (6.1.3) |
+| Pacote GHCR privado deixa o botão mudo | Quatro pacotes públicos + pré-voo (6.2, 6.4) |
+| `-cvx.N` recusado por algum ponto do kit | Etapa 2 existe para medir isso sem identidade em cima |
+| Original reescreve `Sidebar.tsx`/`(public)/layout.tsx`/`layout.tsx` | Alterações mínimas, registradas no `CONVEXY.md`; conferência em tela a cada merge |
+| Original renomeia tokens de `globals.css` | `tema.css` deixa de sobrepor; o teste de tokens da 7.8 reprova |
+| Numeração de migration colide com a do original | Faixa 9001+ (7.7) |
