@@ -12,6 +12,8 @@
 
 **Spec:** docs/superpowers/specs/2026-09-22-identidade-convexy-design.md — seção 7.2
 
+> **Revisão 3 (2026-09-23) — execução sem recursos na máquina local.** Decisão do Victor: nada de Docker/Colima, Supabase local, builds, worktrees, `pnpm install` ou suítes na máquina dele. A partir da Task 5: (a) a spec `tests/e2e/convexy-identidade.spec.ts` e a linha no `e2e.yml` são commitadas sem rodada local — a prova é o check `e2e` do PR (parte 1), e as demais specs afetadas rodam nas partes 1–5 do CI; (b) a comparação de layout base × branch (Step 1b) não é feita; o risco de layout é medido **na VPS depois da aplicação** (Task 8 Step 4: fontes, tokens, kanban, caixa de entrada, diálogo, 390 px e `scrollWidth > clientWidth` por ferramenta no navegador, com aprovação); defeito só cosmético → correção N+1, rollback só se algo ficar ilegível ou um fluxo quebrar; (c) `pnpm typecheck`, `lint`, `test:unit` e `test:shell` locais (Tasks 6 e 7) são substituídos pelos checks obrigatórios do PR (`verify`, `invariants`, `build-and-size`, `e2e`, `imagens-ok`); (d) a evidência de DoD 12 vem da VPS (Task 8), não do e2e local.
+
 ## Global Constraints
 
 - Clone de trabalho: `/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM`. Branch: `convexy/cvx-3`, criada de `origin/main` (`925e60027`, merge da `-cvx.2`) e já contendo o commit deste plano. **Nunca tocar** nas branches locais de backup `convexy/identidade-v142` e `convexy/identidade-pre-scrub`, nem em `.git/hooks` (o `pre-push` da etapa 2 já está lá e continua valendo).
