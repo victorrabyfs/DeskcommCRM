@@ -115,10 +115,12 @@ Conferência depois de um merge do original:
   Atkinson do original tinha também `latin-ext`): caractere fora do Latin-1 cai na fonte de
   reserva. `app/convexy/tema.css` declara `@layer properties, theme, base, components, utilities;`
   (a spec escreve sem `properties`; o Tailwind 4.3 publica essa camada primeiro).
-- **Testes da `-cvx.3`** — `pnpm test:e2e` inteiro não rodou localmente: rodou o recorte do
-  plano (spec nova, `icone-da-marca`, `logo-moldura-no-tema-escuro`, as três specs com
-  `/Inter/i`, `agenda-kit-visual`), e a suíte inteira é a do check `e2e` do PR, com as cinco
-  partes em `pass`. `pnpm test:db` não é exigido (sem schema).
+- **Testes da `-cvx.3`** — nenhuma suíte rodou na máquina local (plano, Revisão 3): a spec
+  nova e as specs afetadas (as três com `/Inter/i`, `icone-da-marca`,
+  `logo-moldura-no-tema-escuro`, `agenda-kit-visual`) têm como prova o check `e2e` do PR
+  (cinco partes em `pass`); typecheck, lint, unitários e shell, os checks `verify` e
+  `build-and-size`; o layout, a medição na VPS depois da aplicação. `pnpm test:db` não é
+  exigido (sem schema).
 - **DoD 13 na `-cvx.3`** — Living System Checklist e `docs/testing/user-journey-map.md` não
   atualizados: mudança só de aparência (sem dado, rota, log, worker ou jornada nova).
 
