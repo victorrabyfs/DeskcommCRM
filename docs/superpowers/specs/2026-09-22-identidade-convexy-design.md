@@ -3,7 +3,7 @@
 - **Data:** 2026-09-22 (revisão 4, 2026-09-23 — base `v1.44.0`; etapa 3 dividida em três versões;
   incorpora a terceira rodada de revisão: conferência de fatos, simulação do operador e
   viabilidade da implementação)
-- **Status:** aguardando revisão do Victor
+- **Status:** aprovada em 2026-09-23 (etapa 3 em três versões confirmada)
 - **Repositório:** `victorrabyfs/DeskcommCRM` (fork de `melgarafael/DeskcommCRM`)
 - **Base:** release `v1.44.0` do original (tag `39b62486`, commit `7dbbf87`). Produção em
   `https://<dominio-de-producao>` roda hoje a `v1.43.0` e sobe para a `v1.44.0` no passo 0 (5.0).
