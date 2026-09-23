@@ -20,7 +20,9 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
   local `.git/hooks/pre-push` recusa tag fora de `vX.Y.Z-cvx.N` (recriar num clone novo:
   plano da etapa 2, Task 1 Step 3).
 - CHANGELOG, do topo para baixo: `## [Não lançado]` › seções `-cvx` da base atual
-  (mais nova primeiro) › seções do original › seções `-cvx` da base anterior › …
+  (mais nova primeiro) › seções do original **trazidas no merge** › seções `-cvx` da base
+  anterior › `## [base anterior]` … Exemplo concreto:
+  `[Não lançado] › [1.45.0-cvx.1] › [1.45.0] › [1.44.1] › [1.44.0-cvx.2] › [1.44.0-cvx.1] › [1.44.0] › …`
   Versão que exige passo manual traz `### ⚠️ Requer atenção`.
 
 ## Alterações em arquivos do original
@@ -42,15 +44,19 @@ Conferência depois de um merge: `pnpm vitest run tests/unit/namespace-das-image
 
 - `hostgator-setup-kit/_common.sh`, `ultima_versao_publicada`: `grep -v -- '-'` →
   `grep -E -- '^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-cvx\.[0-9]+)?$'`. Motivo: instalação nova
-  a partir do fork escolhe a maior `-cvx.N`. Teste: `tests/unit/convexy-ultima-versao.test.ts`.
+  a partir do fork escolhe a maior `-cvx.N`. **Reaplicar o bloco inteiro num conflito de
+  merge** — o comentário `# Convexy: aceita SÓ …` acima da linha explica o porquê do filtro
+  para quem editar depois; reaplicar só a linha do `grep` deixa a explicação de fora e some no
+  próximo merge. Teste: `tests/unit/convexy-ultima-versao.test.ts`.
 
 ### Cabeçalho do CHANGELOG (etapa 2, `-cvx.1`)
 
 - `tests/unit/release-chega-na-lp.test.ts`: `CABECALHO_VERSAO` passa a ser
   `CABECALHO_VERSAO_CONVEXY` (`tests/unit/_convexy-cabecalho.ts`), que aceita `-cvx.N`.
   Reaplicar: a linha da regex e o import.
-- `CHANGELOG.md`: seções `-cvx` escritas à mão. Num merge do original, as seções dele entram
-  **abaixo** das `-cvx` da base nova e acima das `-cvx` da base anterior (ordem acima).
+- `CHANGELOG.md`: seções `-cvx` escritas à mão. Num merge do original, as seções **trazidas
+  no merge** entram **abaixo** das `-cvx` da base nova e **acima** das `-cvx` da base anterior
+  (ordem acima).
 
 ## Desvios aceitos
 
@@ -169,21 +175,30 @@ Fora do expediente das clínicas. Tudo de `/opt/deskcommcrm`.
    Task 9 Step 2.
 2. `cp -p .env ".env.bak-$(date +%Y%m%d)"`.
 3. Numa linha só:
-   `git remote set-url origin https://github.com/victorrabyfs/DeskcommCRM.git && git tag -l > /root/tags-antes.txt && git tag -l | xargs -r git tag -d >/dev/null && git fetch --tags origin && git tag -l`
+   `git remote set-url origin https://github.com/victorrabyfs/DeskcommCRM.git && git tag -l > /root/tags-antes-$(date +%Y%m%d).txt && git tag -l | xargs -r git tag -d >/dev/null && git fetch --tags origin && git tag -l`
    — só podem sobrar `v1.44.0` e `v1.44.0-cvx.*`.
-4. Guarda e atualização, dentro do `tmux`:
-   `[ -z "$(git tag -l | grep -vE '^v1\.44\.0(-cvx\.[0-9]+)?$')" ] || { echo "tag intrusa"; exit 1; }; bash hostgator-setup-kit/update.sh --to v1.44.0-cvx.1`
+4. Guarda e atualização, dentro do `tmux` (script `/tmp/migra.sh` do plano da etapa 2, Task 9
+   Step 5 — não numa linha só num pane interativo, senão a mensagem de "tag intrusa" some
+   junto com o pane ao fechar):
+   ```bash
+   if [ -n "$(git tag -l | grep -vE '^v1\.44\.0(-cvx\.[0-9]+)?$')" ]; then
+     echo "TAG INTRUSA — repetir o passo 3"
+   else
+     bash hostgator-setup-kit/update.sh --to v1.44.0-cvx.1 2>&1 | tee "/root/update-$(date +%Y%m%d-%H%M)-cvx1.log"
+   fi
+   ```
 5. Conferir: `describe` = `v1.44.0-cvx.1`; as quatro `*_IMAGE` do `.env` em `ghcr.io/victorrabyfs`; health `1.44.0-cvx.1`; domínio `307`.
 
 Saída real da migração da `<dominio-de-producao>`: (acrescentada na Task 9).
 
 ## Rollback para o original
 
-Só enquanto a base é a `v1.44.0` e antes da etapa 3. Não ensaiado (ver "Desvios").
+Só enquanto a base é a `v1.44.0` e antes da etapa 3. Não ensaiado (ver "Desvios"). Como na
+migração (acima), dentro do `tmux`, com log:
 ```bash
 cd /opt/deskcommcrm && git remote set-url origin https://github.com/melgarafael/DeskcommCRM.git \
   && git tag -l | xargs -r git tag -d >/dev/null && git fetch --tags origin \
-  && bash hostgator-setup-kit/update.sh --to v1.44.0 --force
+  && tmux new -s rollback "bash hostgator-setup-kit/update.sh --to v1.44.0 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback.log; echo FIM; read"
 ```
 Volta código, `_common.sh` da v1.44.0, imagens `ghcr.io/melgarafael/*:1.44.0` no `.env` e o
 agente. Depois disso a tela oferece a última versão **do original** — não clicar achando que é
