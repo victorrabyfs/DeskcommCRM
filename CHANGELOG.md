@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.0-cvx.2] — 2026-09-23
+
+Sem mudança na tela. Confirma que as atualizações da Convexy chegam pelo botão "Atualizar".
+
 ## [1.44.0-cvx.1] — 2026-09-23
 
 Primeira versão da Convexy, sobre a 1.44.0 do DeskcommCRM. Não muda nada na tela: a partir dela as atualizações chegam pelo repositório da Convexy (`victorrabyfs/DeskcommCRM`) e as imagens vêm de `ghcr.io/victorrabyfs`.
