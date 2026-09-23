@@ -1,0 +1,99 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Convexy — paleta (e, na parte de baixo, fontes) por cima do app/globals.css.
+   Spec: docs/superpowers/specs/2026-09-22-identidade-convexy-design.md, 7.2.
+   Registro: CONVEXY.md, "Paleta, fontes e barra do navegador".
+
+   O globals.css NÃO é editado. Este arquivo vence os blocos `:root`,
+   `[data-theme="light"]` e `[data-theme="dark"]` do original (0,1,0, fora de
+   camada) com o seletor de atributo DOBRADO (0,2,0), também fora de camada:
+   vence em QUALQUER ordem de carga — que difere entre dev e produção
+   (lib/branding/css.ts, "Por que dois blocos") — e sem !important.
+
+   Só superfícies, textos, bordas, neutros e sombras. O acento
+   (--color-accent-*) vem da cor da marca (/admin/marca) e as semânticas e a
+   agenda ficam as do original. Os aliases (card, popover, muted, input,
+   background, secondary, ring) apontam para estes tokens por var() e
+   acompanham.
+
+   Guardas: tests/unit/convexy-tema-cobre-os-tokens.test.ts (cobertura e
+   forma), tests/unit/convexy-tema-contraste.test.ts (pisos WCAG) e
+   tests/e2e/convexy-identidade.spec.ts (na tela).
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Fixa a ordem das camadas do Tailwind caso este arquivo carregue ANTES do
+   globals.css: sem esta linha, o `@layer base` mais abaixo criaria a camada
+   `base` antes de `theme` e a ordem mudaria. `properties` vem primeiro porque
+   é assim que o Tailwind 4.3 publica a folha (medido no build). */
+@layer properties, theme, base, components, utilities;
+
+[data-theme="light"][data-theme="light"] {
+  --color-bg: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #F1F5F9;
+  --color-overlay: rgba(11, 13, 16, 0.42);
+  --color-text: #0B0D10;
+  --color-text-muted: #475569;
+  --color-text-subtle: #64748B;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-neutral-50: #F8FAFC;
+  --color-neutral-100: #F1F5F9;
+  --color-neutral-200: #E2E8F0;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #64748B;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1E293B;
+  --color-neutral-900: #0F172A;
+  --color-neutral-950: #0B0D10;
+  --shadow-xs: 0 1px 2px 0 rgba(11, 13, 16, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(11, 13, 16, 0.05), 0 1px 1px 0 rgba(11, 13, 16, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(11, 13, 16, 0.06), 0 2px 4px -1px rgba(11, 13, 16, 0.04);
+  --shadow-lg: 0 12px 32px -6px rgba(11, 13, 16, 0.10), 0 4px 12px -2px rgba(11, 13, 16, 0.06);
+  --shadow-xl: 0 24px 48px -12px rgba(11, 13, 16, 0.16), 0 8px 16px -4px rgba(11, 13, 16, 0.08);
+}
+
+/* Escuro: sombras do original (pretas), inalteradas. */
+[data-theme="dark"][data-theme="dark"] {
+  --color-bg: #0B0D10;
+  --color-surface: #131923;
+  --color-surface-elevated: #171E2A;
+  --color-overlay: rgba(0, 0, 0, 0.60);
+  --color-text: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --color-text-subtle: #64748B;
+  --color-border: #1E293B;
+  --color-border-strong: #334155;
+  --color-neutral-50: #F8FAFC;
+  --color-neutral-100: #E2E8F0;
+  --color-neutral-200: #CBD5E1;
+  --color-neutral-300: #94A3B8;
+  --color-neutral-400: #64748B;
+  --color-neutral-500: #334155;
+  --color-neutral-600: #1E293B;
+  --color-neutral-700: #171E2A;
+  --color-neutral-800: #131923;
+  --color-neutral-900: #0B0D10;
+  --color-neutral-950: #06080A;
+}
+
+/* ── Fontes (spec 7.2.2) ─────────────────────────────────────────────────
+   Inter no texto chega pelo `--font-atkinson` (app/layout.tsx mantém o nome
+   da variável do original: `--font-sans` e o `body` do globals.css o leem).
+   Títulos h1–h3 em Lexend Deca. DENTRO de `@layer base`, de propósito: um
+   utilitário como `font-mono` (os <h1> de auditoria, incidentes e LGPD)
+   continua vencendo. `CardTitle` é <div> e fica na Inter (spec seção 3). */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-lexend), var(--font-atkinson), sans-serif;
+  }
+}
+
+/* O globals.css liga o "ss01" no body (em `@layer base`); na Inter ele troca
+   o desenho dos dígitos. FORA de camada, para vencer aquela regra. */
+body {
+  font-feature-settings: normal;
+}

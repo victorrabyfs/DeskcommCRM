@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Lexend_Deca } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
-import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 import { cssDaMarca } from "@/lib/branding/css";
 import {
@@ -18,18 +17,33 @@ import {
   resolverMarca,
   type MarcaResolvida,
 } from "@/lib/branding/resolve";
+import { coresDaBarraConvexy } from "@/lib/convexy/barra-do-navegador";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { ThemeProvider } from "@/lib/theme";
 import { Providers } from "./providers";
 import { PublicEnvScript } from "./public-env-script";
 import "./globals.css";
+// Convexy: tema da Convexy (paleta e fontes) por cima do globals.css — depois
+// dele, de propósito. CONVEXY.md, "Paleta, fontes e barra do navegador".
+import "./convexy/tema.css";
 
-const atkinson = Atkinson_Hyperlegible({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "700"],
+// Convexy: Inter no lugar da Atkinson Hyperlegible, com o NOME de variável do
+// original de propósito — `--font-sans` (@theme inline) e o `body` do
+// globals.css leem `--font-atkinson`. Títulos h1–h3 em Lexend Deca pelo
+// app/convexy/tema.css. CONVEXY.md, "Paleta, fontes e barra do navegador".
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-atkinson",
+});
+
+const lexend = Lexend_Deca({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-lexend",
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -109,12 +123,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * A cor da barra do navegador sai da RÉGUA, não de dois hexes redigitados aqui.
- * O porquê — inclusive por que isto NÃO deve virar `generateViewport()` lendo o
- * banco — está no cabeçalho de `lib/branding/barra-do-navegador.ts`.
+ * Convexy: a cor da barra do navegador é o fundo do tema da Convexy
+ * (`lib/convexy/barra-do-navegador.ts`, conferido contra `app/convexy/tema.css`),
+ * não a régua do original. Continua constante — o porquê de NÃO virar
+ * `generateViewport()` lendo o banco está no cabeçalho de
+ * `lib/branding/barra-do-navegador.ts`. CONVEXY.md.
  */
 export const viewport: Viewport = {
-  themeColor: coresDaBarraDoNavegador(REGUA_DO_PRODUTO),
+  themeColor: coresDaBarraConvexy(),
 };
 
 // Inline FOUC-prevention. Conteúdo é string literal estática (zero input do usuário),
@@ -278,7 +294,7 @@ export default function RootLayout({
       lang="pt-BR"
       data-theme="light"
       suppressHydrationWarning
-      className={`${atkinson.variable} ${plexMono.variable}`}
+      className={`${inter.variable} ${lexend.variable} ${plexMono.variable}`}
     >
       <head>
         {/* Primeiro de tudo: a cor da instalação, antes do CSS e do script de tema. */}
