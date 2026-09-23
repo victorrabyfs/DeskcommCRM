@@ -164,6 +164,14 @@ public/llms.txt — texto público do produto original
 - Ruleset `tags-de-versao` (`refs/tags/v*`: criação, atualização e remoção; bypass do Admin).
 - `main` protegida: `verify`, `invariants`, `build-and-size`, `e2e`, `imagens-ok`; só merge commit.
 - Pacotes GHCR públicos: `deskcommcrm`, `deskcomm-worker`, `deskcomm-scheduler`, `deskcomm-voice-agent`.
+  Têm de ser públicos: o agente e o `update.sh` consultam e baixam do GHCR sem login.
+- **Medido em 23/09: desligar o `publish-image` não impede a publicação.** O push da tag
+  `v1.44.0` (com o workflow em `disabled_manually`) disparou o `publish-image`, a guarda
+  `a-tag-veio-da-main` passou, e o fork publicou `victorrabyfs/*:1.44.0` e `:1.44` (código puro
+  do original) e moveu `stable` para elas por ~1 h, até a `-cvx.1` movê-lo de volta. Sem dano
+  (nenhuma VPS lia o `stable` do fork), e as imagens `1.44.0`/`1.44` ficaram (inofensivas: o
+  botão escolhe a maior tag do git). A proteção real é **nunca empurrar tag do original** —
+  o hook `pre-push` recusa, e só `--no-verify` passa.
 
 ## Migrar uma VPS do original para o fork
 
@@ -175,8 +183,12 @@ Fora do expediente das clínicas. Tudo de `/opt/deskcommcrm`.
    Task 9 Step 2.
 2. `cp -p .env ".env.bak-$(date +%Y%m%d)"`.
 3. Numa linha só:
-   `git remote set-url origin https://github.com/victorrabyfs/DeskcommCRM.git && git tag -l > /root/tags-antes-$(date +%Y%m%d).txt && git tag -l | xargs -r git tag -d >/dev/null && git fetch --tags origin && git tag -l`
-   — só podem sobrar `v1.44.0` e `v1.44.0-cvx.*`.
+   `git remote set-url origin https://github.com/victorrabyfs/DeskcommCRM.git && git config remote.origin.fetch "+refs/heads/main:refs/remotes/origin/main" && git tag -l > /root/tags-antes-$(date +%Y%m%d).txt && git tag -l | xargs -r git tag -d >/dev/null && git fetch --tags origin && git tag -l`
+   — só podem sobrar `v1.44.0` e `v1.44.0-cvx.*`. O `git config remote.origin.fetch` é
+   obrigatório: VPS instalada pelo kit com `git clone --branch vX.Y.Z` fica com o fetch preso
+   àquela tag (`+refs/tags/vX.Y.Z:refs/tags/vX.Y.Z`); se a tag não existe no fork, o
+   `git fetch --tags` falha com `couldn't find remote ref` e a VPS fica **sem nenhuma tag**
+   (medido na migração de 23/09 — ver abaixo).
 4. Guarda e atualização, dentro do `tmux` (script `/tmp/migra.sh` do plano da etapa 2, Task 9
    Step 5 — não numa linha só num pane interativo, senão a mensagem de "tag intrusa" some
    junto com o pane ao fechar):
@@ -189,7 +201,32 @@ Fora do expediente das clínicas. Tudo de `/opt/deskcommcrm`.
    ```
 5. Conferir: `describe` = `v1.44.0-cvx.1`; as quatro `*_IMAGE` do `.env` em `ghcr.io/victorrabyfs`; health `1.44.0-cvx.1`; domínio `307`.
 
-Saída real da migração da `<dominio-de-producao>`: (acrescentada na Task 9).
+Saída real da migração da `<dominio-de-producao>` (2026-09-23, 16:46 UTC):
+
+- Pré-voo: as quatro imagens `1.44.0-cvx.1` com `200`; VPS em `v1.44.0` exata; `OK`. Lock do
+  agente livre, nenhum `update.sh` rodando.
+- Passo 3, primeira tentativa (sem o `git config remote.origin.fetch`):
+  ```
+  fatal: couldn't find remote ref refs/tags/v1.42.0
+  --- tags:
+  (nenhuma)
+  ```
+  `remote.origin.fetch` era `+refs/tags/v1.42.0:refs/tags/v1.42.0` (instalação original com
+  `--branch v1.42.0`). Corrigido para `+refs/heads/main:refs/remotes/origin/main`; o fetch
+  seguinte trouxe `v1.44.0` e `v1.44.0-cvx.1`.
+- Passo 4 (`tmux` destacado, log em `/root/update-20260923-1646-cvx1.log`): `UPDATE_EXIT=0`,
+  "Atualização concluída — app no ar e saudável", nenhuma imagem construída na VPS.
+- Passo 5:
+  ```
+  v1.44.0-cvx.1
+  APP_IMAGE=ghcr.io/victorrabyfs/deskcommcrm:1.44.0-cvx.1
+  WORKER_IMAGE=ghcr.io/victorrabyfs/deskcomm-worker:1.44.0-cvx.1
+  SCHEDULER_IMAGE=ghcr.io/victorrabyfs/deskcomm-scheduler:1.44.0-cvx.1
+  VOICE_AGENT_IMAGE=ghcr.io/victorrabyfs/deskcomm-voice-agent:1.44.0-cvx.1
+  tags: v1.44.0 v1.44.0-cvx.1
+  domínio: 307
+  health: {"status":"healthy","version":"1.44.0-cvx.1", supabase/redis/waha ok}
+  ```
 
 ## Rollback para o original
 
