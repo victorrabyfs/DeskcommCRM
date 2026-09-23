@@ -5,6 +5,8 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { CABECALHO_VERSAO_CONVEXY } from "./_convexy-cabecalho";
+
 /**
  * TODA RELEASE APARECE NA PÁGINA DE CHANGELOG DA LP — E O CI CONFERE.
  *
@@ -278,8 +280,8 @@ describe("a release chega à página de changelog da LP", () => {
   });
 
   it("toda seção do CHANGELOG segue o cabeçalho que a LP sabe ler", () => {
-    // A mesma expressão de deskcomm-site/lib/changelog.ts (CABECALHO_VERSAO).
-    const CABECALHO_VERSAO = /^## \[(\d+\.\d+\.\d+)\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})\s*$/;
+    // Convexy: aceita também `X.Y.Z-cvx.N` (tests/unit/_convexy-cabecalho.ts; CONVEXY.md).
+    const CABECALHO_VERSAO = CABECALHO_VERSAO_CONVEXY;
     const cabecalhos = changelog.split("\n").filter((l) => l.startsWith("## "));
     const fora = cabecalhos.filter((l) => !CABECALHO_VERSAO.test(l) && l.trim() !== "## [Não lançado]");
     expect(fora, "seção que a página de changelog da LP não reconheceria").toEqual([]);
