@@ -10,7 +10,7 @@
 
 Entre `v1.43.0` e `v1.44.0` (37 commits) nenhum arquivo citado nas seções 6 e 7 mudou, exceto
 `CHANGELOG.md`, `lib/i18n/dicionario.ts`, `supabase/baseline.sql` (+12 linhas, na 37142, longe do
-trecho da 7.6) e `MANIFEST.md`. As referências `arquivo:linha` valem para a `v1.44.0` (≈ 95
+trecho da 7.3.1) e `MANIFEST.md`. As referências `arquivo:linha` valem para a `v1.44.0` (≈ 95
 conferidas uma a uma na revisão 4).
 
 ## 1. Objetivo
