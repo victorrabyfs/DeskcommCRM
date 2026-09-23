@@ -51,8 +51,8 @@ original não são editados (o que deixa de valer no fork é registrado no `CONV
 
 Medida no CRM atual (`<frontend-atual>` na VPS): fontes **Inter** (texto) e **Lexend
 Deca** (títulos); marca `#146BFF`; tinta `#0B0D10`; fundo claro `#F8FAFC`; escuro: fundo
-`#0B0D10`, cartão `#131923`, popover `#171E2A`. Logos em SVG (`logo-light-v3.svg`,
-`logo-dark-v3.svg`) — **exportar em PNG** (altura ≥ 96 px, fundo transparente, ≤ 512 KB) para
+`#0B0D10`, cartão `#131923`, popover `#171E2A`. Logos em SVG (logo-light-v3.svg,
+logo-dark-v3.svg) — **exportar em PNG** (altura ≥ 96 px, fundo transparente, ≤ 512 KB) para
 enviar pela tela, que recusa SVG por segurança.
 
 ## 5. Entregas
@@ -285,7 +285,9 @@ botão só faz rollback automático de imagem quando a atualização veio dele e
 - `/api/v1/health` responde `1.44.0-cvx.1`, depois `1.44.0-cvx.2` aplicada **pelo botão**;
 - `.env` da VPS aponta as quatro imagens para `ghcr.io/victorrabyfs`;
 - `git tag -l` na VPS só lista `v1.44.0` e `v1.44.0-cvx.*`;
-- o rollback acima foi ensaiado numa VM descartável, com a saída real registrada no `CONVEXY.md`.
+- o rollback acima está documentado no `CONVEXY.md`, com os comandos exatos. **Não é ensaiado
+  numa VM** (decisão de 23/09): o procedimento foi conferido contra o código do kit, e o risco
+  de ele falhar na hora é aceito.
 
 ## 7. Etapa 3 — identidade visual
 
