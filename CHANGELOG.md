@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.0-cvx.3] — 2026-09-23
+
+Nova identidade visual da Convexy nos temas claro e escuro: fundos, textos, bordas e cinzas novos, a fonte Inter no texto e a Lexend Deca nos títulos, e a barra do navegador (no celular) na cor do fundo novo. A cor de destaque continua a da marca definida em `/admin/marca`. Sem mudança no banco nem no `.env`.
+
 ## [1.44.0-cvx.2] — 2026-09-23
 
 Sem mudança na tela. Confirma que as atualizações da Convexy chegam pelo botão "Atualizar".
