@@ -1,9 +1,13 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { derivarMarca, razaoDeContraste } from "@/lib/branding/contraste";
 import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
+import { coresDaBarraConvexy } from "@/lib/convexy/barra-do-navegador";
 
-import { lerTemaConvexy, type Tema } from "./_convexy-tema";
+import { RAIZ, lerTemaConvexy, type Tema } from "./_convexy-tema";
 
 /**
  * Convexy -cvx.3 (spec 7.2.5): pisos WCAG da paleta da Convexy, lendo o
@@ -62,5 +66,21 @@ describe("contraste do tema da Convexy", () => {
   it.each(TEMAS)("frente do acento sobre o acento no tema %s ≥ 4,5", (t) => {
     const r = razaoDeContraste(marca[t].accentFg, marca[t].accent);
     expect(r, `${marca[t].accentFg} sobre ${marca[t].accent} = ${r.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("barra do navegador da Convexy (spec 7.2.3)", () => {
+  it("as duas cores são o --color-bg de cada tema do tema.css — uma fonte só", () => {
+    const tema = lerTemaConvexy();
+    expect(coresDaBarraConvexy().map((c) => ({ media: c.media, color: c.color.toLowerCase() }))).toEqual([
+      { media: "(prefers-color-scheme: light)", color: tema.claro.get("--color-bg")?.toLowerCase() },
+      { media: "(prefers-color-scheme: dark)", color: tema.escuro.get("--color-bg")?.toLowerCase() },
+    ]);
+  });
+
+  it("o layout usa a barra da Convexy, não a régua do original", () => {
+    const layout = fs.readFileSync(path.join(RAIZ, "app/layout.tsx"), "utf8");
+    expect(layout).toContain("themeColor: coresDaBarraConvexy(),");
+    expect(layout).not.toContain("coresDaBarraDoNavegador(");
   });
 });

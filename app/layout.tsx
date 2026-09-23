@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter, Lexend_Deca } from "next/font/google";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
-import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 import { cssDaMarca } from "@/lib/branding/css";
 import {
@@ -18,6 +17,7 @@ import {
   resolverMarca,
   type MarcaResolvida,
 } from "@/lib/branding/resolve";
+import { coresDaBarraConvexy } from "@/lib/convexy/barra-do-navegador";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { ThemeProvider } from "@/lib/theme";
@@ -123,12 +123,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * A cor da barra do navegador sai da RÉGUA, não de dois hexes redigitados aqui.
- * O porquê — inclusive por que isto NÃO deve virar `generateViewport()` lendo o
- * banco — está no cabeçalho de `lib/branding/barra-do-navegador.ts`.
+ * Convexy: a cor da barra do navegador é o fundo do tema da Convexy
+ * (`lib/convexy/barra-do-navegador.ts`, conferido contra `app/convexy/tema.css`),
+ * não a régua do original. Continua constante — o porquê de NÃO virar
+ * `generateViewport()` lendo o banco está no cabeçalho de
+ * `lib/branding/barra-do-navegador.ts`. CONVEXY.md.
  */
 export const viewport: Viewport = {
-  themeColor: coresDaBarraDoNavegador(REGUA_DO_PRODUTO),
+  themeColor: coresDaBarraConvexy(),
 };
 
 // Inline FOUC-prevention. Conteúdo é string literal estática (zero input do usuário),
