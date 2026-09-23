@@ -1043,7 +1043,7 @@ ler_rodada_do_banco() {
 # `publish-image.yml` digam o mesmo. Se você é um fork, é lá que está a lista do
 # que trocar junto — e, desde 18/09/2026, o CI do SEU fork não cobra este valor:
 # a asserção só vale quando o dono do runner é o dono deste repositório.
-IMG_NS="ghcr.io/melgarafael"
+IMG_NS="ghcr.io/victorrabyfs"
 IMG_APP="${IMG_NS}/deskcommcrm"
 IMG_WORKER="${IMG_NS}/deskcomm-worker"
 IMG_SCHEDULER="${IMG_NS}/deskcomm-scheduler"
@@ -1063,14 +1063,14 @@ IMG_VOICE_AGENT="${IMG_NS}/deskcomm-voice-agent"
 # alguém porque não deu para resolver um número de versão seria trocar um
 # problema de previsibilidade por um de disponibilidade.
 ultima_versao_publicada() {
-  local url="${1:-https://github.com/melgarafael/DeskcommCRM.git}" ref
+  local url="${1:-https://github.com/victorrabyfs/DeskcommCRM.git}" ref
   command -v git >/dev/null 2>&1 || return 0
-  # `grep -v -- -` descarta PRERELEASE (v1.11.0-rc1, v1.1.1-jmpo.1 — esta última
-  # existe de verdade neste repo). O `--sort=-v:refname` do git põe o prerelease
-  # ACIMA do release final quando `versionsort.suffix` não está configurado, e
-  # uma instalação nova nasceria num release candidate sem ninguém pedir.
+  # Convexy: aceita SÓ `vX.Y.Z` e `vX.Y.Z-cvx.N` (as versões do fork). Todo outro
+  # sufixo — `-rc1`, `-RC3`, `-alpha`, `-cvx.N-teste` — fica de fora. O
+  # `--sort=-v:refname` do git põe o sufixo ACIMA do release final quando
+  # `versionsort.suffix` não está configurado: é o que faz a `-cvx.N` vencer a base.
   ref="$(git ls-remote --tags --refs --sort=-v:refname "$url" 'v*' 2>/dev/null \
-        | awk '{print $2}' | grep -v -- '-' | head -1)" || return 0
+        | awk '{print $2}' | grep -E -- '^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-cvx\.[0-9]+)?$' | head -1)" || return 0
   [ -n "$ref" ] || return 0
   printf '%s' "${ref#refs/tags/v}"
 }
