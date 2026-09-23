@@ -1,5 +1,7 @@
 # Convexy — -cvx.3: paleta, fontes e barra do navegador — plano de implementação
 
+> **Revisão 2 (2026-09-23): incorpora três revisões — fatos, execução real das Tasks 1–6 + build, cobertura/operação.** Mudanças principais: nomes de imagem citados por caminho completo (o plano reprovava `evidencia-citada`); contagem de casos da Task 7 (+45); desvio declarado do `pnpm test:e2e` local e rodada local ampliada; comparação de layout base × branch medida por ferramenta (Task 5); `@layer properties, …` (Tailwind 4.3); portões de confirmação antes do merge e da tag; conferência na VPS por ferramenta; rollback verificado e com regra de decisão; logs fora de `/tmp`; versões nomeadas por conteúdo.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Publicar a `v1.44.0-cvx.3` — a plataforma passa a ter a paleta (fundos, textos, bordas, neutros, sombras), as fontes (Inter no texto, Lexend Deca em `h1–h3`) e a barra do navegador da Convexy, nos temas claro e escuro — e aplicá-la na VPS pelo botão "Atualizar", sem banco e sem `.env`.
@@ -14,7 +16,7 @@
 
 - Clone de trabalho: `/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM`. Branch: `convexy/cvx-3`, criada de `origin/main` (`925e60027`, merge da `-cvx.2`) e já contendo o commit deste plano. **Nunca tocar** nas branches locais de backup `convexy/identidade-v142` e `convexy/identidade-pre-scrub`, nem em `.git/hooks` (o `pre-push` da etapa 2 já está lá e continua valendo).
 - Repositório: `victorrabyfs/DeskcommCRM`. Todo `gh` leva `-R victorrabyfs/DeskcommCRM`; `gh pr checks`/`merge`/`view` levam o nome da branch. PR só na `main` do fork; **merge só por merge commit**.
-- Versão: `v1.44.0-cvx.3`, tag anotada, criada **só depois de o PR estar `MERGED`**, empurrada **pelo nome** (`git push origin v1.44.0-cvx.3`). Nunca `--tags`/`--follow-tags`. Tag publicada nunca é refeita (corrigir = `-cvx.4`).
+- Versão: `v1.44.0-cvx.3`, tag anotada, criada **só depois de o PR estar `MERGED`**, empurrada **pelo nome** (`git push origin v1.44.0-cvx.3`). Nunca `--tags`/`--follow-tags`. Tag publicada nunca é refeita (corrigir = a próxima `-cvx.N`, calculada por `git tag -l 'v1.44.0-cvx.*' --sort=-v:refname | head -1`). Os planos seguintes nomeiam o conteúdo (logo escuro, spec 7.3; marca das clínicas desligada, spec 7.4), não o número: se a `-cvx.3` for revertida, a correção é a `-cvx.4` e o conteúdo seguinte desloca uma casa.
 - `CHANGELOG.md`: seção `## [1.44.0-cvx.3] — AAAA-MM-DD` (data do dia do corte, `date +%F`), logo abaixo de `## [Não lançado]` e **acima** de `## [1.44.0-cvx.2] — 2026-09-23`. Sem `### ⚠️ Requer atenção` (não há passo manual).
 - Sem banco, sem `.env`, sem fragmento em `.changes/` (desvio DoD 17 já registrado no `CONVEXY.md`). Destino (DoD 18): **instalação do fork**.
 - Placeholders de infraestrutura (o repositório é público): domínio `<dominio-de-producao>`, host `<host-ssh>`. Pasta da VPS: `/opt/deskcommcrm`. `update.sh` na VPS roda **sempre dentro de `tmux`**, com log `/root/update-<data>-<rótulo>.log`.
@@ -22,6 +24,8 @@
 - Commits terminam com a linha em branco e `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`.
 - Ambiente local (macOS): `pnpm typecheck` com `NODE_OPTIONS=--max-old-space-size=8192`. `pnpm test:shell` já falha na base em três scripts no bash 3.2 do macOS (`hostgator-setup-kit/test-validators.sh`, `tests/shell/hooks-nao-acusam-a-main.test.sh`, `tests/shell/desinstalar-docker.test.sh`) e, por encadear com `&&`, para no primeiro: comparar **script a script** com a linha de base da Task 0.
 - `pnpm test:unit` sem caminho; o **exit code** é a autoridade, e as linhas `Test Files`/`Tests`/`Errors` a explicação (CLAUDE.md, "Testes").
+- Logs, linhas de base e scripts auxiliares desta versão ficam em `S=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM/.superpowers/sdd/convexy-cvx3` (nunca em `/tmp`, que é limpo no meio da sessão); evidência visual em `.superpowers/evidence/convexy-cvx3/`. Os dois ficam sob `.superpowers/`, ignorado pelo git (`.gitignore:110`).
+- Números de linha de `app/layout.tsx` citados neste plano são os da `origin/main` (`925e60027`). Depois da Task 1 eles andam (o import do `tema.css` acrescenta três linhas): nas Tasks 3 e 4, **localizar pelo texto** citado, não pelo número.
 
 **Arquivos novos** (spec 7.2 + 7.1): `app/convexy/tema.css`, `lib/convexy/barra-do-navegador.ts`, `tests/unit/convexy-tema-cobre-os-tokens.test.ts`, `tests/unit/convexy-tema-contraste.test.ts`, `tests/e2e/convexy-identidade.spec.ts`. Mais um, fora da lista da spec: `tests/unit/_convexy-tema.ts` (parser do `tema.css`/`globals.css` e a tabela da spec, compartilhados pelos três testes; sem `.test`, o Vitest não coleta — mesmo padrão de `tests/unit/_convexy-cabecalho.ts`).
 
@@ -59,7 +63,7 @@ Seletores `[data-theme="light"][data-theme="light"]` e `[data-theme="dark"][data
 - `Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-atkinson" })` no lugar de `Atkinson_Hyperlegible` — o nome da variável fica o do original de propósito (`globals.css:535` inlina `--font-sans`; `globals.css:701` usa `var(--font-atkinson)` no `body`; `tests/unit/tailwind-tokens.test.ts:89-93` exige o literal no layout).
 - `Lexend_Deca({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-lexend" })`. Os dois `.variable` no `className` do `<html>` (`layout.tsx:281`). IBM Plex Mono continua.
 - Os dois levam também `display: "swap"` — o que o original já declara (`layout.tsx:31`) e o padrão do `next/font`; a spec omite o campo, não o proíbe.
-- `tema.css` começa com `@layer theme, base, components, utilities;`; dentro de `@layer base`: `h1, h2, h3 { font-family: var(--font-lexend), var(--font-atkinson), sans-serif; }`; **fora de camada**: `body { font-feature-settings: normal; }` (anula o `"ss01"` de `globals.css:703`).
+- `tema.css` começa com `@layer properties, theme, base, components, utilities;` (a spec escreve sem `properties`; o Tailwind 4.3 emite `@layer properties` **primeiro** — medido no build real —, e a declaração tem de repetir a ordem que ele publica); dentro de `@layer base`: `h1, h2, h3 { font-family: var(--font-lexend), var(--font-atkinson), sans-serif; }`; **fora de camada**: `body { font-feature-settings: normal; }` (anula o `"ss01"` de `globals.css:703`).
 
 **Barra do navegador** (spec 7.2.3): `viewport.themeColor` de `lib/convexy/barra-do-navegador.ts`, formato `[{ media, color }]`: `(prefers-color-scheme: light)` → `#F8FAFC`, `(prefers-color-scheme: dark)` → `#0B0D10`. `lib/branding/regua-do-produto.ts` **não muda**.
 
@@ -67,21 +71,22 @@ Seletores `[data-theme="light"][data-theme="light"]` e `[data-theme="dark"][data
 - `--color-text` e `--color-text-muted` ≥ 4,5; `--color-text-subtle` ≥ 3 — sobre `--color-bg`, `--color-surface` e `--color-surface-elevated`, nos dois temas (pior caso medido: `text-subtle` escuro sobre `surface-elevated` = 3,51).
 - `derivarMarca("#146BFF", REGUA_DO_PRODUTO)` (`contraste.ts:839`) dá `accent` `#1756c4`/`accentFg` `#ffffff` (claro) e `#6ea3ff`/`#000000` (escuro). `accent` ≥ 4,5 sobre os três fundos (medido 6,06–7,73); `accentFg` ≥ 4,5 sobre `accent` (6,64 claro, 8,35 escuro).
 
-**Suítes antes da tag** (spec 7.1): `pnpm typecheck`, `pnpm lint`, `pnpm test:unit`, `pnpm test:shell` (local); e2e: a spec nova e as duas de tema mais próximas, localmente (Task 5), e a suíte inteira pelo check `e2e` do PR (cinco partes). `pnpm test:db` não é exigido nesta versão (sem schema; a spec só o torna obrigatório na `-cvx.4`) — o check `invariants` o roda no PR. Depois: conferência em tela na VPS, claro e escuro.
+**Suítes antes da tag** (spec 7.1): `pnpm typecheck`, `pnpm lint`, `pnpm test:unit`, `pnpm test:shell` (local); e2e: localmente um recorte (Task 5 Step 5 — a spec nova, `icone-da-marca`, `logo-moldura-no-tema-escuro`, as três specs alteradas na Task 3 e `agenda-kit-visual`), e a suíte inteira pelo check `e2e` do PR, com as cinco `e2e-parte (1..5)` em `pass` — nunca `skipping` (desvio declarado abaixo). `pnpm test:db` não é exigido nesta versão (sem schema; a spec só o torna obrigatório na versão do logo escuro, spec 7.3, que tem migration) — o check `invariants` o roda no PR. Depois: conferência em tela na VPS, claro e escuro, por ferramenta (Task 8 Step 4).
 
 ## Modo de execução
 
 - **Tasks 0–6 (código)** podem ir para subagente (superpowers:subagent-driven-development), uma por vez, na ordem. A Task 5 precisa do Docker Desktop aberto e leva tempo (imagens do Supabase na primeira vez e dois `next build`).
 - **Task 7 [GitHub]** e **Task 8 [VPS]** rodam **na sessão principal, no modo padrão de permissão**, com o Victor aprovando cada comando — nunca em subagente nem no modo automático.
-- Clicar em "Atualizar" (Task 8) é do Victor. A conferência em tela na VPS é dele, ou de Claude pelo navegador com aprovação.
+- Clicar em "Atualizar" (Task 8) é do Victor. A conferência em tela na VPS é por ferramenta — Claude pelo navegador (Claude in Chrome), com aprovação do Victor — e o olhar dele é complemento.
 
 ## Review Focus
 
-1. **Tema "sistema"** — sem escolha salva, o `data-theme` vem de `prefers-color-scheme` pelo script anti-flash (`app/layout.tsx:122`) e é reaplicado pelo `ThemeProvider` (`lib/theme.tsx:42`); o seletor dobrado tem de pegar nos dois caminhos. Fixado na Task 5: os casos de `/login` usam `page.emulateMedia({ colorScheme })` sem `localStorage`, e o de `/app/settings` troca o tema pelo controle da tela (tema escolhido).
-2. **Ordem de carga do CSS diferente em dev e produção** (`lib/branding/css.ts:17-23`) — se o `tema.css` carregar antes do `globals.css`, só a especificidade o salva, e o `@layer base` dele não pode criar a camada `base` antes das do Tailwind. Fixado na Task 1 (teste de forma: arquivo começa com `@layer theme, base, components, utilities;`; blocos de token fora de camada) e na Task 5 (a folha **publicada** pelo `next build` contém as duas regras dobradas em nível de topo, fora de camada).
+1. **Tema "sistema"** — sem escolha salva, o `data-theme` vem de `prefers-color-scheme` pelo script anti-flash (`app/layout.tsx:122`, linha da `origin/main`) e é reaplicado pelo `ThemeProvider` (`lib/theme.tsx:122`, que chama `applyTheme` em `:138`; a `applyTheme` é a `:42`); o seletor dobrado tem de pegar nos dois caminhos. Fixado na Task 5: os casos de `/login` usam `page.emulateMedia({ colorScheme })` sem `localStorage`, e o de `/app/settings` troca o tema pelo controle da tela (tema escolhido).
+2. **Ordem de carga do CSS diferente em dev e produção** (`lib/branding/css.ts:17-23`) — se o `tema.css` carregar antes do `globals.css`, só a especificidade o salva, e o `@layer base` dele não pode criar a camada `base` antes das do Tailwind. Fixado na Task 1 (teste de forma: arquivo começa com `@layer properties, theme, base, components, utilities;`; blocos de token fora de camada) e na Task 5 (a folha **publicada** pelo `next build` contém as duas regras dobradas em nível de topo, fora de camada).
 3. **Custom properties reescritas pelo minificador** (`#FFFFFF` → `#fff`, `rgba(…)` → hex de 8 dígitos, seletor reescrito) — Fixado na Task 5: comparação por `getComputedStyle` de um elemento-sonda (`rgb()`), canal a canal, alfa com folga de 0,01; e a regra dobrada procurada no `CSSStyleSheet`, não no texto. Na Task 1 a comparação com a tabela é sem distinção de caixa.
 4. **`<h1>` com utilitário `font-mono`** (quatro: `app/app/lgpd/requests/[id]/_client.tsx:94`, `app/admin/(protected)/lgpd/requests/[id]/_client.tsx:275`, `app/admin/(protected)/audit/[entryId]/_client.tsx:114`, `app/admin/(protected)/incidents/[id]/_client.tsx:102`) — a regra de `h1–h3` tem de perder para utilitário. Fixado na Task 3 (a regra está **dentro** de `@layer base` e não há `h1` fora de camada) e na Task 5 (uma sonda `<h1 class="font-mono">` mede IBM Plex Mono; `<h2>` mede Lexend; `<div>` — o `CardTitle` — mede Inter).
 5. **Contraste no escuro** — `text-subtle` escuro sobre `surface-elevated` fica em 3,51 (a folga é 0,51 sobre o piso 3), e o acento é derivado contra a régua do original, não contra os fundos novos. Fixado na Task 2: os 18 pares de texto e os 8 do acento com os pisos da spec, lendo o `tema.css` de verdade, com contraprova por sabotagem.
+6. **Layout com as fontes novas** — a Lexend Deca é mais larga que a Atkinson e passa a valer em ≈121 `h1`, 164 `h2` e 134 `h3`; a Inter tem 500/600 de verdade (a Atkinson só tinha 400/700, e `font-medium`/`font-semibold` eram sintetizados). Títulos com `truncate`/`line-clamp` (`components/kanban/KanbanCard.tsx:225` `h3 line-clamp-2 h-10`, `components/kanban/StageColumn.tsx:131` `h2 truncate`, `components/inbox/ConversationHeader.tsx:166` `h2 truncate`, `app/app/pipelines/[id]/_client.tsx:95` `h1 truncate`) cortam mais cedo; os sem corte podem transbordar. Fixado na Task 5 (Steps 1b, 4 e 5): capturas base × branch a 1280 e 390 px e medida por ferramenta de transbordo inesperado de título e de página.
 
 ---
 
@@ -107,6 +112,11 @@ Onde este plano se afasta da letra da spec (conferido contra o código na `origi
 - A spec diz que a medida em `rgb()` "prova que o seletor dobrado sobreviveu à minificação"; ela sozinha não prova (em produção o `tema.css` carrega depois, e a ordem também daria a vitória). O e2e acrescenta a busca da regra dobrada, em nível de topo, no `CSSStyleSheet` publicado.
 - Um arquivo novo além dos da spec: `tests/unit/_convexy-tema.ts` (a tabela da spec e o parser, uma vez só para os três testes).
 - `display: "swap"` nas duas fontes (Global Constraints, "Fontes").
+- **`pnpm test:e2e` inteiro não roda localmente** (a spec 7.1 o pede antes de cada tag). Localmente roda o recorte da Task 5 Step 5, que não precisa de WAHA; a suíte inteira é a do CI, e só vale com as cinco `e2e-parte (1..5)` em `pass` no PR — nunca `skipping` (Task 7 Step 3). Spec do recorte que precise de fixture além do seed de credenciais fica para o CI, com o motivo escrito no relatório da Task 5.
+- **`pnpm test:db` não é exigido na `-cvx.3`** (sem schema); a spec o torna obrigatório na versão do logo escuro (7.3). O check `invariants` o roda no PR de qualquer forma.
+- **`@layer properties, theme, base, components, utilities;`** no lugar do `@layer theme, base, components, utilities;` da spec 7.2.2: o Tailwind 4.3 publica `@layer properties` antes de `theme` (medido no build real), e a declaração antecipada tem de repetir a ordem publicada, senão uma carga do `tema.css` antes do `globals.css` a mudaria.
+- **Fontes só com o subconjunto `latin`** (como a spec 7.2.2 manda), enquanto a Atkinson do original carregava `latin` + `latin-ext`. Caractere fora do Latin-1 (ex.: `ő`, `ł`, `ș`) cai na fonte de reserva (`sans-serif`). Aceito: o público é pt-BR; registrado no `CONVEXY.md`, "Desvios aceitos" (Task 6).
+- **DoD 13 (Living System Checklist) e `docs/testing/user-journey-map.md` não são atualizados**: mudança só de aparência — sem dado, rota, log, worker ou jornada nova. Registrado no `CONVEXY.md`, "Desvios aceitos" (Task 6).
 - Demais referências `arquivo:linha` da seção 7.2 (≈ 30) conferem com o código.
 
 Ordem das tasks, e por que é esta: a Task 5 (e2e) vem depois das Tasks 1–4 porque o "vermelho antes" dela é medido contra um build da `origin/main` (sem nada da `-cvx.3`) num worktree, e o verde contra o build da branch — construir o ambiente do e2e uma vez só serve às duas medidas.
@@ -119,7 +129,7 @@ Ordem das tasks, e por que é esta: a Task 5 (e2e) vem depois das Tasks 1–4 po
 
 **Interfaces:**
 - Consumes: branch `convexy/cvx-3` = `origin/main` + commit deste plano.
-- Produces: `node_modules`; `/tmp/cvx3-vt-base.log`, `/tmp/cvx3-shell-base.txt`.
+- Produces: `node_modules`; `$S/vt-base.log`, `$S/shell-base.txt` (`S` definido em Global Constraints).
 
 - [ ] **Step 1: Estado da branch**
 
@@ -131,7 +141,7 @@ git fetch -q origin main && git merge --ff-only origin/main
 git log --oneline origin/main..HEAD
 git branch --list 'convexy/*'
 ```
-Expected: `git status` vazio; `Already up to date.` (ou fast-forward, se a `main` andou — nunca merge com conflito); o `log` lista só `docs(convexy): plano da -cvx.3 (paleta, fontes, barra do navegador)`; as branches `convexy/cvx-3`, `convexy/identidade-pre-scrub`, `convexy/identidade-v142`, `convexy/main-local` (as de backup ficam como estão).
+Expected: `git status` vazio; `Already up to date.` (ou fast-forward, se a `main` andou — nunca merge com conflito); o `log` lista **só commits deste plano** — `docs(convexy): plano da -cvx.3 (paleta, fontes, barra do navegador)` e `docs(convexy): plano da -cvx.3, revisão 2 — achados das três revisões` (e outra revisão do plano, se houver); qualquer commit que não seja `docs(convexy): plano da -cvx.3…` = parar e perguntar; as branches `convexy/cvx-3`, `convexy/identidade-pre-scrub`, `convexy/identidade-v142`, `convexy/main-local` (as de backup ficam como estão).
 
 - [ ] **Step 2: Dependências**
 
@@ -142,14 +152,26 @@ git status --short
 ```
 Expected: instala; `git status` vazio.
 
+- [ ] **Step 2b: Pré-requisitos da Task 5 (medir agora, não no meio dela)**
+
+```bash
+docker info >/dev/null 2>&1 && echo "docker ok" || echo "DOCKER AUSENTE"
+for c in supabase psql openssl tmux gh; do command -v "$c" >/dev/null && echo "$c ok" || echo "$c AUSENTE"; done
+df -g /Users/victorraby/Downloads/Quantux/backup-deskcommcrm | awk 'NR==2{print "livre GB:", $4}'
+for p in 3000 54321 54322 54323 54324; do lsof -nP -iTCP:$p -sTCP:LISTEN >/dev/null 2>&1 && echo "porta $p OCUPADA" || echo "porta $p livre"; done
+```
+Expected: `docker ok`; `supabase`, `psql`, `openssl`, `tmux`, `gh` ok; livre ≥ 15 GB (imagens do Supabase, dois `node_modules` e dois `next build`); as cinco portas livres. **Docker ausente, CLI ausente, disco curto ou porta ocupada: parar e perguntar ao Victor** — não instalar nada nem matar processo por conta própria (porta ocupada pode ser stack dele).
+
 - [ ] **Step 3: Linha de base**
 
 ```bash
-pnpm test:unit > /tmp/cvx3-vt-base.log 2>&1; echo "exit=$?"; grep -aE "Test Files|Tests |Errors " /tmp/cvx3-vt-base.log | tail -3
+S=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM/.superpowers/sdd/convexy-cvx3
+mkdir -p "$S"
+pnpm test:unit > "$S/vt-base.log" 2>&1; echo "exit=$?"; grep -aE "Test Files|Tests |Errors " "$S/vt-base.log" | tail -3
 node -e 'console.log(require("./package.json").scripts["test:shell"].split(" && ").map(s=>s.replace(/^bash /,"")).join("\n"))' \
-  | while read -r s; do bash "$s" </dev/null >/dev/null 2>&1; echo "$? $s"; done | tee /tmp/cvx3-shell-base.txt
+  | while read -r s; do bash "$s" </dev/null >/dev/null 2>&1; echo "$? $s"; done | tee "$S/shell-base.txt"
 ```
-Expected: `exit=0`, sem linha `Errors` (se houver vermelho, anotar os arquivos antes de qualquer mudança; `lib/ai/dispatcher/rate-limit.test.ts` vermelho = `.env.local` com `UPSTASH_*` e Redis parado — não é deste trabalho). `/tmp/cvx3-shell-base.txt`: `0` em todos, exceto os três scripts conhecidos do macOS (Global Constraints).
+Expected: `exit=0`, sem linha `Errors`, `Test Files 1299 passed`, `Tests 13006 …` (medido na revisão 2; se o número for outro porque a `main` andou, anotar o medido — é contra ele que a Task 7 compara). Se houver vermelho, anotar os arquivos antes de qualquer mudança; `lib/ai/dispatcher/rate-limit.test.ts` vermelho = `.env.local` com `UPSTASH_*` e Redis parado — não é deste trabalho. `$S/shell-base.txt`: `0` em todos, exceto os três scripts conhecidos do macOS (Global Constraints).
 
 ---
 
@@ -419,9 +441,10 @@ describe("tema da Convexy cobre os tokens do original", () => {
     const css = fs.readFileSync(path.join(RAIZ, CAMINHO_DO_TEMA), "utf8");
 
     it("começa fixando a ordem das camadas do Tailwind", () => {
-      expect(semComentarios(css).trimStart().startsWith("@layer theme, base, components, utilities;")).toBe(
-        true,
-      );
+      // `properties` primeiro: é a ordem que o Tailwind 4.3 publica (medido no build).
+      expect(
+        semComentarios(css).trimStart().startsWith("@layer properties, theme, base, components, utilities;"),
+      ).toBe(true);
     });
 
     it("os blocos de token têm seletor dobrado e estão fora de qualquer @layer", () => {
@@ -479,8 +502,9 @@ Expected: FAIL — `Test Files 1 failed`, com `Error: ENOENT: no such file or di
 
 /* Fixa a ordem das camadas do Tailwind caso este arquivo carregue ANTES do
    globals.css: sem esta linha, o `@layer base` mais abaixo criaria a camada
-   `base` antes de `theme` e a ordem mudaria. */
-@layer theme, base, components, utilities;
+   `base` antes de `theme` e a ordem mudaria. `properties` vem primeiro porque
+   é assim que o Tailwind 4.3 publica a folha (medido no build). */
+@layer properties, theme, base, components, utilities;
 
 [data-theme="light"][data-theme="light"] {
   --color-bg: #F8FAFC;
@@ -537,7 +561,7 @@ Expected: FAIL — `Test Files 1 failed`, com `Error: ENOENT: no such file or di
 
 - [ ] **Step 5: Importar no layout**
 
-Em `app/layout.tsx`, trocar a linha 26
+Em `app/layout.tsx`, trocar a linha 26 (localizar pelo texto)
 ```ts
 import "./globals.css";
 ```
@@ -664,7 +688,7 @@ grep -n -- "--color-text-muted" app/convexy/tema.css
 pnpm vitest run tests/unit/convexy-tema-contraste.test.ts 2>&1 | grep -aE "Tests |✗|×|FAIL" | head -8
 git checkout -- app/convexy/tema.css && git status --short
 ```
-Expected: o `grep` mostra `#475569` nas duas linhas (a do claro já era; a do escuro foi sabotada); `Tests 3 failed | 24 passed (27)` — os três casos `--color-text-muted sobre … no tema escuro` (2,57, 2,33 e 2,21); depois do `checkout`, `git status` vazio.
+Expected: o `grep` mostra `#475569` nas duas linhas (a do claro já era; a do escuro foi sabotada); `Tests 3 failed | 24 passed (27)` — os três casos `--color-text-muted sobre … no tema escuro` (2,57, 2,33 e 2,21); depois do `checkout`, `git status --short` mostra **só** `?? tests/unit/convexy-tema-contraste.test.ts` (o teste ainda não commitado; o `tema.css` voltou).
 
 - [ ] **Step 4: Commit**
 
@@ -682,7 +706,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 **Files:**
 - Modify: `tests/unit/convexy-tema-cobre-os-tokens.test.ts` (novo `describe` no fim)
 - Modify: `app/convexy/tema.css` (bloco de fontes no fim)
-- Modify: `app/layout.tsx:2` (import), `:28-33` (`atkinson` → `inter` + `lexend`), `:281` (`className`)
+- Modify: `app/layout.tsx:2` (import), `:28-33` (`atkinson` → `inter` + `lexend`), `:281` (`className`) — linhas da `origin/main`; depois da Task 1 as duas últimas andam três linhas: localizar pelo texto
 - Modify: `tests/e2e/aviso-de-caso-no-whatsapp.spec.ts:280`, `tests/e2e/conversa-do-caso.spec.ts:340`, `tests/e2e/passagem-com-contexto.spec.ts:261`
 
 **Interfaces:**
@@ -752,7 +776,7 @@ body {
 
 - [ ] **Step 4: Fontes no `layout.tsx`**
 
-Linha 2 — trocar
+Linha 2 (localizar pelo texto) — trocar
 ```ts
 import { Atkinson_Hyperlegible, IBM_Plex_Mono } from "next/font/google";
 ```
@@ -761,7 +785,7 @@ por
 import { IBM_Plex_Mono, Inter, Lexend_Deca } from "next/font/google";
 ```
 
-Linhas 28-33 — trocar
+Linhas 28-33 da `origin/main` (31-36 depois da Task 1; localizar pelo texto) — trocar
 ```ts
 const atkinson = Atkinson_Hyperlegible({
   subsets: ["latin", "latin-ext"],
@@ -791,7 +815,7 @@ const lexend = Lexend_Deca({
 });
 ```
 
-Linha 281 — trocar
+Linha 281 da `origin/main` (localizar pelo texto `className={`) — trocar
 ```tsx
       className={`${atkinson.variable} ${plexMono.variable}`}
 ```
@@ -833,7 +857,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 **Files:**
 - Modify: `tests/unit/convexy-tema-contraste.test.ts` (imports e `describe` no fim)
 - Create: `lib/convexy/barra-do-navegador.ts`
-- Modify: `app/layout.tsx:5` (import) e `:111-118` (`viewport`)
+- Modify: `app/layout.tsx:5` (import) e `:111-118` (`viewport`) — linhas da `origin/main`; depois das Tasks 1 e 3 o `viewport` andou: localizar pelo texto
 
 **Interfaces:**
 - Consumes: `type CorDaBarra = { readonly media: string; readonly color: string }` de `lib/branding/barra-do-navegador.ts:36`.
@@ -911,7 +935,7 @@ export function coresDaBarraConvexy(): CorDaBarra[] {
 
 - [ ] **Step 4: Ligar no layout**
 
-Em `app/layout.tsx`, apagar a linha 5
+Em `app/layout.tsx`, apagar a linha 5 (localizar pelo texto)
 ```ts
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
 ```
@@ -977,10 +1001,12 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 **Files:**
 - Create: `tests/e2e/convexy-identidade.spec.ts`
 - Modify: `.github/workflows/e2e.yml` (`SPECS_PARTE_1`, linha nova depois de `icone-da-marca.spec.ts`, `:623`)
+- Create, **fora do versionamento**: `$S/layout-comparado.spec.ts` (Step 1b) — copiada para o `tests/e2e/` do worktree descartável só para rodar; nunca entra no clone de trabalho nem no `e2e.yml`.
 
 **Interfaces:**
 - Consumes: `PALETA_DA_SPEC`, `Tema` (Task 1); `lerCreds(): CredsE2E` e `loginComoAdmin(page, creds): Promise<CredsE2E>` de `tests/e2e/helpers/login-admin.ts`; controle de tema `getByRole("button", { name: /^Tema:/ })` (`components/theme/theme-toggle.tsx:26`, no `UserMenu`).
-- Produces: 4 casos e2e na `SPECS_PARTE_1`; evidência em `.superpowers/evidence/convexy-cvx3/` (ignorada pelo git).
+- Consumes também (Step 1b): `scripts/seed-e2e-kanban.ts` (grava `kanban.pipeline_id` no `.e2e-creds.json`: dois leads, "Pedido E2E com responsavel" e "Pedido E2E sem responsavel", no funil padrão — o mesmo seed de `tests/e2e/kanban-owner-filter.spec.ts:39`) e `scripts/seed-e2e-queue.ts` (grava `queue.conversation_id`: conversa com o contato "Cliente Fila E2E" — o de `tests/e2e/queue-assign.spec.ts`); rota `/app/inbox/<id>` (como em `tests/e2e/agenda-google-meet.spec.ts:175`); botão "Novo Lead" (`app/app/pipelines/[id]/_client.tsx:99`, abre `components/kanban/NewLeadDialog.tsx`, título `h2`).
+- Produces: 4 casos e2e na `SPECS_PARTE_1`; evidência em `.superpowers/evidence/convexy-cvx3/` (ignorada pelo git): os quatro PNGs da spec, as capturas de layout em `.superpowers/evidence/convexy-cvx3/layout/` e as medidas `layout-base.json`/`layout-branch.json` na mesma pasta.
 
 Ambiente: o e2e roda contra `next build` + `next start` (`playwright.config.ts`, `webServer`) e um Supabase **local** com o `baseline.sql`. O clone de trabalho não tem `.env.e2e` nem `.e2e-creds.json`, e montar o stack como o CI faz exige mover `supabase/migrations` e sobrescrever `.env.local` (que aponta para produção). Por isso tudo roda num **worktree descartável**, fora de `/tmp` e com `node_modules` real (receita do CLAUDE.md, "QA Visual"). Vermelho: build da `origin/main` com a spec nova copiada. Verde: build da branch.
 
@@ -1168,9 +1194,16 @@ async function escolherTemaPelaTela(page: Page, alvo: "light" | "dark"): Promise
   const botao = page.getByRole("button", { name: /^Tema:/ });
   await expect(botao, "o controle de tema não está na tela").toBeVisible({ timeout: 15_000 });
   for (let i = 0; i < 4; i++) {
-    if ((await temaDaPagina(page)) === alvo) return;
+    const antes = await temaDaPagina(page);
+    if (antes === alvo) return;
     await botao.click();
-    await page.waitForTimeout(150);
+    // Espera o `data-theme` MUDAR (o ThemeProvider aplica num efeito) — sem pausa fixa.
+    // "sistema" com a mídia emulada em claro pode resolver no mesmo valor: aí o
+    // poll estoura e o laço segue para o próximo clique.
+    await expect
+      .poll(() => temaDaPagina(page), { timeout: 3_000 })
+      .not.toBe(antes)
+      .catch(() => undefined);
   }
   throw new Error(`o controle de tema não chegou em "${alvo}" em 4 cliques (data-theme=${await temaDaPagina(page)})`);
 }
@@ -1220,6 +1253,160 @@ test.describe("identidade da Convexy na tela (spec 7.2)", () => {
   });
 });
 ```
+
+- [ ] **Step 1b: Medida de layout base × branch (fora do versionamento)**
+
+As fontes novas mudam largura de título (Review Focus 6). A mesma medida roda no build da base (Step 4) e no da branch (Step 5) e as duas saídas são comparadas por script. Ela **registra**, não reprova: quem decide é a comparação do Step 5. Criar `$S/layout-comparado.spec.ts` (`S` em Global Constraints):
+```ts
+import { execFileSync } from "node:child_process";
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+import { test, expect, type Page } from "@playwright/test";
+
+import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+
+/**
+ * Convexy -cvx.3 — NÃO VERSIONADA. Copiada para o tests/e2e/ do worktree
+ * descartável e rodada duas vezes: CVX3_ROTULO=base (origin/main) e
+ * CVX3_ROTULO=branch (convexy/cvx-3). Para cada tela e largura: captura e
+ * medida por ferramenta de (a) h1/h2/h3 visível com scrollWidth > clientWidth
+ * SEM corte declarado (truncate / line-clamp / text-overflow) e (b) página com
+ * rolagem horizontal. O veredito é do script de comparação (plano, Task 5 Step 5).
+ */
+
+const ROTULO = process.env.CVX3_ROTULO ?? "sem-rotulo";
+const PASTA = path.join(process.cwd(), ".superpowers", "evidence", "convexy-cvx3", "layout");
+const CREDS = path.join(process.cwd(), ".e2e-creds.json");
+const LARGURAS = [1280, 390] as const;
+
+type Medida = {
+  tela: string;
+  largura: number;
+  titulos: number;
+  transbordoInesperado: string[];
+  paginaTransborda: boolean;
+};
+
+async function medir(page: Page, tela: string, largura: number): Promise<Medida> {
+  const m = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const visiveis = Array.from(document.querySelectorAll<HTMLElement>("h1, h2, h3")).filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    const cortaDeProposito = (el: HTMLElement): boolean => {
+      const cs = getComputedStyle(el);
+      const clamp = cs.getPropertyValue("-webkit-line-clamp").trim();
+      return (
+        /\b(truncate|line-clamp-\d+|text-ellipsis)\b/.test(el.className) ||
+        cs.textOverflow === "ellipsis" ||
+        (clamp !== "" && clamp !== "none")
+      );
+    };
+    const inesperado = visiveis
+      .filter((el) => el.scrollWidth > el.clientWidth && !cortaDeProposito(el))
+      .map(
+        (el) =>
+          `${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 50)}" ${el.scrollWidth}>${el.clientWidth}`,
+      );
+    const doc = document.documentElement;
+    return { titulos: visiveis.length, inesperado, pagina: doc.scrollWidth > doc.clientWidth };
+  });
+  return {
+    tela,
+    largura,
+    titulos: m.titulos,
+    transbordoInesperado: m.inesperado,
+    paginaTransborda: m.pagina,
+  };
+}
+
+test("layout comparado: funil, diálogo e conversa a 1280 e 390 px", async ({ page }) => {
+  test.setTimeout(180_000);
+  await loginComoAdmin(page, lerCreds());
+  // Os seeds rodam DEPOIS do login: o login pode re-semear as credenciais e
+  // reescrever o .e2e-creds.json inteiro, levando os blocos kanban/queue junto.
+  execFileSync("npx", ["tsx", "scripts/seed-e2e-kanban.ts"], { stdio: "inherit" });
+  execFileSync("npx", ["tsx", "scripts/seed-e2e-queue.ts"], { stdio: "inherit" });
+  const c = JSON.parse(fs.readFileSync(CREDS, "utf8")) as {
+    kanban?: { pipeline_id: string };
+    queue?: { conversation_id: string };
+  };
+  if (!c.kanban?.pipeline_id || !c.queue?.conversation_id) {
+    throw new Error("seed sem kanban.pipeline_id ou queue.conversation_id no .e2e-creds.json");
+  }
+
+  fs.mkdirSync(PASTA, { recursive: true });
+  const medidas: Medida[] = [];
+  const registrar = async (tela: string, largura: number) => {
+    medidas.push(await medir(page, tela, largura));
+    await page.screenshot({ path: path.join(PASTA, `${ROTULO}-${tela}-${largura}.png`), fullPage: true });
+  };
+
+  for (const largura of LARGURAS) {
+    await page.setViewportSize({ width: largura, height: largura === 390 ? 844 : 800 });
+
+    await page.goto(`/app/pipelines/${c.kanban.pipeline_id}`);
+    await expect(page.getByRole("heading", { name: "Pedido E2E com responsavel" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await registrar("funil", largura);
+
+    await page.getByRole("button", { name: /Novo Lead/i }).click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+    await registrar("dialogo-novo-lead", largura);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+
+    await page.goto(`/app/inbox/${c.queue.conversation_id}`);
+    await expect(page.getByRole("heading", { name: "Cliente Fila E2E" }).first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await registrar("conversa", largura);
+  }
+
+  expect(medidas.every((m) => m.titulos > 0), "tela sem nenhum h1/h2/h3 visível — a medida seria vazia").toBe(
+    true,
+  );
+  fs.writeFileSync(
+    path.join(path.dirname(PASTA), `layout-${ROTULO}.json`),
+    JSON.stringify(medidas, null, 2),
+  );
+});
+```
+E o comparador, `$S/comparar-layout.mjs`:
+```js
+// Uso: node comparar-layout.mjs <pasta com layout-base.json e layout-branch.json>
+import fs from "node:fs";
+import path from "node:path";
+
+const dir = process.argv[2];
+const ler = (r) => JSON.parse(fs.readFileSync(path.join(dir, `layout-${r}.json`), "utf8"));
+const base = ler("base");
+const branch = ler("branch");
+let ok = true;
+for (const m of branch) {
+  const b = base.find((x) => x.tela === m.tela && x.largura === m.largura);
+  if (!b) {
+    console.log(`${m.tela}@${m.largura}: SEM MEDIDA NA BASE`);
+    ok = false;
+    continue;
+  }
+  const zero = m.transbordoInesperado.length === 0 && !m.paginaTransborda;
+  const naoPiorou =
+    m.transbordoInesperado.length <= b.transbordoInesperado.length && (!m.paginaTransborda || b.paginaTransborda);
+  const veredito = zero ? "ok" : naoPiorou ? "igual à base (não piorou)" : "PIOROU";
+  if (!zero && !naoPiorou) ok = false;
+  console.log(
+    `${m.tela}@${m.largura}: títulos=${m.titulos} inesperado=${m.transbordoInesperado.length} (base ${b.transbordoInesperado.length}) página=${m.paginaTransborda} (base ${b.paginaTransborda}) → ${veredito}`,
+  );
+  for (const t of m.transbordoInesperado) console.log(`    ${t}`);
+}
+console.log(ok ? "LAYOUT: OK" : "LAYOUT: PIOROU");
+process.exit(ok ? 0 : 1);
+```
+Os dois arquivos ficam em `$S` (ignorado pelo git) e não são commitados.
 
 - [ ] **Step 2: Registrar na `SPECS_PARTE_1`**
 
@@ -1283,33 +1470,49 @@ Expected: `supabase start` imprime as URLs locais (`API URL: http://127.0.0.1:54
 ```bash
 W=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM-e2e-cvx3
 C=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM
+S="$C/.superpowers/sdd/convexy-cvx3"
 cp "$C/tests/e2e/convexy-identidade.spec.ts" "$W/tests/e2e/"
 cp "$C/tests/unit/_convexy-tema.ts" "$W/tests/unit/"
-cd "$W" && pnpm e2e:build > /tmp/cvx3-build-base.log 2>&1; echo "build exit=$?"
-pnpm exec playwright test tests/e2e/convexy-identidade.spec.ts > /tmp/cvx3-e2e-vermelho.log 2>&1; echo "e2e exit=$?"
-grep -aE "passed|failed" /tmp/cvx3-e2e-vermelho.log | tail -3
-grep -aE "medido rgb\(250, 249, 246\)|#FAF9F6" /tmp/cvx3-e2e-vermelho.log | head -3
+cp "$S/layout-comparado.spec.ts" "$W/tests/e2e/"
+cd "$W" && pnpm e2e:build > "$S/build-base.log" 2>&1; echo "build exit=$?"
+pnpm exec playwright test tests/e2e/convexy-identidade.spec.ts > "$S/e2e-vermelho.log" 2>&1; echo "e2e exit=$?"
+grep -aE "passed|failed" "$S/e2e-vermelho.log" | tail -3
+grep -aE "medido rgb\(250, 249, 246\)|#FAF9F6" "$S/e2e-vermelho.log" | head -3
+CVX3_ROTULO=base pnpm exec playwright test tests/e2e/layout-comparado.spec.ts > "$S/layout-base.log" 2>&1; echo "layout base exit=$?"
+ls .superpowers/evidence/convexy-cvx3/layout-base.json
 ```
-Expected: `build exit=0`; `e2e exit=1`; `4 failed`; o log mostra `--color-bg` `medido rgb(250, 249, 246), esperado #F8FAFC` (o fundo do original) e a `theme-color` com `#FAF9F6`.
+Expected: `build exit=0`; `e2e exit=1`; `4 failed`; o log mostra `--color-bg` `medido rgb(250, 249, 246), esperado #F8FAFC` (o fundo do original) e a `theme-color` com `#FAF9F6`; `layout base exit=0` e o JSON da base listado (seis medidas: três telas × duas larguras). Se o layout da base falhar ao achar um cabeçalho ou botão (seed que não carregou, rota diferente), é defeito da medida, não da `-cvx.3`: corrigir o seletor no `$S/layout-comparado.spec.ts` e rodar de novo — nunca seguir sem a base.
 
 - [ ] **Step 5: Verde — build da branch**
 
 ```bash
 W=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM-e2e-cvx3
 C=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM
+S="$C/.superpowers/sdd/convexy-cvx3"
 cd "$W" && rm tests/e2e/convexy-identidade.spec.ts tests/unit/_convexy-tema.ts
 git checkout --detach convexy/cvx-3
 cp "$C/tests/e2e/convexy-identidade.spec.ts" tests/e2e/
-pnpm e2e:build > /tmp/cvx3-build-cvx3.log 2>&1; echo "build exit=$?"
-pnpm exec playwright test tests/e2e/convexy-identidade.spec.ts tests/e2e/icone-da-marca.spec.ts tests/e2e/logo-moldura-no-tema-escuro.spec.ts > /tmp/cvx3-e2e-verde.log 2>&1; echo "e2e exit=$?"
-grep -aE "passed|failed|skipped" /tmp/cvx3-e2e-verde.log | tail -3
-ls .superpowers/evidence/convexy-cvx3/
+pnpm e2e:build > "$S/build-cvx3.log" 2>&1; echo "build exit=$?"
+pnpm exec playwright test \
+  tests/e2e/convexy-identidade.spec.ts tests/e2e/icone-da-marca.spec.ts tests/e2e/logo-moldura-no-tema-escuro.spec.ts \
+  tests/e2e/aviso-de-caso-no-whatsapp.spec.ts tests/e2e/conversa-do-caso.spec.ts tests/e2e/passagem-com-contexto.spec.ts \
+  tests/e2e/agenda-kit-visual.spec.ts > "$S/e2e-verde.log" 2>&1; echo "e2e exit=$?"
+grep -aE "passed|failed|skipped|flaky" "$S/e2e-verde.log" | tail -4
+CVX3_ROTULO=branch pnpm exec playwright test tests/e2e/layout-comparado.spec.ts > "$S/layout-branch.log" 2>&1; echo "layout branch exit=$?"
+node "$S/comparar-layout.mjs" .superpowers/evidence/convexy-cvx3 | tee "$S/layout-comparacao.txt"
+ls .superpowers/evidence/convexy-cvx3/ .superpowers/evidence/convexy-cvx3/layout/
 ```
-Expected: `build exit=0` (o `next build` baixa Inter e Lexend Deca do Google Fonts — sem rede, falha aqui); `e2e exit=0`, nenhum `failed`; quatro PNGs (`login-claro.png`, `login-escuro.png`, `app-settings-claro.png`, `app-settings-escuro.png`). `logo-moldura-no-tema-escuro` mede o chip branco contra `#131923` (limiar 200/255, spec 9). Se `icone-da-marca` ou `logo-moldura-no-tema-escuro` falharem, rodar as duas no build da base (Step 4) antes de concluir que é regressão — falta de fixture reprova igual nas duas.
+Expected:
+- `build exit=0` (o `next build` baixa Inter e Lexend Deca do Google Fonts — sem rede, falha aqui).
+- `e2e exit=0`, nenhum `failed`. O recorte é a spec nova, as duas de marca (`icone-da-marca`, `logo-moldura-no-tema-escuro` — esta mede o chip branco contra `#131923`, limiar 200/255, spec 9), as três alteradas na Task 3 (`aviso-de-caso-no-whatsapp`, `conversa-do-caso`, `passagem-com-contexto` — conferem `/Inter/i` nos botões) e `agenda-kit-visual` (trilhas de pessoa com a paleta nova). Nenhuma precisa de WAHA (partes 1–3 do CI); as de caso semeiam sozinhas (`scripts/seed-e2e-escalacao.ts`). Se uma falhar, rodá-la no build da base (Step 4, `git checkout --detach origin/main` + `pnpm e2e:build`) antes de concluir que é regressão — falta de fixture reprova igual nas duas; se reprovar igual por fixture que este ambiente não tem, ela fica para o CI, **com o motivo escrito** no relatório da task.
+- Quatro PNGs da spec: `.superpowers/evidence/convexy-cvx3/login-claro.png`, `.superpowers/evidence/convexy-cvx3/login-escuro.png`, `.superpowers/evidence/convexy-cvx3/app-settings-claro.png`, `.superpowers/evidence/convexy-cvx3/app-settings-escuro.png`.
+- `layout branch exit=0`; a comparação termina em `LAYOUT: OK`: em cada tela × largura, `inesperado=0` e `página=false` na branch, ou no máximo igual à base (`igual à base (não piorou)`). `LAYOUT: PIOROU` = parar: o título listado transborda por causa da Lexend/Inter — mostrar ao Victor as duas capturas (`.superpowers/evidence/convexy-cvx3/layout/<rotulo>-<tela>-<largura>.png`, base e branch) e decidir com ele antes de seguir (corrigir no `tema.css` ou aceitar e registrar em "Desvios").
+- Doze capturas em `.superpowers/evidence/convexy-cvx3/layout/` (seis da base, seis da branch).
 
-Olhar os quatro PNGs (Read): fundo claro azulado-frio e escuro quase preto, títulos em Lexend, texto em Inter, nada ilegível. Copiar a evidência para o clone (pasta ignorada pelo git):
+Complemento, não prova: olhar (Read) os quatro PNGs da spec e os pares base × branch do layout — fundo claro azulado-frio e escuro quase preto, títulos em Lexend, texto em Inter, nada ilegível. A prova são as medidas acima. Copiar a evidência para o clone (pasta ignorada pelo git):
 ```bash
 mkdir -p "$C/.superpowers/evidence" && cp -R "$W/.superpowers/evidence/convexy-cvx3" "$C/.superpowers/evidence/"
+rm "$W/tests/e2e/layout-comparado.spec.ts"
 ```
 
 - [ ] **Step 6: Desmontar o ambiente**
@@ -1338,7 +1541,7 @@ Expected: `eslint` sem erro; `git status --short` vazio depois do commit.
 ### Task 6: `CONVEXY.md` e `CHANGELOG.md`
 
 **Files:**
-- Modify: `CONVEXY.md` (seção nova depois de "Cabeçalho do CHANGELOG"; bullets em "Desvios aceitos" e "Afirmações de docs…"; seção de rollback no fim)
+- Modify: `CONVEXY.md` (seção nova depois de "Cabeçalho do CHANGELOG"; bullets em "Desvios aceitos" e "Afirmações de docs…"; tabela conteúdo → versão em "Base e versões"; seção de rollback no fim)
 - Modify: `CHANGELOG.md` (seção acima de `## [1.44.0-cvx.2] — 2026-09-23`, `:11`)
 
 **Interfaces:**
@@ -1375,20 +1578,45 @@ Conferência depois de um merge do original:
 `[data-theme]` do `globals.css`: decidir o valor Convexy e acrescentá-lo ao `tema.css`.
 ```
 
-- [ ] **Step 2: Desvios aceitos e afirmações que não valem**
+- [ ] **Step 2: Desvios aceitos, afirmações que não valem e tabela de versões**
 
 Em `CONVEXY.md`, no fim da lista de `## Desvios aceitos`, acrescentar:
 ```markdown
 - **Paleta (`-cvx.3`)** — popover igual ao cartão (`#131923` no escuro, e não `#171E2A` do
   CRM antigo: os aliases estão fixados em `globals.css:529-532`); campo no escuro igual ao
   fundo (`#0B0D10`, e não `#111720`). Ficam na paleta do original, aceitas: o nome do produto
-  sem logo (`components/branding/MarcaDoProduto.tsx:30-31`, `lib/branding/desenho.ts:101`);
+  sem logo (`components/branding/MarcaDoProduto.tsx:30-31`, `CORES_DA_MARCA` em `lib/branding/desenho.ts:100`);
   `--color-accent-fg` escuro `#161510` (só vale sem cor de marca — aqui há); as prévias do
   `CampoDeLogo` e o fundo dos e-mails (leem `REGUA_DO_PRODUTO`, que não muda —
   `lib/branding/regua-do-produto.ts` é gerado do `globals.css`); o showcase `app/design/`.
 - **Fontes (`-cvx.3`)** — Lexend Deca só em `h1–h3`: `CardTitle` é `<div>` e números de
   destaque ficam na Inter (exigiria classe em componente do original). `display: "swap"` nas
-  duas fontes, como a Atkinson do original.
+  duas fontes, como a Atkinson do original. Só o subconjunto `latin` (a spec manda assim; a
+  Atkinson do original tinha também `latin-ext`): caractere fora do Latin-1 cai na fonte de
+  reserva. `app/convexy/tema.css` declara `@layer properties, theme, base, components, utilities;`
+  (a spec escreve sem `properties`; o Tailwind 4.3 publica essa camada primeiro).
+- **Testes da `-cvx.3`** — `pnpm test:e2e` inteiro não rodou localmente: rodou o recorte do
+  plano (spec nova, `icone-da-marca`, `logo-moldura-no-tema-escuro`, as três specs com
+  `/Inter/i`, `agenda-kit-visual`), e a suíte inteira é a do check `e2e` do PR, com as cinco
+  partes em `pass`. `pnpm test:db` não é exigido (sem schema).
+- **DoD 13 na `-cvx.3`** — Living System Checklist e `docs/testing/user-journey-map.md` não
+  atualizados: mudança só de aparência (sem dado, rota, log, worker ou jornada nova).
+```
+
+Em `## Base e versões`, no fim da lista, acrescentar a tabela conteúdo → versão (os planos
+seguintes calculam o próximo número por `git tag -l 'v1.44.0-cvx.*' --sort=-v:refname | head -1`,
+e se referem ao conteúdo, não ao número):
+```markdown
+
+| Conteúdo | Versão |
+|---|---|
+| Fork só com infraestrutura (namespace das imagens, filtro de versão do kit, cabeçalho do CHANGELOG) | `v1.44.0-cvx.1` |
+| Prova do botão "Atualizar" pelo fork, sem mudança na tela | `v1.44.0-cvx.2` |
+| Paleta, fontes e barra do navegador (spec 7.2) | `v1.44.0-cvx.3` |
+
+Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
+vinha depois (logo escuro, spec 7.3; marca das clínicas desligada, spec 7.4) desloca uma casa.
+Acrescentar uma linha a cada versão publicada.
 ```
 e no fim de `## Afirmações de docs do original que não valem no fork`:
 ```markdown
@@ -1407,14 +1635,31 @@ No fim de `CONVEXY.md`, acrescentar:
 ````markdown
 ## Rollback de uma versão da etapa 3
 
-Para a `-cvx` anterior, dentro do `tmux`, com log (exemplo: da `-cvx.3` para a `-cvx.2`):
+**Quando reverter:** só se algo ficou **ilegível** ou um **fluxo quebrou** (não dá para
+entrar, atender, mover lead, agendar). Defeito cosmético (um corte de título, um tom) não
+reverte: corrige para a frente, na `-cvx.N` seguinte.
+
+Para a `-cvx` anterior, dentro do `tmux`, com log (exemplo: da `-cvx.3` para a `-cvx.2`).
+Antes, conferir que não há sessão com o mesmo nome:
 ```bash
-cd /opt/deskcommcrm && tmux new -s rollback-cvx3 "bash hostgator-setup-kit/update.sh --to v1.44.0-cvx.2 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-cvx3.log; echo FIM; read"
+cd /opt/deskcommcrm && tmux has-session -t rollback-cvx3 2>/dev/null && echo "JÁ EXISTE: tmux attach -t rollback-cvx3 (não criar outra)" \
+  || tmux new -s rollback-cvx3 "bash hostgator-setup-kit/update.sh --to v1.44.0-cvx.2 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-cvx3.log; echo FIM; read"
 ```
-`--force` porque o alvo é ancestral do HEAD (`update.sh:107-114`). Depois disso o botão
-"Atualizar" **volta a oferecer** a versão revertida (ela não é ancestral do HEAD —
-`agent.sh:161-164`): **não clicar**; corrigir com a `-cvx` seguinte. A `-cvx.3` não tem banco
-nem `.env`: o rollback é só código e imagens.
+`--force` porque o alvo é ancestral do HEAD (`update.sh:107-114`). Conferir depois:
+```bash
+cd /opt/deskcommcrm && git describe --tags --exact-match HEAD \
+  && curl -s https://<dominio-de-producao>/api/v1/health | head -c 300; echo \
+  && curl -s -o /dev/null -w "%{http_code}\n" https://<dominio-de-producao>/ \
+  && curl -s https://<dominio-de-producao>/login | grep -oiE "<meta name=\"theme-color\"[^>]*>"
+```
+Esperado: `v1.44.0-cvx.2`; health com `1.44.0-cvx.2`; `307`; a `theme-color` de volta à do
+original — `#faf9f6` (claro) e `#161510` (escuro), os `--color-bg` da régua
+(`lib/branding/regua-do-produto.ts:45` e `:186`).
+
+Depois disso o botão "Atualizar" **volta a oferecer** a versão revertida (ela não é ancestral
+do HEAD — `agent.sh:161-164`): **não clicar**; corrigir com a `-cvx` seguinte (e o conteúdo
+que vinha depois desloca uma casa — "Base e versões"). A `-cvx.3` não tem banco nem `.env`:
+o rollback é só código e imagens.
 ````
 
 - [ ] **Step 4: Seção no CHANGELOG**
@@ -1454,12 +1699,14 @@ Expected: o `sed` mostra `## [Não lançado]`, depois `## [1.44.0-cvx.3] — <ho
 
 ```bash
 cd /Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM
+S=/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM/.superpowers/sdd/convexy-cvx3
 NODE_OPTIONS=--max-old-space-size=8192 pnpm typecheck && pnpm lint
-pnpm test:unit > /tmp/cvx3-vt.log 2>&1; echo "exit=$?"; grep -aE "Test Files|Tests |Errors " /tmp/cvx3-vt.log | tail -3
+pnpm test:unit > "$S/vt.log" 2>&1; echo "exit=$?"; grep -aE "Test Files|Tests |Errors " "$S/vt.log" | tail -3
+grep -aE "Test Files|Tests " "$S/vt-base.log" | tail -2
 node -e 'console.log(require("./package.json").scripts["test:shell"].split(" && ").map(s=>s.replace(/^bash /,"")).join("\n"))' \
-  | while read -r s; do bash "$s" </dev/null >/dev/null 2>&1; echo "$? $s"; done > /tmp/cvx3-shell.txt; diff /tmp/cvx3-shell-base.txt /tmp/cvx3-shell.txt && echo "shell igual à base"
+  | while read -r s; do bash "$s" </dev/null >/dev/null 2>&1; echo "$? $s"; done > "$S/shell.txt"; diff "$S/shell-base.txt" "$S/shell.txt" && echo "shell igual à base"
 ```
-Expected: typecheck e lint exit 0 (lint: 0 erros; só os warnings já existentes); Vitest `exit=0`, sem `failed` e sem linha `Errors`, com **2** arquivos e **44** casos a mais que `/tmp/cvx3-vt-base.log` (`convexy-tema-cobre-os-tokens` 15 + `convexy-tema-contraste` 29); `shell igual à base`.
+Expected: typecheck e lint exit 0 (lint: 0 erros; só os warnings já existentes); Vitest `exit=0`, sem `failed` e sem linha `Errors`, com **2** arquivos e **45** casos a mais que `$S/vt-base.log` — base medida na revisão 2: 1299 arquivos / 13006 casos, logo 1301 / 13051. Os 45: `convexy-tema-cobre-os-tokens` 15 + `convexy-tema-contraste` 29 + **1** em `tests/unit/seed-nao-le-env-local-do-disco.test.ts`, que gera um caso por spec de `tests/e2e/` (a `convexy-identidade.spec.ts` é nova). `shell igual à base`.
 
 - [ ] **Step 2: Workflows, push e PR**
 
@@ -1477,8 +1724,9 @@ Expected: `ci.yml`, `e2e.yml`, `perf.yml`, `publish-image.yml` em `active`; `aco
 
 - [ ] **Step 3: Esperar os cinco obrigatórios resolverem**
 
-`gh pr checks --watch` sai antes de os cinco aparecerem; esperar por nome:
+`gh pr checks --watch` sai antes de os cinco aparecerem; esperar por nome, com teto de ~90 min:
 ```bash
+inicio=$(date +%s)
 while :; do
   linhas=$(gh pr checks convexy/cvx-3 -R victorrabyfs/DeskcommCRM --json name,bucket \
     --jq '.[] | select(.name=="verify" or .name=="invariants" or .name=="build-and-size" or .name=="e2e" or .name=="imagens-ok") | "\(.name) \(.bucket)"' 2>/dev/null)
@@ -1486,6 +1734,7 @@ while :; do
   pendentes=$(printf '%s\n' "$linhas" | grep -c ' pending$')
   echo "$(date +%T) obrigatórios vistos=$vistos/5 pendentes=$pendentes"
   [ "$vistos" -eq 5 ] && [ "$pendentes" -eq 0 ] && break
+  [ $(( $(date +%s) - inicio )) -gt 5400 ] && { echo "TETO DE 90 MIN — parar e investigar (fila? job preso?)"; break; }
   sleep 60
 done
 printf '%s\n' "$linhas" | sort -u
@@ -1496,9 +1745,11 @@ Expected: `build-and-size pass`, `e2e pass`, `imagens-ok pass`, `invariants pass
 **Se `build-and-size`, `e2e` ou `imagens-ok` falhar**, ver se é o download do Google Fonts no `next build` (a `-cvx.3` passou a baixar Inter e Lexend Deca):
 ```bash
 id=$(gh run list -R victorrabyfs/DeskcommCRM --branch convexy/cvx-3 --workflow perf.yml --limit 1 --json databaseId --jq '.[0].databaseId')   # perf.yml → build-and-size; e2e.yml → e2e; publish-image.yml → imagens-ok
-gh run view "$id" -R victorrabyfs/DeskcommCRM --log-failed | grep -iE "fonts\.(googleapis|gstatic)\.com|Failed to fetch" | head -3
+gh run view "$id" -R victorrabyfs/DeskcommCRM --log-failed | grep -iE "fonts\.(googleapis|gstatic)\.com|@vercel/turbopack-next/internal/font/google|Failed to fetch" | head -3
 gh run rerun "$id" -R victorrabyfs/DeskcommCRM --failed
 ```
+Se o laço bater no teto de 90 min: **não** seguir para o merge — olhar `gh run list -R victorrabyfs/DeskcommCRM --branch convexy/cvx-3` (job em fila, preso ou pedindo aprovação) e decidir com o Victor.
+
 Se o `grep` achar o erro de rede: **um** `rerun --failed` e voltar ao laço. Se falhar de novo, ou se o erro for outro: parar e investigar (superpowers:systematic-debugging), corrigir na branch; nunca desligar check.
 
 - [ ] **Step 4: Data da seção e merge por merge commit**
@@ -1506,23 +1757,40 @@ Se o `grep` achar o erro de rede: **um** `rerun --failed` e voltar ao laço. Se 
 ```bash
 git fetch -q origin && git diff --quiet HEAD origin/convexy/cvx-3 && echo "branch local = remota"
 grep -n "^## \[1.44.0-cvx.3\] — $(date +%F)$" CHANGELOG.md || echo "DATA DA SEÇÃO DIFERENTE DE HOJE — corrigir, commitar, empurrar e voltar ao Step 3"
+```
+Expected: `branch local = remota`; a linha da seção com a data de hoje.
+
+**Pedir confirmação explícita ao Victor para o merge** (mostrar os cinco obrigatórios e as cinco `e2e-parte` em `pass`, e o `LAYOUT: OK` da Task 5). Só com o "sim" dele:
+```bash
 gh pr merge convexy/cvx-3 -R victorrabyfs/DeskcommCRM --merge
 gh pr view convexy/cvx-3 -R victorrabyfs/DeskcommCRM --json state,mergeCommit --jq '.state, .mergeCommit.oid'
 ```
-Expected: `branch local = remota`; a linha da seção com a data de hoje; `MERGED` e o sha do merge.
+Expected: `MERGED` e o sha do merge — **anotar o sha**, o Step 5 o usa.
 
 - [ ] **Step 5: Tag e publicação**
 
 ```bash
 git fetch origin main
 test "$(gh pr view convexy/cvx-3 -R victorrabyfs/DeskcommCRM --json state --jq .state)" = MERGED || { echo "PR não está MERGED — não criar tag"; exit 1; }
+merge=$(gh pr view convexy/cvx-3 -R victorrabyfs/DeskcommCRM --json mergeCommit --jq .mergeCommit.oid)
+test "$(git rev-parse origin/main)" = "$merge" || { echo "origin/main ($(git rev-parse origin/main)) não é o merge do PR ($merge) — não criar tag"; exit 1; }
 git tag -a v1.44.0-cvx.3 -m "Convexy 1.44.0-cvx.3 — paleta, fontes e barra do navegador" origin/main
+git show --no-patch --format='%H %s' v1.44.0-cvx.3^{commit}
+```
+Expected: o commit da tag é o sha do merge anotado no Step 4. **Pedir confirmação explícita ao Victor para empurrar a tag** (a tag publica as imagens e move a `stable` que a VPS instala). Só com o "sim" dele:
+```bash
 git push origin v1.44.0-cvx.3
 until id=$(gh run list -R victorrabyfs/DeskcommCRM --workflow publish-image.yml --event push --limit 20 --json databaseId,headBranch --jq '[.[]|select(.headBranch=="v1.44.0-cvx.3")][0].databaseId // empty') && [ -n "$id" ]; do sleep 5; done
 gh run watch "$id" -R victorrabyfs/DeskcommCRM --exit-status
 git ls-remote --tags origin
 ```
 Expected: o `pre-push` local aceita (`vX.Y.Z-cvx.N`); o run termina verde (inclui `a-tag-veio-da-main` e `promover-stable`); `ls-remote` lista `v1.44.0`, `v1.44.0-cvx.1`, `v1.44.0-cvx.2`, `v1.44.0-cvx.3`, cada uma com `^{}`.
+
+**Se o run da tag falhar**: o `build-and-push` também roda `next build` e pode falhar ao baixar a Inter/Lexend do Google Fonts.
+```bash
+gh run view "$id" -R victorrabyfs/DeskcommCRM --log-failed | grep -iE "fonts\.(googleapis|gstatic)\.com|@vercel/turbopack-next/internal/font/google|Failed to fetch" | head -5
+```
+Se o `grep` achar o erro de fonte: **um** `gh run rerun "$id" -R victorrabyfs/DeskcommCRM --failed` e de novo `gh run watch "$id" -R victorrabyfs/DeskcommCRM --exit-status`. **Nunca** apagar nem refazer a tag. Se falhar de novo, ou se o erro for outro: parar e investigar com o Victor (a tag já existe; a `stable` não andou enquanto `promover-stable` não passar).
 
 - [ ] **Step 6: Conferir as imagens publicadas**
 
@@ -1550,9 +1818,9 @@ Expected: em cada imagem, `cvx3` e `stable` com `200` e **o mesmo digest**.
 
 Pedir confirmação ao Victor (a recriação dos contêineres derruba o app por alguns segundos — fora do pico das clínicas). Depois:
 ```bash
-ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; git tag -l | tr "\n" " "; echo; git config --get versionsort.suffix || echo "versionsort.suffix vazio (ok)"; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300'
+ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; git tag -l | tr "\n" " "; echo; git config --get versionsort.suffix || echo "versionsort.suffix vazio (ok)"; git config --get remote.origin.fetch; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300'
 ```
-Expected: `v1.44.0-cvx.2`; tags só `v1.44.0 v1.44.0-cvx.1 v1.44.0-cvx.2` (e `v1.44.0-cvx.3`, se o agente já buscou); `versionsort.suffix vazio (ok)`; health `1.44.0-cvx.2`. Tag intrusa: repetir a limpeza de `CONVEXY.md`, "Migrar uma VPS do original para o fork", passo 3, antes de seguir.
+Expected: `v1.44.0-cvx.2`; tags só `v1.44.0 v1.44.0-cvx.1 v1.44.0-cvx.2` (e `v1.44.0-cvx.3`, se o agente já buscou); `versionsort.suffix vazio (ok)`; `+refs/heads/main:refs/remotes/origin/main` (outro valor = a VPS busca branches além da `main`: parar e perguntar); health `1.44.0-cvx.2`. Tag intrusa: repetir a limpeza de `CONVEXY.md`, "Migrar uma VPS do original para o fork", passo 3, antes de seguir.
 
 - [ ] **Step 2: Atualizar pelo botão (Victor)**
 
@@ -1565,15 +1833,33 @@ ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; g
 ```
 Expected: `v1.44.0-cvx.3`; as quatro `*_IMAGE` em `ghcr.io/victorrabyfs/…:1.44.0-cvx.3`; `307`; health com `"version":"1.44.0-cvx.3"`; duas metas `theme-color`, uma com `media="(prefers-color-scheme: light)"` e `content="#F8FAFC"`, outra com `(prefers-color-scheme: dark)` e `content="#0B0D10"`.
 
-- [ ] **Step 4: Conferência em tela, claro e escuro (Victor, ou Claude pelo navegador com aprovação)**
+- [ ] **Step 4: Conferência em tela, claro e escuro — por ferramenta (Claude pelo navegador, com aprovação do Victor)**
 
-Recarregar sem cache (Cmd+Shift+R). Nos dois temas (controle de tema no topo): `/login` (título em Lexend, texto em Inter, fundo `#F8FAFC`/`#0B0D10`); `/app/settings`; caixa de entrada e uma conversa; um diálogo (título `h2` em Lexend); campos de formulário (borda visível no escuro); a barra lateral com o logo claro (no escuro ele continua com o chip branco até a `-cvx.4`); a agenda (trilhas de pessoa legíveis); no celular, a barra do navegador na cor do fundo. Nada ilegível, nenhum fundo "bege" do original sobrando.
+Com o Claude in Chrome, na sessão do Victor (ele aprova o uso do navegador e cada tela), recarregando sem cache. O `/login` **não tem** controle de tema (`app/(public)/layout.tsx`): para vê-lo no escuro, escolher o escuro dentro do `/app` (controle "Tema:" no menu do usuário) e sair — a escolha fica no navegador —, ou trocar a preferência do sistema operacional. Telas: `/login`, `/app/settings`, um funil com lead (kanban), a caixa de entrada com uma conversa, um diálogo aberto (título `h2`), a agenda; cada uma no claro e no escuro, e `/app/settings` e o funil também a 390 px de largura.
 
-**Se algo estiver errado:** parar e perguntar ao Victor. Rollback (só com a aprovação dele):
-```bash
-ssh -t <host-ssh> 'cd /opt/deskcommcrm && tmux new -s rollback-cvx3 "bash hostgator-setup-kit/update.sh --to v1.44.0-cvx.2 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-cvx3.log; echo FIM; read"'
+Em cada tela, medir pelo `javascript_tool`:
+```js
+JSON.stringify({
+  url: location.pathname,
+  largura: innerWidth,
+  tema: document.documentElement.getAttribute("data-theme"),
+  bg: getComputedStyle(document.documentElement).getPropertyValue("--color-bg").trim(),
+  body: getComputedStyle(document.body).fontFamily,
+  h1: document.querySelector("h1") ? getComputedStyle(document.querySelector("h1")).fontFamily : null,
+  paginaTransborda: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+})
 ```
-Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-cvx3'`. Depois do rollback o botão **volta a oferecer** a `-cvx.3` (ela não é ancestral do HEAD — `agent.sh:161-164`): **não clicar**; a correção sai como `v1.44.0-cvx.4`.
+Esperado: `bg` `#F8FAFC` no claro e `#0B0D10` no escuro (sem distinção de caixa; o minificador pode encurtar); `body` começando por Inter; `h1` começando por Lexend (exceto `h1.font-mono`); `paginaTransborda` `false`. Gravar as medidas, uma linha JSON por tela, em `.superpowers/evidence/convexy-cvx3/vps-medidas.jsonl`, e as capturas em `.superpowers/evidence/convexy-cvx3/` com os nomes `vps-login-claro`, `vps-login-escuro`, `vps-app-claro`, `vps-app-escuro`, `vps-kanban-claro`, `vps-kanban-escuro` e `vps-app-390` (PNG). Se a ferramenta só devolver a imagem na conversa, sem arquivo, registrar isso no relatório — a prova é a medida; a captura é complemento. Também: no escuro, logo da barra lateral com o chip branco (fica até a versão do logo escuro, spec 7.3); no celular do Victor, a barra do navegador na cor do fundo.
+
+**Se algo estiver errado:** parar e perguntar ao Victor. Regra de decisão: **reverter só se algo ficou ilegível ou um fluxo quebrou** (entrar, atender, mover lead, agendar); defeito cosmético → corrigir para a frente, na `-cvx.N` seguinte. Rollback (só com a aprovação dele), conferindo antes que a sessão `tmux` não existe:
+```bash
+ssh -t <host-ssh> 'cd /opt/deskcommcrm && if tmux has-session -t rollback-cvx3 2>/dev/null; then echo "JÁ EXISTE: tmux attach -t rollback-cvx3"; else tmux new -s rollback-cvx3 "bash hostgator-setup-kit/update.sh --to v1.44.0-cvx.2 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-cvx3.log; echo FIM; read"; fi'
+```
+Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-cvx3'`. Conferir o rollback:
+```bash
+ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300; echo; curl -s -o /dev/null -w "%{http_code}\n" https://<dominio-de-producao>/; curl -s https://<dominio-de-producao>/login | grep -oiE "<meta name=\"theme-color\"[^>]*>"'
+```
+Esperado: `v1.44.0-cvx.2`; health `"version":"1.44.0-cvx.2"`; `307`; `theme-color` de volta à do original — `#faf9f6` (claro) e `#161510` (escuro), os `--color-bg` de `lib/branding/regua-do-produto.ts:45` e `:186`, que o `viewport` da `origin/main` publica por `coresDaBarraDoNavegador(REGUA_DO_PRODUTO)`. Depois do rollback o botão **volta a oferecer** a `-cvx.3` (ela não é ancestral do HEAD — `agent.sh:161-164`): **não clicar**; a correção sai como a `-cvx.N` seguinte (a `-cvx.4`), e o conteúdo que vinha depois (logo escuro, marca desligada) desloca uma casa — atualizar a tabela de "Base e versões" do `CONVEXY.md`.
 
 ---
 
@@ -1589,7 +1875,7 @@ Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-cvx3'`. Depois do rol
 | 7.2.1 seletor dobrado, fora de camada, sem `!important`, tabela e sombras | Task 1 (teste de forma, de valores, de sombras); Task 5 (folha publicada, rgb na tela) |
 | 7.2.1 aliases acompanham | Task 5 (`bg-popover`, `border-input`) |
 | 7.2.2 Inter em `--font-atkinson`, Lexend em `--font-lexend`, `className` | Task 3 |
-| 7.2.2 `@layer theme, base, components, utilities;`; `h1–h3` em `@layer base`; `ss01` anulado fora | Tasks 1, 3; Task 5 (sonda `font-mono`, `fontFeatureSettings`) |
+| 7.2.2 `@layer properties, theme, base, components, utilities;` (desvio declarado); `h1–h3` em `@layer base`; `ss01` anulado fora | Tasks 1, 3; Task 5 (sonda `font-mono`, `fontFeatureSettings`) |
 | 7.2.3 barra `#F8FAFC`/`#0B0D10`, régua intacta | Task 4; Task 5 (meta); Task 8 (`curl`) |
 | 7.2.4 acento derivado e cores fixas aceitas | Task 2; Task 6 (desvios) |
 | 7.2.5 `convexy-tema-cobre-os-tokens` (a) e (b) | Task 1 |
@@ -1597,11 +1883,16 @@ Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-cvx3'`. Depois do rol
 | 7.2.5 e2e em `/login` e `/app/settings`, fontes pelo primeiro nome, tokens por sonda nos dois temas | Task 5 |
 | 7.2.5 rollback e botão que reoferece | Task 6 Step 3; Task 8 Step 4 |
 | 7.1 `CONVEXY.md` (trecho, local, motivo, reaplicar; docs que não valem, incl. `docs/white-label.md:80`) | Task 6 |
-| 7.1 suítes antes da tag; conferência em tela | Task 7 Step 1; Task 5; Task 8 Step 4 |
+| 7.1 suítes antes da tag (e2e local em recorte + CI completo — desvio declarado); conferência em tela | Task 7 Steps 1 e 3; Task 5 Step 5; Task 8 Step 4 |
+| Risco de layout das fontes novas (títulos com e sem corte, página) | Task 5 Steps 1b, 4 e 5 (medida base × branch, 1280 e 390 px) |
+| 7.5 diff contra a base bate com o `CONVEXY.md` | Task 6 Step 5 |
 
 ## Pronto quando
 
-- `/api/v1/health` responde `1.44.0-cvx.3`, aplicada **pelo botão** (Task 8);
+- `/api/v1/health` responde `1.44.0-cvx.3`, aplicada **pelo botão** (Task 8), e o domínio responde `307` (Task 8 Step 3);
 - `curl` de `/login` traz `theme-color` `#F8FAFC` e `#0B0D10` (Task 8 Step 3);
-- conferência em tela, claro e escuro, sem regressão visível (Task 8 Step 4);
-- `CONVEXY.md` registra cada alteração em arquivo do original e o rollback (Task 6).
+- as quatro imagens `:1.44.0-cvx.3` publicadas e a `stable` com **o mesmo digest** de cada uma (Task 7 Step 6);
+- DoD 12 com evidência por ferramenta em `.superpowers/evidence/convexy-cvx3/`: os quatro PNGs da spec e2e, as doze capturas de layout base × branch com `LAYOUT: OK` (Task 5 Step 5), e as medidas e capturas da VPS em claro e escuro, incluindo o kanban e 390 px (Task 8 Step 4) — sem regressão legível;
+- CI do PR com os cinco obrigatórios e as cinco `e2e-parte (1..5)` em `pass`, nenhuma `skipping` (Task 7 Step 3);
+- spec 7.5: `git diff --name-only refs/upstream-tags/v1.44.0 main` = arquivos registrados no `CONVEXY.md` + arquivos novos da `-cvx.3` + `docs/superpowers/` (Task 6 Step 5, conferido de novo depois do merge);
+- `CONVEXY.md` registra cada alteração em arquivo do original, os desvios, a tabela conteúdo → versão e o rollback (Task 6).
