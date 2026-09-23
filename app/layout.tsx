@@ -24,6 +24,9 @@ import { ThemeProvider } from "@/lib/theme";
 import { Providers } from "./providers";
 import { PublicEnvScript } from "./public-env-script";
 import "./globals.css";
+// Convexy: tema da Convexy (paleta e fontes) por cima do globals.css — depois
+// dele, de propósito. CONVEXY.md, "Paleta, fontes e barra do navegador".
+import "./convexy/tema.css";
 
 const atkinson = Atkinson_Hyperlegible({
   subsets: ["latin", "latin-ext"],
