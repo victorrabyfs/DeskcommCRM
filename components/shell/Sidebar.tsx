@@ -156,8 +156,10 @@ export function SidebarContent({
                 build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
                 Altura fixa e largura livre porque a arte enviada tem proporção
                 desconhecida; forçar as duas distorceria o logo de quem configurou. */}
+              {/* Convexy: `h-10` (40px) no lugar do `h-7` do original — o logo da
+                marca ficava pequeno demais na barra. CONVEXY.md, "Logo maior". */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
+              <img src={logo} alt={nome} className="h-10 w-auto max-w-[10rem] object-contain" />
             </div>
             {/* Convexy (spec 7.3.5): com o logo do tema escuro, a moldura INTEIRA
               some no escuro (acima) e este logo aparece no lugar dela, sem
@@ -168,7 +170,7 @@ export function SidebarContent({
               <img
                 src={logoEscuro}
                 alt={nome}
-                className="hidden h-7 w-auto max-w-[10rem] object-contain dark:block"
+                className="hidden h-10 w-auto max-w-[10rem] object-contain dark:block"
               />
             ) : null}
           </>
