@@ -56,6 +56,13 @@ const SUPERFICIE_ESCURA = superficie("escuro");
 
 export type EscopoDoLogo = "instalacao" | "organizacao";
 
+/**
+ * Convexy (spec 7.3.3): `escuro` = o logo que a INSTALAÇÃO mostra no tema escuro,
+ * no lugar do claro com moldura. Só existe com `escopo="instalacao"` (a rota
+ * recusa o resto). CONVEXY.md, "Logo escuro".
+ */
+export type VarianteDoLogo = "claro" | "escuro";
+
 interface Props {
   readonly escopo: EscopoDoLogo;
   /**
@@ -84,6 +91,12 @@ interface Props {
   readonly origemDoHerdado: string;
   /** O nome em vigor — vira o `alt` da prévia e o texto do caso sem logo. */
   readonly nomeEmVigor: string;
+  /**
+   * Convexy (spec 7.3.3): qual logo este campo troca. Padrão `claro`. O `id` e o
+   * `data-campo-de-logo` só ganham o sufixo `-escuro` nesta variante:
+   * `#logo-instalacao` continua único para os e2e do original.
+   */
+  readonly variante?: VarianteDoLogo;
 }
 
 /** Mensagem por código de recusa da rota. */
@@ -101,8 +114,11 @@ export function CampoDeLogo({
   logoHerdado,
   origemDoHerdado,
   nomeEmVigor,
+  variante = "claro",
 }: Props) {
   const t = useT();
+  // Convexy: a chave do DOM (`id`, `data-campo-de-logo`) — sem sufixo no claro.
+  const chave = variante === "escuro" ? `${escopo}-escuro` : escopo;
   const router = useRouter();
   const entrada = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
@@ -217,6 +233,7 @@ export function CampoDeLogo({
     try {
       const corpo = new FormData();
       corpo.set("escopo", escopo);
+      corpo.set("variante", variante);
       corpo.set("file", arquivo);
       const resposta = await fetch("/api/v1/marca/logo", { method: "POST", body: corpo });
       if (!resposta.ok) {
@@ -238,7 +255,9 @@ export function CampoDeLogo({
   async function remover() {
     setEnviando(true);
     try {
-      const resposta = await fetch(`/api/v1/marca/logo?escopo=${escopo}`, { method: "DELETE" });
+      const resposta = await fetch(`/api/v1/marca/logo?escopo=${escopo}&variante=${variante}`, {
+        method: "DELETE",
+      });
       if (!resposta.ok) {
         toast.error(await razaoDaFalha(resposta));
         return;
@@ -255,13 +274,15 @@ export function CampoDeLogo({
   }
 
   return (
-    <div className="space-y-4" data-campo-de-logo={escopo} data-hidratado={hidratado ? "" : undefined}>
+    <div className="space-y-4" data-campo-de-logo={chave} data-hidratado={hidratado ? "" : undefined}>
       <div className="space-y-2">
-        <Label htmlFor={`logo-${escopo}`}>{t("Logo")}</Label>
+        <Label htmlFor={`logo-${chave}`}>
+          {variante === "escuro" ? t("Logo para o tema escuro") : t("Logo")}
+        </Label>
         <div className="flex flex-wrap items-center gap-3">
           <input
             ref={entrada}
-            id={`logo-${escopo}`}
+            id={`logo-${chave}`}
             type="file"
             // `image/png,image/jpeg` FILTRA o seletor de arquivos, não decide
             // nada: quem decide é o farejador de bytes do servidor. O atributo
@@ -288,6 +309,9 @@ export function CampoDeLogo({
         </p>
       </div>
 
+      {variante === "escuro" ? (
+        <PreviaDoLogoEscuro logo={logoGravado} nome={nomeEmVigor} />
+      ) : (
       <div className="space-y-2">
         <p className="text-sm text-text-muted">
           {/*
@@ -361,6 +385,39 @@ export function CampoDeLogo({
           ))}
         </div>
       </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Convexy (spec 7.3.3) — a prévia do logo do TEMA ESCURO, num bloco próprio: a
+ * prévia de cima (duas caixas, com o chip claro na escura) é a do logo claro e
+ * continua como está. Aqui o logo aparece CRU sobre a superfície escura da régua,
+ * que é exatamente o que a barra lateral e a tela de entrada desenham com ele
+ * (sem moldura). Atributo próprio, `data-previa-do-logo-escuro`: o seletor
+ * `[data-previa-do-logo='escuro'] img` dos e2e do original continua único.
+ * Sem logo escuro, nenhuma imagem — o sistema segue com o claro na moldura.
+ */
+function PreviaDoLogoEscuro({ logo, nome }: { readonly logo: string | null; readonly nome: string }) {
+  const t = useT();
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-text-muted">
+        {logo
+          ? t("Como o logo aparece no tema escuro, sem moldura:")
+          : t("Sem logo para o tema escuro, o sistema mostra o logo claro sobre uma moldura branca.")}
+      </p>
+      {logo ? (
+        <div
+          data-previa-do-logo-escuro=""
+          className="flex h-24 items-center justify-center rounded-sm border border-border px-4 sm:max-w-[50%]"
+          style={{ backgroundColor: SUPERFICIE_ESCURA }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logo} alt={nome} className="max-h-12 w-auto max-w-full object-contain" />
+        </div>
+      ) : null}
     </div>
   );
 }

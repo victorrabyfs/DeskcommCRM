@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { loadAuthUser } from "@/lib/auth/server";
 import { marcaDaInstalacao } from "@/lib/branding/instalacao";
+import { logoDaCamada } from "@/lib/branding/logo";
 import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
 import { camadaDaInstalacao, camadaDoAmbiente, resolverMarca } from "@/lib/branding/resolve";
 import { env } from "@/lib/env";
@@ -95,6 +96,8 @@ export default async function Page() {
           app_name: linha?.app_name ?? null,
           logo_url: linha?.logo_url ?? null,
           logo_path: linha?.logo_path ?? null,
+          // Convexy (spec 7.3.3): o arquivo do tema escuro, como está no banco.
+          logo_dark_path: linha?.logo_dark_path ?? null,
           accent_hex: linha?.accent_hex ?? null,
           // `true` é o default da coluna: sem linha ainda, é o valor que o
           // `upsert` gravaria de qualquer forma.
@@ -103,6 +106,10 @@ export default async function Page() {
         nomeEmVigor={marca.name}
         logoEmVigor={marca.logoUrl}
         logoDoAmbiente={semOArquivo.logoUrl}
+        // Convexy: a URL do arquivo escuro GRAVADO — direto da coluna, e não da
+        // marca resolvida (que só o traz junto do logo claro da instalação): a
+        // tela mostra o que está salvo mesmo quando ele ainda não aparece.
+        logoEscuroEmVigor={logoDaCamada(linha?.logo_dark_path, null)}
         origens={marca.origens}
         // `seeded_from_env` ligado significa que a linha é cópia do arquivo de
         // instalação, não escolha de alguém nesta tela. Sem linha, também não é.
