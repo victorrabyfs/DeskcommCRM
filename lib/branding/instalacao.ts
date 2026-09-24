@@ -101,8 +101,11 @@ export type SementeDoAmbiente = {
  * imagem. Mesma exposição que `fallback_at`/`fallback_reason` já tinham desde a
  * 0155; tratá-la diferente agora criaria duas regras para o mesmo caso.
  */
+// Convexy (spec 7.3.4): `logo_dark_path` (migration 9001) entra pela MESMA regra
+// do tudo-ou-nada descrita acima — o `update.sh` aplica o baseline antes de subir
+// a imagem. CONVEXY.md, "Logo escuro".
 const COLUNAS =
-  "app_name, logo_url, logo_path, accent_hex, show_powered_by, seeded_from_env, fallback_at, fallback_reason";
+  "app_name, logo_url, logo_path, logo_dark_path, accent_hex, show_powered_by, seeded_from_env, fallback_at, fallback_reason";
 
 /**
  * Códigos de recusa — os que significam "a cor configurada NÃO pintou".
