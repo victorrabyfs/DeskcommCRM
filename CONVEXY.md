@@ -33,6 +33,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Paleta, fontes e barra do navegador (spec 7.2) | `v1.44.0-cvx.3` |
 | Atualização para a base 1.47.0 do original (sem mudança da Convexy) | `v1.47.0-cvx.1` |
 | Logo escuro em `/admin/marca` (spec 7.3; migration 9001) | `v1.47.0-cvx.2` |
+| Logo maior na barra lateral (40px de altura em vez de 28px) | `v1.47.0-cvx.3` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -127,6 +128,18 @@ Arquivos novos (código da Convexy — não conflitam num merge):
 | `lib/i18n/dicionario.ts` | quatro chaves (com `es`) logo depois de `"Assim ele aparece:"`, com o comentário `Convexy` | reaplicar o bloco no mesmo lugar, não no fim do objeto |
 | `.github/workflows/e2e.yml` | linha `convexy-logo-escuro.spec.ts` em `SPECS_PARTE_1`, logo depois de `convexy-identidade.spec.ts` | dentro do bloco `>-`, sem comentário |
 | `CHANGELOG.md` | `## [1.47.0-cvx.2]` | ordem de "Base e versões" |
+
+### Logo maior (`v1.47.0-cvx.3`)
+
+O logo da barra lateral passa de `h-7` (28px) para `h-10` (40px) de altura, nos dois `<img>` (o
+claro, dentro da moldura, e o escuro). O cabeçalho da barra continua `h-14` (56px): com a moldura
+do tema escuro (`dark:py-1`) o conjunto fica em 48px e cabe. A largura segue limitada por
+`max-w-[10rem]`. A tela de entrada não muda (já era `h-10`).
+
+| Arquivo | O que muda | Ao mesclar o original |
+|---|---|---|
+| `components/shell/Sidebar.tsx` | `h-7` → `h-10` nos dois `<img>` do logo, com o comentário `Convexy` | reaplicar a troca de classe |
+| `CHANGELOG.md` | `## [1.47.0-cvx.3]` | ordem de "Base e versões" |
 
 Conferência depois de um merge do original: o CI do PR do merge (checks `verify` e `invariants`)
 com `tests/invariants/convexy-logo-escuro.test.ts`, `tests/unit/convexy-logo-escuro*.test.ts*`,
