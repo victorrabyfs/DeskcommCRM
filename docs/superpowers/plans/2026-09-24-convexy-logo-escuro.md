@@ -1,5 +1,7 @@
 # Convexy — logo escuro em `/admin/marca` (`v1.47.0-cvx.2`) — plano de implementação
 
+**Revisão 2 (2026-09-24):** incorpora duas revisões (código × CI e spec/operação) e decisões do Victor: marca só da Convexy; nenhuma clínica opera ainda (atualização a qualquer hora, sem janela); logo escuro vem do SVG da plataforma atual e é convertido no navegador.
+
 > **Execução sem recursos na máquina local, desde a primeira linha.** Decisão do Victor (mantida
 > da Revisão 3 do plano da `-cvx.3`): nada de `pnpm`/`npm`/`npx`/`node`/`vitest`/`tsc`/`eslint`,
 > Docker, Supabase local, `brew`, Playwright, `git worktree`, build, instalação ou processo em
@@ -24,9 +26,9 @@
 
 - Clone de trabalho: `/Users/victorraby/Downloads/Quantux/backup-deskcommcrm/DeskcommCRM`. Branch: **`convexy/logo-escuro`**, criada de `origin/main` (`0f34ef09d`, merge da `v1.47.0-cvx.1`, base `v1.47.0` do original; `refs/upstream-tags/v1.47.0` existe no clone), já contendo o commit deste plano. **Nunca tocar** em `.git/hooks` (o `pre-push` da etapa 2 continua valendo) nem nas branches `convexy/identidade-v142` e `convexy/identidade-pre-scrub`.
 - Repositório: `victorrabyfs/DeskcommCRM`. Todo `gh` leva `-R victorrabyfs/DeskcommCRM`; PR só na `main` do fork; **merge só por merge commit**. Tag `v1.47.0-cvx.2` anotada, criada **só depois de o PR estar `MERGED`** e de `origin/main` ser o sha do merge, empurrada **pelo nome** (`git push origin v1.47.0-cvx.2`), nunca `--tags`/`--follow-tags`. Tag publicada nunca é refeita (corrigir = `-cvx.3`).
-- `CHANGELOG.md`: seção `## [1.47.0-cvx.2] — AAAA-MM-DD` (data do dia do corte) logo abaixo de `## [Não lançado]` e **acima** de `## [1.47.0-cvx.1] — 2026-09-24`. Sem `### ⚠️ Requer atenção`: o banco muda sozinho pelo `update.sh`, o `.env` não muda, e enviar o logo escuro é opcional.
+- `CHANGELOG.md`: seção `## [1.47.0-cvx.2] — <data>` — a **data real** (formato `2026-09-24`) do dia em que a Task 7 escreve a seção; `AAAA-MM-DD` literal não casa com `CABECALHO_VERSAO_CONVEXY` e reprova o `verify` — logo abaixo de `## [Não lançado]` e **acima** de `## [1.47.0-cvx.1] — 2026-09-24`. Sem `### ⚠️ Requer atenção`: o banco muda sozinho pelo `update.sh`, o `.env` não muda, e enviar o logo escuro é opcional.
 - Sem `.env`, sem fragmento em `.changes/` (desvio DoD 17 já registrado). Destino (DoD 18): **instalação do fork**.
-- Placeholders de infraestrutura (o repositório é público): `<dominio-de-producao>`, `<host-ssh>`, `<projeto-supabase>`. Pasta da VPS: `/opt/deskcommcrm`. `update.sh` na VPS roda **sempre dentro de `tmux`**, com log `/root/update-<data>-<rótulo>.log`.
+- Placeholders de infraestrutura (o repositório é público): `<dominio-de-producao>`, `<host-ssh>`, `<projeto-supabase>`. Os valores reais vêm da memória do projeto (`deskcommcrm-deploy-vps.md`, fora do repositório) ou do Victor, e **nunca** são escritos no repositório — nem em commit, nem em comentário de PR. Pasta da VPS: `/opt/deskcommcrm`. `update.sh` na VPS roda **sempre dentro de `tmux`**, com log `/root/update-<data>-<rótulo>.log`.
 - Nenhum `.md` cita nome de imagem com extensão entre crases (nem link), exceto caminho versionado real (`tests/unit/evidencia-citada.test.ts`); caminho sob `.superpowers/` é livre. Nenhum arquivo novo em `app/`, `components/`, `lib/` escreve a palavra do produto original (`tests/unit/branding.test.ts`).
 - Commits terminam com a linha em branco e `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`.
 - Números de linha citados são os da `origin/main` `0f34ef09d`, conferidos um a um nesta revisão. Depois que uma task edita um arquivo, as linhas andam: **localizar pelo texto citado**, nunca pelo número. Se o texto citado não existir, parar e relatar — nunca "adaptar".
@@ -104,7 +106,7 @@ Conferido contra `origin/main` `0f34ef09d` (base `v1.47.0`); a spec foi escrita 
 6. **Seletores que a spec não previu:** a prévia escura usa `data-previa-do-logo-escuro` (e não `data-previa-do-logo`), e o `<img>` escuro da entrada usa `data-testid="logo-da-fachada-escuro"`: `logo-moldura-no-tema-escuro.spec.ts` (caso 4), `marca-logo.spec.ts` (`:696-699`) e o `getByTestId("logo-da-fachada")` dependem de seletores únicos.
 7. **e2e:** spec nova `tests/e2e/convexy-logo-escuro.spec.ts` em vez de estender `convexy-identidade.spec.ts` — aquela é da `-cvx.3`, declara "um login só" e não usa o dono do servidor; esta precisa do dono (`/admin/marca`), promovido por `scripts/seed-e2e-system-update.ts` como em `logo-moldura-no-tema-escuro.spec.ts:98-99`. O `e2e.yml` tem cinco partes (spec 7.1 diz 1..3); a spec nova entra na `SPECS_PARTE_1`, ao lado de `convexy-identidade.spec.ts` (`:624`).
 8. **`lib/branding/contexto.tsx`** está na tabela da spec, mas não precisa de edição (o tipo `Branding` carrega o campo).
-9. **Logo escuro sem logo claro:** a regra de leitura só usa o escuro quando o logo exibido é o da instalação; se a instalação tiver só o escuro, nada muda na tela (o campo mostra o aviso). Consequência direta da spec 7.3.4, registrada como desvio aceito no `CONVEXY.md`.
+9. **Logo escuro sem logo claro:** a regra de leitura só usa o escuro quando o logo exibido é o da instalação; se a instalação tiver só o escuro, nada muda na tela (o campo mostra o aviso). Consequência direta da spec 7.3.4, registrada como desvio aceito no `CONVEXY.md`. Nota de coerência: a semeadura (`sementeDoAmbiente`, `lib/branding/instalacao.ts:149-166`) copia `APP_LOGO_URL` para `platform_branding.logo_url` na primeira leitura, e daí em diante a origem desse logo é a camada "banco" da instalação — então um logo claro vindo do `.env` e já semeado **recebe** o escuro, coerente com a 7.3.4 ("camada do banco da instalação"). Sem efeito para a Convexy: o logo claro dela foi enviado pela tela (etapa 1) e o `APP_LOGO_URL` não é usado.
 
 ---
 
@@ -668,7 +670,7 @@ por:
   const aberto = await abrirContexto(escopoLido.data);
 ```
 E, no mesmo `POST`, trocar as três chamadas:
-- `const anterior = await caminhoGravado(ctx);` → `const anterior = await caminhoGravado(ctx, variante);`
+- `const anterior = await caminhoGravado(ctx);` → `const anterior = await caminhoGravado(ctx, variante);` — **atenção:** essa linha exata aparece **duas** vezes no arquivo (no `POST`, `route.ts:423`, e no `DELETE`, `:488`), e a troca é a mesma nas duas. Fazer **uma** substituição de todas as ocorrências dessa linha exata (Edit com `replace_all`), aqui no Step 4 — ela já cobre o item igual do Step 5. Uma troca simples sem `replace_all` falha por ambiguidade.
 - `const recusa = await gravarCaminho(ctx, caminho);` → `const recusa = await gravarCaminho(ctx, caminho, variante);`
 - `await registrarAuditoria(ctx, req, requestId, "definido");` → `await registrarAuditoria(ctx, req, requestId, "definido", variante);`
 
@@ -699,7 +701,7 @@ por:
   const aberto = await abrirContexto(escopoLido.data);
 ```
 E trocar, no `DELETE`:
-- `const anterior = await caminhoGravado(ctx);` → `const anterior = await caminhoGravado(ctx, variante);`
+- `const anterior = await caminhoGravado(ctx);` → `const anterior = await caminhoGravado(ctx, variante);` — já feito pelo `replace_all` do Step 4 (conferir que a linha do `DELETE` está com `variante`; se não estiver, trocar agora só ela).
 - `const recusa = await gravarCaminho(ctx, null);` → `const recusa = await gravarCaminho(ctx, null, variante);`
 - `await registrarAuditoria(ctx, req, requestId, "removido");` → `await registrarAuditoria(ctx, req, requestId, "removido", variante);`
 
@@ -1636,7 +1638,7 @@ git commit -m "feat(convexy): logo escuro na barra lateral e na tela de entrada 
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
-Expected do `grep`: em cada arquivo, a primeira linha com `dark:bg-white` fora de `{/* … */}` é a do `cn(` da moldura (no `Sidebar.tsx`, a linha do comentário `//` antigo não cita a classe; no `(public)/layout.tsx` a menção em `{/* O chip \`dark:bg-white\` … */}` é removida pela cerca junto com o comentário).
+Expected do `grep`, exato: `components/shell/Sidebar.tsx` — **uma** linha, a do `cn(` da moldura (`"rounded-md dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm",`; o comentário `//` antigo não cita a classe); `app/(public)/layout.tsx` — **duas** linhas: a do comentário `{/* O chip \`dark:bg-white\` é o mesmo da barra lateral` (≈ `:74`, mantido; a cerca `logo-nao-some-no-tema-escuro.test.ts` tira `{/* … */}` antes de procurar) e a do `cn(` da moldura (`"rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm",`). Qualquer outra linha (em especial um `className="… dark:bg-white …"` antigo que sobrou) = a moldura foi duplicada: corrigir antes de commitar.
 
 **Quem prova (no PR):** `verify` — `tests/unit/convexy-logo-escuro.test.tsx` (6 casos PASS); sem alteração e PASS: `logo-nao-some-no-tema-escuro.test.ts` (4 casos: o chip existe, embrulha o `<img>` claro direto, a prévia do `CampoDeLogo` intacta, as três superfícies com `<img`), `marca-do-produto.test.tsx`, `marca-sem-divergencia-de-hidratacao.test.tsx`, `marca-na-fachada-de-acesso.test.tsx` (sem logo → nenhum `<img`), `sidebar-nome-da-organizacao.test.tsx` (`getByRole("img")` único sem escuro); `pnpm lint` (`@next/next/no-img-element` desligado por linha). `e2e`: `logo-moldura-no-tema-escuro.spec.ts` (`SPECS_PARTE_3`, sem logo escuro gravado nessa parte) inalterada e PASS.
 
@@ -2160,9 +2162,9 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `lerCreds(): CredsE2E`, `loginComoDono(page, creds): Promise<CredsE2E>` (`tests/e2e/helpers/login-admin.ts:44,118`); `scripts/seed-e2e-system-update.ts` (promove o `dono` a dono do servidor, idempotente); controle de tema `getByRole("button", { name: /^Tema:/ })`; chave `deskcomm-theme` do `THEME_INIT_SCRIPT` (`app/layout.tsx`); DOM das Tasks 4 e 5.
-- Produces: 2 casos + `afterAll` na `SPECS_PARTE_1`; evidência em `.superpowers/evidence/convexy-logo-escuro/` (ignorada pelo git; no CI, só no artefato do run).
+- Produces: 1 caso (um login só; limpeza em `try/finally` com a mesma `page`) na `SPECS_PARTE_1`; evidência em `.superpowers/evidence/convexy-logo-escuro/` (ignorada pelo git; no CI, só no artefato do run).
 
-Regras que a spec cumpre: está em exatamente uma lista (`tests/unit/e2e-cobertura-completa.test.ts:188-198`), numa linha dentro do bloco `>-` sem comentário; loga duas vezes (`loginComoDono(` no caso 1 e no `afterAll`), então declara teto ≥ 60 000 ms (`e2e-dois-logins-nao-cabem-no-teto-padrao.test.ts`: padrão 30 000 + janela TOTP 30 000) — declara 120 000; navega só para rotas que existem (`/admin/marca`, `/app/inbox`, `/login`); não lê `.env.local`; não toca tabela tenant-aware sem filtro (nem toca banco: tudo pela tela). Banco compartilhado na parte: o caso (1) monta a própria precondição (remove os dois logos) e o `afterAll` remove os dois de novo, mesmo se um caso estourar.
+Regras que a spec cumpre: está em exatamente uma lista (`tests/unit/e2e-cobertura-completa.test.ts:188-198`), numa linha dentro do bloco `>-` sem comentário; **loga uma vez só** (um único call site de `loginComoDono(`, no único caso): a cerca `e2e-dois-logins-nao-cabem-no-teto-padrao.test.ts` só mede spec com 2+ call sites e não se aplica — mesmo assim a spec declara um teto generoso, `test.describe.configure({ timeout: 180_000 })` (o caso faz upload, duas trocas de tema, dois contextos da fachada e a limpeza; o padrão de 30 000 não cabe), forma que a própria cerca reconhece caso um segundo login volte um dia; a fachada é medida com `browser.newContext()` **dentro** do mesmo caso (contexto sem sessão, sem login); navega só para rotas que existem (`/admin/marca`, `/app/inbox`, `/login`); não lê `.env.local`; não toca tabela tenant-aware sem filtro (nem toca banco: tudo pela tela). Banco compartilhado na parte: o caso monta a própria precondição (remove os dois logos) e o `finally` remove os dois de novo com a mesma `page` já logada, mesmo se uma asserção estourar — sem `afterAll`, sem segundo login e sem espera de janela TOTP. Entre os dois uploads a spec **recarrega** `/admin/marca` (`page.goto`): o `router.refresh()` do primeiro envio não corre contra o segundo, e a independência das duas colunas é lida do servidor, não do estado do cliente.
 
 - [ ] **Step 1: A spec**
 
@@ -2186,14 +2188,19 @@ import { lerCreds, loginComoDono } from "./helpers/login-admin";
  * lateral e na tela de entrada. Por ferramenta: `toBeVisible`/`toBeHidden` e
  * `getComputedStyle` da cadeia de ancestrais, nunca a olho.
  *
- * O banco do e2e é compartilhado pelas specs da mesma parte: o caso (1) monta a
- * precondição (sem logo nenhum) e o `afterAll` remove os dois logos — é ele que
- * limpa `logo_dark_path` mesmo quando um caso estoura (a moldura do logo claro
- * é medida por tests/e2e/logo-moldura-no-tema-escuro.spec.ts). Registro:
- * CONVEXY.md, "Logo escuro".
+ * O banco do e2e é compartilhado pelas specs da mesma parte: o caso monta a
+ * precondição (sem logo nenhum) e o `finally` remove os dois logos com a mesma
+ * página já logada — é ele que limpa `logo_dark_path` mesmo quando uma asserção
+ * estoura (a moldura do logo claro é medida por
+ * tests/e2e/logo-moldura-no-tema-escuro.spec.ts). UM login só: um segundo login
+ * no mesmo arquivo cairia na espera da janela TOTP. A fachada é medida em
+ * contextos novos, sem sessão, dentro do mesmo caso. Registro: CONVEXY.md,
+ * "Logo escuro".
  */
 
-test.describe.configure({ mode: "serial", timeout: 120_000 });
+// Um caso longo (uploads, duas trocas de tema, dois contextos da fachada e a
+// limpeza): o teto padrão não cabe.
+test.describe.configure({ timeout: 180_000 });
 
 const EVIDENCIA = path.join(process.cwd(), ".superpowers", "evidence", "convexy-logo-escuro");
 
@@ -2308,6 +2315,8 @@ async function escolherTemaPelaTela(page: Page, alvo: "light" | "dark"): Promise
       .not.toBe(antes)
       .catch(() => undefined);
   }
+  // O 4º clique pode ter chegado ao alvo: conferir antes de acusar.
+  if ((await temaDaPagina(page)) === alvo) return;
   throw new Error(`o controle de tema não chegou em "${alvo}" em 4 cliques (data-theme=${await temaDaPagina(page)})`);
 }
 
@@ -2350,92 +2359,86 @@ async function removerSeHouver(page: Page, chave: Chave): Promise<void> {
   await expect(remover).toHaveCount(0, { timeout: 15_000 });
 }
 
-let urlClaro = "";
-let urlEscuro = "";
-
 test.describe("o logo do tema escuro (spec 7.3)", () => {
-  test("(1) /admin/marca grava os dois logos, e a barra lateral troca o claro pelo escuro no tema escuro", async ({
+  test("/admin/marca grava os dois logos; a barra lateral e a tela de entrada trocam o claro pelo escuro no tema escuro, sem moldura", async ({
     page,
-  }) => {
-    creds = await loginComoDono(page, creds);
-    await removerSeHouver(page, "instalacao-escuro");
-    await removerSeHouver(page, "instalacao");
-
-    await page.goto("/admin/marca");
-    urlClaro = await subir(page, "instalacao", PNG_CLARO, "logo-claro.png");
-    urlEscuro = await subir(page, "instalacao-escuro", PNG_ESCURO, "logo-escuro.png");
-    expect(urlEscuro).not.toBe(urlClaro);
-    // Colunas independentes, vistas pela tela: subir o escuro não trocou o claro.
-    await expect(page.locator("[data-previa-do-logo='claro'] img")).toHaveAttribute("src", urlClaro);
-    await expect(page.locator("[data-previa-do-logo-escuro] img")).toHaveAttribute("src", urlEscuro);
-    await page.screenshot({ path: evidencia("admin-marca.png"), fullPage: true });
-
-    await page.goto("/app/inbox");
-    const claro = page.locator(`aside img[src="${urlClaro}"]`).first();
-    const escuro = page.locator(`aside img[src="${urlEscuro}"]`).first();
-
-    await escolherTemaPelaTela(page, "light");
-    await expect(claro, "tema claro sem o logo claro").toBeVisible({ timeout: 15_000 });
-    await expect(escuro, "o logo escuro apareceu no tema claro").toBeHidden();
-    const fundoDaMoldura = await claro.evaluate((el) => getComputedStyle(el.parentElement as HTMLElement).backgroundColor);
-    expect(fundoETransparente(fundoDaMoldura), `no claro a moldura pintou fundo (${fundoDaMoldura})`).toBe(true);
-    await page.screenshot({ path: evidencia("barra-claro.png") });
-
-    await escolherTemaPelaTela(page, "dark");
-    await expect(escuro, "tema escuro sem o logo escuro").toBeVisible({ timeout: 15_000 });
-    await expect(claro, "o logo claro (e a moldura) continuou no tema escuro").toBeHidden();
-    const fundos = await fundosAte(escuro, "aside");
-    expect(fundos.filter(fundoEClaro), `moldura branca no escuro: ${JSON.stringify(fundos)}`).toEqual([]);
-    await page.screenshot({ path: evidencia("barra-escuro.png") });
-  });
-
-  test("(2) a tela de entrada, sem sessão: o claro só no claro, o escuro só no escuro, sem moldura", async ({
     browser,
   }) => {
-    expect(urlClaro && urlEscuro, "o caso (1) não gravou os dois logos").toBeTruthy();
-    for (const tema of ["light", "dark"] as const) {
-      const contexto = await browser.newContext();
-      try {
-        const pagina = await contexto.newPage();
-        // A fachada não tem controle de tema: o estado é semeado antes do primeiro
-        // byte, como no navegador de quem escolheu o tema e saiu da conta.
-        await pagina.addInitScript((t) => window.localStorage.setItem("deskcomm-theme", t), tema);
-        await pagina.goto("/login");
-        expect(await temaDaPagina(pagina), `a fachada não ficou em ${tema}`).toBe(tema);
-
-        const claro = pagina.getByTestId("logo-da-fachada");
-        const escuro = pagina.getByTestId("logo-da-fachada-escuro");
-        await expect(claro).toHaveAttribute("src", urlClaro);
-        await expect(escuro).toHaveAttribute("src", urlEscuro);
-
-        if (tema === "light") {
-          await expect(claro).toBeVisible({ timeout: 15_000 });
-          await expect(escuro).toBeHidden();
-        } else {
-          await expect(escuro).toBeVisible({ timeout: 15_000 });
-          await expect(claro).toBeHidden();
-          const fundos = await fundosAte(escuro, "body");
-          expect(fundos.filter(fundoEClaro), `moldura branca na entrada escura: ${JSON.stringify(fundos)}`).toEqual(
-            [],
-          );
-        }
-        await pagina.screenshot({ path: evidencia(`login-${tema}.png`) });
-      } finally {
-        await contexto.close();
-      }
-    }
-  });
-
-  /** A restauração: roda mesmo quando um caso estoura, e limpa as duas colunas. */
-  test.afterAll(async ({ browser }) => {
-    const contexto = await browser.newContext();
+    creds = await loginComoDono(page, creds);
     try {
-      const pagina = await contexto.newPage();
-      creds = await loginComoDono(pagina, creds);
-      await removerSeHouver(pagina, "instalacao-escuro");
-      await removerSeHouver(pagina, "instalacao");
+      await removerSeHouver(page, "instalacao-escuro");
+      await removerSeHouver(page, "instalacao");
+
+      // Um envio por carga da página: o `router.refresh()` do primeiro envio não
+      // corre contra o segundo, e o que se confere depois é o que o SERVIDOR leu.
+      await page.goto("/admin/marca");
+      const urlClaro = await subir(page, "instalacao", PNG_CLARO, "logo-claro.png");
+      await page.goto("/admin/marca");
+      const urlEscuro = await subir(page, "instalacao-escuro", PNG_ESCURO, "logo-escuro.png");
+      await page.goto("/admin/marca");
+      expect(urlEscuro).not.toBe(urlClaro);
+      // Colunas independentes, lidas do servidor: gravar o escuro não trocou o claro.
+      await expect(page.locator("[data-previa-do-logo='claro'] img")).toHaveAttribute("src", urlClaro);
+      await expect(page.locator("[data-previa-do-logo-escuro] img")).toHaveAttribute("src", urlEscuro);
+      await page.screenshot({ path: evidencia("admin-marca.png"), fullPage: true });
+
+      // ── Barra lateral ──────────────────────────────────────────────────────
+      await page.goto("/app/inbox");
+      const claro = page.locator(`aside img[src="${urlClaro}"]`).first();
+      const escuro = page.locator(`aside img[src="${urlEscuro}"]`).first();
+
+      await escolherTemaPelaTela(page, "light");
+      await expect(claro, "tema claro sem o logo claro").toBeVisible({ timeout: 15_000 });
+      await expect(escuro, "o logo escuro apareceu no tema claro").toBeHidden();
+      const fundoDaMoldura = await claro.evaluate((el) => getComputedStyle(el.parentElement as HTMLElement).backgroundColor);
+      expect(fundoETransparente(fundoDaMoldura), `no claro a moldura pintou fundo (${fundoDaMoldura})`).toBe(true);
+      await page.screenshot({ path: evidencia("barra-claro.png") });
+
+      await escolherTemaPelaTela(page, "dark");
+      await expect(escuro, "tema escuro sem o logo escuro").toBeVisible({ timeout: 15_000 });
+      await expect(claro, "o logo claro (e a moldura) continuou no tema escuro").toBeHidden();
+      const fundos = await fundosAte(escuro, "aside");
+      expect(fundos.filter(fundoEClaro), `moldura branca no escuro: ${JSON.stringify(fundos)}`).toEqual([]);
+      await page.screenshot({ path: evidencia("barra-escuro.png") });
+
+      // ── Tela de entrada, sem sessão (contexto novo, sem login) ───────────────
+      for (const tema of ["light", "dark"] as const) {
+        const contexto = await browser.newContext();
+        try {
+          const pagina = await contexto.newPage();
+          // A fachada não tem controle de tema: o estado é semeado antes do primeiro
+          // byte, como no navegador de quem escolheu o tema e saiu da conta.
+          await pagina.addInitScript((t) => window.localStorage.setItem("deskcomm-theme", t), tema);
+          await pagina.goto("/login");
+          expect(await temaDaPagina(pagina), `a fachada não ficou em ${tema}`).toBe(tema);
+
+          const claroNaEntrada = pagina.getByTestId("logo-da-fachada");
+          const escuroNaEntrada = pagina.getByTestId("logo-da-fachada-escuro");
+          await expect(claroNaEntrada).toHaveAttribute("src", urlClaro);
+          await expect(escuroNaEntrada).toHaveAttribute("src", urlEscuro);
+
+          if (tema === "light") {
+            await expect(claroNaEntrada).toBeVisible({ timeout: 15_000 });
+            await expect(escuroNaEntrada).toBeHidden();
+          } else {
+            await expect(escuroNaEntrada).toBeVisible({ timeout: 15_000 });
+            await expect(claroNaEntrada).toBeHidden();
+            const fundosDaEntrada = await fundosAte(escuroNaEntrada, "body");
+            expect(
+              fundosDaEntrada.filter(fundoEClaro),
+              `moldura branca na entrada escura: ${JSON.stringify(fundosDaEntrada)}`,
+            ).toEqual([]);
+          }
+          await pagina.screenshot({ path: evidencia(`login-${tema}.png`) });
+        } finally {
+          await contexto.close();
+        }
+      }
     } finally {
-      await contexto.close();
+      // A restauração: roda mesmo quando uma asserção estoura, com a MESMA página
+      // (já logada — nada de segundo login), e limpa as duas colunas.
+      await removerSeHouver(page, "instalacao-escuro");
+      await removerSeHouver(page, "instalacao");
     }
   });
 });
@@ -2465,7 +2468,7 @@ git commit -m "test(convexy): e2e do logo escuro (spec 7.3.6)
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
 
-**Quem prova (no PR):** `e2e` — a parte `e2e-parte (1)` roda `convexy-logo-escuro.spec.ts` (2 casos PASS; o `afterAll` limpa); as partes 3 e 5 rodam `logo-moldura-no-tema-escuro.spec.ts` e `marca-logo.spec.ts` sem alteração. `verify` — `tests/unit/e2e-cobertura-completa.test.ts`, `e2e-dois-logins-nao-cabem-no-teto-padrao.test.ts` (um caso novo, PASS com 120 000), `e2e-navega-para-rota-que-existe.test.ts`, `e2e-nao-escolhe-a-primeira-linha.test.ts`, `seed-nao-le-env-local-do-disco.test.ts` (um caso novo por spec, PASS); `pnpm typecheck` inclui `tests/e2e`.
+**Quem prova (no PR):** `e2e` — a parte `e2e-parte (1)` roda `convexy-logo-escuro.spec.ts` (1 caso PASS; o `finally` limpa as duas colunas); as partes 3 e 5 rodam `logo-moldura-no-tema-escuro.spec.ts` e `marca-logo.spec.ts` sem alteração. `verify` — `tests/unit/e2e-cobertura-completa.test.ts`, `e2e-dois-logins-nao-cabem-no-teto-padrao.test.ts` (a spec nova tem **um** call site de login: fica fora da varredura, nenhum caso novo; PASS sem alteração), `e2e-navega-para-rota-que-existe.test.ts`, `e2e-nao-escolhe-a-primeira-linha.test.ts`, `seed-nao-le-env-local-do-disco.test.ts` (um caso novo por spec, PASS); `pnpm typecheck` inclui `tests/e2e`.
 
 ---
 
@@ -2548,7 +2551,9 @@ No fim da lista de `## Desvios aceitos`, acrescentar:
 ```markdown
 - **Logo escuro (`v1.47.0-cvx.2`)** — só aparece junto com o logo claro da instalação: se a
   instalação tiver só o escuro, ou se o logo exibido for o de uma organização ou o do `.env`,
-  nada muda (o campo avisa). E-mail, ícone, manifest e MFA continuam com o logo claro
+  nada muda (o campo avisa). Um `APP_LOGO_URL` já semeado em `platform_branding.logo_url`
+  conta como logo da instalação (origem "banco") e recebe o escuro — sem efeito na Convexy,
+  que envia o logo pela tela. E-mail, ícone, manifest e MFA continuam com o logo claro
   (spec, seção 3). O mapa `docs/architecture/marca-propria.architecture.json` (aresta `e58`,
   "upsert de logo_path") não é editado: a coluna nova e a variante da rota ficam registradas
   aqui (DoD 13). `docs/testing/user-journey-map.md` não é editado (doc do original); a prova de
@@ -2573,11 +2578,23 @@ No fim de `CONVEXY.md` (depois do último parágrafo de "Rollback de uma versão
 **Da `v1.47.0-cvx.2` (logo escuro) para a `v1.47.0-cvx.1`.** Antes de pensar em rollback: se
 o problema é só o logo escuro (arte errada, contraste), basta **Remover** o logo do campo
 "Logo para o tema escuro" em `/admin/marca` — a tela volta ao logo claro com a moldura, sem
-atualização nenhuma. Rollback só se algo ficou ilegível ou um fluxo quebrou, pelo mesmo
-comando acima com `--to v1.47.0-cvx.1 --force` (sessão `tmux` `rollback-logo-escuro`, log
-`/root/update-<data>-rollback-logo-escuro.log`). A coluna `logo_dark_path` fica no banco,
-inofensiva: o código da `-cvx.1` não a lê, e o baseline da `-cvx.1` não a remove. Depois
-disso o botão volta a oferecer a `-cvx.2`: não clicar; corrigir na `-cvx.3`.
+atualização nenhuma. Rollback só se algo ficou ilegível ou um fluxo quebrou, sempre dentro
+de `tmux`, conferindo antes que a sessão não existe:
+
+    ssh -t <host-ssh> 'cd /opt/deskcommcrm && if tmux has-session -t rollback-logo-escuro 2>/dev/null; then echo "JÁ EXISTE: tmux attach -t rollback-logo-escuro"; else tmux new -s rollback-logo-escuro "bash hostgator-setup-kit/update.sh --to v1.47.0-cvx.1 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-logo-escuro.log; echo FIM; read"; fi'
+
+Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-logo-escuro'`. A coluna
+`logo_dark_path` fica no banco, inofensiva: o código da `-cvx.1` não a lê, e o baseline da
+`-cvx.1` não a remove. **O valor gravado e o arquivo também ficam:** o `logo_dark_path` da
+linha `id = 1` e o PNG no bucket `brand-logos` do Storage (na nuvem, fora do `tar` do
+`backup.sh`) não são tocados pelo rollback, e a `-cvx.1` não tem campo para removê-los. Se o
+motivo do rollback é o próprio logo escuro, clicar **Remover** no campo "Logo para o tema
+escuro" **antes** do rollback. Se o rollback já foi feito, limpar o valor pelo `psql_run` do
+kit (mesmo bloco `ssh <host-ssh> 'bash -s'` com `source hostgator-setup-kit/_common.sh` e
+`enter_project` usado na conferência do banco, nunca com `bash -x`/`set -x`):
+`update public.platform_branding set logo_dark_path = null where id = 1;` — o PNG órfão
+(≤ 512 KB) no bucket é inofensivo. Depois do rollback o botão volta a oferecer a `-cvx.2`:
+não clicar; corrigir na `-cvx.3`.
 ```
 
 - [ ] **Step 5: Seção no CHANGELOG**
@@ -2588,7 +2605,7 @@ Em `CHANGELOG.md`, substituir:
 
 ## [1.47.0-cvx.1] — 2026-09-24
 ```
-por (trocar `AAAA-MM-DD` pela data do corte, que a sessão principal informa no despacho desta task; a Task 8 Step 4 confere):
+por (o implementador desta task **escreve a data real** do dia em que escreve a seção — `date +%F` —, no lugar de `AAAA-MM-DD`; o literal `AAAA-MM-DD` não casa com `CABECALHO_VERSAO_CONVEXY` e reprova o `verify`; a Task 8 Step 4 aceita essa data, mesmo que o merge caia noutro dia):
 ```markdown
 ## [Não lançado]
 
@@ -2609,7 +2626,7 @@ git commit -m "docs(convexy): registro e notas da 1.47.0-cvx.2
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
-Expected: o `sed` mostra `## [Não lançado]`, depois `## [1.47.0-cvx.2] — <data do corte>`, o parágrafo e `## [1.47.0-cvx.1] — 2026-09-24`; o laço não imprime nada (todo arquivo tocado por esta branch está citado no `CONVEXY.md`).
+Expected: o `sed` mostra `## [Não lançado]`, depois `## [1.47.0-cvx.2] — <data real, AAAA-MM-DD em dígitos>` (nunca o literal `AAAA-MM-DD`), o parágrafo e `## [1.47.0-cvx.1] — 2026-09-24`; o laço não imprime nada (todo arquivo tocado por esta branch está citado no `CONVEXY.md`).
 
 **Quem prova (no PR):** `verify` — `tests/unit/release-chega-na-lp.test.ts` (cabeçalho `-cvx` aceito por `CABECALHO_VERSAO_CONVEXY`), `convexy-cabecalho-cvx.test.ts`, `changelog-cabe-na-tela-da-vps.test.ts`, `lib/system/changelog.test.ts`, `documentacao-aponta-para-o-que-existe.test.ts`, `evidencia-citada.test.ts` (nenhuma imagem citada entre crases).
 
@@ -2673,21 +2690,23 @@ Expected: `build-and-size pass`, `e2e pass`, `imagens-ok pass`, `invariants pass
 
 Se o laço bater no teto: **não** seguir — `gh run list -R victorrabyfs/DeskcommCRM --branch convexy/logo-escuro` (fila, job preso, aprovação pendente) e decidir com o Victor.
 
-Se algum falhar, ler o motivo:
+Se algum falhar, ler o motivo **no workflow do check que falhou** (`verify`/`invariants` → `ci.yml`; `e2e` → `e2e.yml`; `build-and-size` → `perf.yml`; `imagens-ok` → `publish-image.yml`):
 ```bash
-id=$(gh run list -R victorrabyfs/DeskcommCRM --branch convexy/logo-escuro --workflow ci.yml --limit 1 --json databaseId --jq '.[0].databaseId')   # ci.yml → verify/invariants; e2e.yml → e2e; perf.yml → build-and-size; publish-image.yml → imagens-ok
+wf=perf.yml   # trocar pelo workflow do check que falhou (ci.yml | e2e.yml | perf.yml | publish-image.yml)
+id=$(gh run list -R victorrabyfs/DeskcommCRM --branch convexy/logo-escuro --workflow "$wf" --limit 1 --json databaseId --jq '.[0].databaseId')
 gh run view "$id" -R victorrabyfs/DeskcommCRM --log-failed | grep -aE "FAIL|✗|Error|error TS|expected" | head -40
 ```
-- Erro de rede do Google Fonts no `next build` (`fonts.googleapis.com`, `fonts.gstatic.com`, `Failed to fetch`): **um** `gh run rerun "$id" -R victorrabyfs/DeskcommCRM --failed` e voltar ao laço.
+- Erro de rede do Google Fonts no `next build` (`fonts.googleapis.com`, `fonts.gstatic.com`, `Failed to fetch`): **um** `gh run rerun "$id" -R victorrabyfs/DeskcommCRM --failed` — com o `id` do run do **mesmo** workflow do check vermelho (o `build-and-size` é do `perf.yml`, não do `ci.yml`) — e voltar ao laço.
 - Qualquer outro vermelho: diagnosticar (superpowers:systematic-debugging) pelo log, corrigir **na branch** por subagente (só editar + commitar, com o motivo no commit), `git push`, voltar ao laço. Nunca desligar check.
 
 - [ ] **Step 4: Data da seção e merge por merge commit**
 
 ```bash
 git fetch -q origin && git diff --quiet HEAD origin/convexy/logo-escuro && echo "branch local = remota"
-grep -n "^## \[1.47.0-cvx.2\] — $(date +%F)$" CHANGELOG.md || echo "DATA DA SEÇÃO DIFERENTE DE HOJE — corrigir, commitar, empurrar e voltar ao Step 3"
+grep -nE "^## \[1\.47\.0-cvx\.2\] — [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md || echo "SEÇÃO SEM DATA REAL — corrigir, commitar, empurrar e voltar ao Step 3"
+git log -1 --format='%h %ad' --date=short -S'## [1.47.0-cvx.2]' -- CHANGELOG.md
 ```
-Expected: `branch local = remota`; a linha da seção com a data de hoje.
+Expected: `branch local = remota`; a linha da seção com uma data real, que é a data do commit que escreveu a seção (o `git log` mostra esse commit e a data dele; as duas datas batem — se não baterem, corrigir a linha para a data do commit, commitar, empurrar e voltar ao Step 3). Não é exigido que seja a data do merge: a seção fica com a data em que foi escrita.
 
 **Pedir confirmação explícita ao Victor para o merge** (mostrar os cinco obrigatórios, as cinco `e2e-parte` e as pernas `invariants-majors` em `pass`). Só com o "sim" dele:
 ```bash
@@ -2709,8 +2728,12 @@ git show --no-patch --format='%H %s' v1.47.0-cvx.2^{commit}
 Expected: o commit da tag é o sha anotado no Step 4. **Pedir confirmação explícita ao Victor para empurrar a tag** (ela publica as imagens e move a `stable`). Só com o "sim" dele:
 ```bash
 git push origin v1.47.0-cvx.2
-until id=$(gh run list -R victorrabyfs/DeskcommCRM --workflow publish-image.yml --event push --limit 20 --json databaseId,headBranch --jq '[.[]|select(.headBranch=="v1.47.0-cvx.2")][0].databaseId // empty') && [ -n "$id" ]; do sleep 5; done
-gh run watch "$id" -R victorrabyfs/DeskcommCRM --exit-status
+inicio=$(date +%s)
+until id=$(gh run list -R victorrabyfs/DeskcommCRM --workflow publish-image.yml --event push --limit 20 --json databaseId,headBranch --jq '[.[]|select(.headBranch=="v1.47.0-cvx.2")][0].databaseId // empty') && [ -n "$id" ]; do
+  [ $(( $(date +%s) - inicio )) -gt 600 ] && { echo "TETO DE 10 MIN — o run da tag não apareceu; parar e investigar (gh run list, ruleset, workflow desligado?)"; break; }
+  sleep 5
+done
+[ -n "$id" ] && gh run watch "$id" -R victorrabyfs/DeskcommCRM --exit-status
 git ls-remote --tags origin
 ```
 Expected: o `pre-push` local aceita (`vX.Y.Z-cvx.N`); o run termina verde (inclui `a-tag-veio-da-main` e `promover-stable`); `ls-remote` lista `v1.44.0`, `v1.44.0-cvx.1`, `-cvx.2`, `-cvx.3`, `v1.47.0-cvx.1`, `v1.47.0-cvx.2` (cada uma com `^{}`), e nenhuma outra tag do original.
@@ -2741,7 +2764,7 @@ Expected: em cada imagem, `tag` e `stable` com `200` e **o mesmo digest**.
 
 - [ ] **Step 1: Confirmação e estado de partida**
 
-Pedir confirmação ao Victor (a recriação dos contêineres derruba o app por alguns segundos — fora do pico das clínicas). Depois:
+Pedir confirmação ao Victor. **Sem janela de horário:** nenhuma clínica opera ainda (decisão da Revisão 2), então a atualização pode ser a qualquer hora — basta o "sim" dele. Durante a atualização o app fica **fora do ar alguns minutos** (reaplicação do baseline e recriação dos contêineres). Depois:
 ```bash
 ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; git tag -l | tr "\n" " "; echo; git config --get versionsort.suffix || echo "versionsort.suffix vazio (ok)"; git config --get remote.origin.fetch; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300'
 ```
@@ -2760,6 +2783,8 @@ EOF
 ```
 Expected: nenhuma linha `COLUNA|`; `REGRA|0`. (O `</dev/null` é obrigatório: o `psql_run` roda `docker run -i` e, sem ele, engoliria o resto do script lido pelo `bash -s`.)
 
+**Regra de todo bloco SQL deste plano (`bash -s` com `psql_run`):** **nunca** `bash -x`, `set -x` nem `ssh … 'bash -x -s'` — o rastreio imprimiria na tela (e no histórico da conversa) a connection string do `.env`, com a senha do banco. Para depurar, rodar uma consulta por vez, nunca rastrear.
+
 - [ ] **Step 2: Atualizar pelo botão (Victor)**
 
 Esperar até 5 min (ciclo do agente, `agent.sh:127`). Em `https://<dominio-de-producao>/app/settings/atualizacao` deve aparecer `1.47.0-cvx.2` com as notas "Logo para o tema escuro…". **Victor clica em "Atualizar".** Se não aparecer em 10 min: `git tag -l` na VPS e o manifesto `1.47.0-cvx.2` (Task 8 Step 6). Acompanhar até a versão nova responder (teto de 20 min):
@@ -2767,10 +2792,20 @@ Esperar até 5 min (ciclo do agente, `agent.sh:127`). Em `https://<dominio-de-pr
 ssh <host-ssh> 'for i in $(seq 1 60); do v=$(curl -s https://<dominio-de-producao>/api/v1/health | grep -o "\"version\":\"[^\"]*\""); echo "$(date +%T) $v"; case "$v" in *1.47.0-cvx.2*) break;; esac; sleep 20; done'
 ```
 
+**Se não chegou à `1.47.0-cvx.2`** (o laço bateu no teto, a tela de atualização mostrou erro, ou o health responde outra versão/nada): **não** clicar de novo. Diagnosticar (só leitura):
+```bash
+ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; grep -E "^(APP|WORKER|SCHEDULER|VOICE_AGENT)_IMAGE=" .env; echo "--- banco"; tail -n 40 .deskcomm-banco.log; echo "--- contêineres"; docker ps --format "{{.Names}}\t{{.Image}}\t{{.Status}}" | grep victorrabyfs'
+```
+e ler o que a tela `https://<dominio-de-producao>/app/settings/atualizacao` diz (estado e mensagem da última tentativa). Mostrar tudo ao Victor. Com a aprovação dele, retomar **dentro de `tmux`**, conferindo antes que a sessão não existe:
+```bash
+ssh -t <host-ssh> 'cd /opt/deskcommcrm && if tmux has-session -t update-logo-escuro 2>/dev/null; then echo "JÁ EXISTE: tmux attach -t update-logo-escuro"; else tmux new -s update-logo-escuro "bash hostgator-setup-kit/update.sh --to v1.47.0-cvx.2 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-logo-escuro.log; echo FIM; read"; fi'
+```
+Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t update-logo-escuro'`. Ao ver `FIM`, repetir o laço do health acima e seguir para o Step 3. Se falhar de novo: parar e decidir com o Victor entre investigar e o rollback do Step 6.
+
 - [ ] **Step 3: Verificar versão, saúde, 307 e o banco**
 
 ```bash
-ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; grep -E "^(APP|WORKER|SCHEDULER|VOICE_AGENT)_IMAGE=" .env; curl -s -o /dev/null -w "%{http_code}\n" https://<dominio-de-producao>/; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300; echo'
+ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; grep -E "^(APP|WORKER|SCHEDULER|VOICE_AGENT)_IMAGE=" .env; curl -s -o /dev/null -w "%{http_code}\n" https://<dominio-de-producao>/; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300; echo; grep -nE "logo_dark_path|ERROR" .deskcomm-banco.log | tail'
 ssh <host-ssh> 'bash -s' <<'EOF'
 set -euo pipefail
 cd /opt/deskcommcrm
@@ -2779,19 +2814,165 @@ enter_project
 psql_run -tA -c "select 'COLUNA|' || data_type || '|' || is_nullable from information_schema.columns where table_schema = 'public' and table_name = 'platform_branding' and column_name = 'logo_dark_path';" </dev/null
 psql_run -tA -c "select 'REGRA|' || count(*) from pg_constraint where conname = 'platform_branding_logo_dark_path';" </dev/null
 psql_run -tA -c "select 'LINHA|' || (logo_path is not null) || '|' || (logo_dark_path is not null) from public.platform_branding where id = 1;" </dev/null
+psql_run -tA -c "select 'ORGLOGO|' || count(*) from public.organizations where settings->'branding'->>'logo_path' is not null;" </dev/null
 EOF
 ```
-Expected: `v1.47.0-cvx.2`; as quatro `*_IMAGE` em `ghcr.io/victorrabyfs/…:1.47.0-cvx.2`; `307`; health com `"version":"1.47.0-cvx.2"` e dependências ok; `COLUNA|text|YES`; `REGRA|1`; `LINHA|true|false` (logo claro da etapa 1 gravado; escuro ainda não). Se a coluna faltar com a imagem nova no ar (Review Focus 1: a marca inteira cai no `.env`): parar e decidir com o Victor entre reaplicar o baseline (`update.sh --to v1.47.0-cvx.2 --force` no `tmux`) e o rollback do Step 6.
+Expected: `v1.47.0-cvx.2`; as quatro `*_IMAGE` em `ghcr.io/victorrabyfs/…:1.47.0-cvx.2`; `307`; health com `"version":"1.47.0-cvx.2"` e dependências ok; o `grep` do log do banco sem `ERROR` novo desta aplicação (linhas com `logo_dark_path` são as do bloco 9001; `ERROR` antigo, de aplicações anteriores e já conhecido, não conta — na dúvida, mostrar ao Victor); `COLUNA|text|YES`; `REGRA|1`; `LINHA|true|false` (logo claro da etapa 1 gravado; escuro ainda não); `ORGLOGO|0` (nenhuma organização com logo próprio — senão, nessa organização a barra lateral mostra o logo dela e não troca pelo escuro, como manda a 7.3.4; conferir o Step 5 numa organização sem logo). Se a coluna faltar com a imagem nova no ar (Review Focus 1: a marca inteira cai no `.env`): parar e, com a aprovação do Victor, reaplicar pelo **mesmo comando `tmux` `update-logo-escuro` do Step 2** (`update.sh --to v1.47.0-cvx.2 --force`), ou decidir pelo rollback do Step 6.
 
-- [ ] **Step 4: O logo escuro (Victor)**
+- [ ] **Step 4: O logo escuro — do SVG da plataforma atual para PNG, no navegador**
 
-Victor exporta o logo escuro da identidade (o SVG logo-dark-v3) em **PNG**, altura ≥ 96 px, fundo transparente, ≤ 512 KB (a tela recusa SVG), abre `https://<dominio-de-producao>/admin/marca` e sobe o arquivo no campo **"Logo para o tema escuro"**. Esperado na tela: aviso "Logo atualizado."; a prévia "Como o logo aparece no tema escuro, sem moldura:" mostra o arquivo sobre o fundo escuro; o campo "Logo" de cima continua com o logo claro. Conferir no banco (mesmo `bash -s` do Step 3, só a consulta `LINHA|`): `LINHA|true|true`.
+O logo claro já está enviado (etapa 1; `LINHA|true|…` no Step 3). O escuro sai do SVG logo-dark-v3 que a plataforma atual da Convexy serve, convertido para PNG **no navegador do Victor** (sem ferramenta nesta máquina) e enviado pelo próprio campo "Logo para o tema escuro" — a tela recusa SVG.
+
+**4a — Conferir o SVG na VPS (só leitura).**
+```bash
+ssh <host-ssh> 'f=/root/convexy-dev/frontend/public/branding/logo-dark-v3.svg; test -f "$f" || { echo "FALTA: $f"; exit 1; }; echo "bytes=$(wc -c < "$f")"; tr "\n" " " < "$f" | grep -oE "<svg[^>]*>" | head -1 | grep -oE "(viewBox|width|height)=\"[^\"]*\""; echo "externos=$(grep -cE "<text|<image|@import|@font-face|href=\"http|url\(http" "$f")"'
+```
+Expected: `bytes=` (anotar: é o número que o 4c confere depois de decodificar); `viewBox="…"` com quatro números (ou `width`/`height` numéricos); **`externos=0`**. Se `externos` for maior que zero, **parar**: o SVG depende de fonte, imagem ou folha externa, que um SVG desenhado como imagem no canvas não carrega — o PNG sairia sem texto ou sem parte da arte. Pedir ao Victor o PNG exportado pela ferramenta de design (altura ≥ 96 px, fundo transparente, ≤ 512 KB) e subir pelo campo, conferindo como no fim do 4c.
+
+**4b — Levar o conteúdo ao navegador, em base64.** Não pela URL pública da plataforma atual: buscar de outra origem esbarra em CORS, e uma imagem de outra origem desenhada sem CORS **contamina o canvas** (`getImageData`/`toBlob` lançam `SecurityError`). Os bytes vão pela saída do SSH:
+```bash
+ssh <host-ssh> 'f=/root/convexy-dev/frontend/public/branding/logo-dark-v3.svg; base64 -w0 "$f" | wc -c; base64 -w0 "$f"'
+```
+A primeira linha é o tamanho do base64. Até 40 KB: no `javascript_tool` (Claude in Chrome), `window.__svgB64 = "<base64 inteiro>"`. Acima de 40 KB, em partes de 30 000 caracteres:
+```bash
+ssh <host-ssh> 'base64 -w0 /root/convexy-dev/frontend/public/branding/logo-dark-v3.svg | fold -w 30000'
+```
+e, uma chamada do `javascript_tool` por linha, na ordem: `(window.__svgPartes ||= []).push("<linha N>"); window.__svgPartes.length`. No fim, `window.__svgB64 = window.__svgPartes.join(""); window.__svgB64.length` — tem de ser igual ao tamanho da primeira linha.
+
+**4c — Converter, prever e só então enviar (Chrome do Victor, com aprovação dele).** Com o Claude in Chrome, abrir `https://<dominio-de-producao>/admin/marca` (sessão do Victor) e esperar o campo hidratar: `document.querySelector("[data-campo-de-logo='instalacao-escuro'][data-hidratado]") !== null` → `true`. A injeção do 4b é feita **nesta** aba (recarregar a página apaga `window.__svgB64`). Rodar pelo `javascript_tool`, primeiro com `ENVIAR = false` (só a prévia):
+```js
+(async () => {
+  const ENVIAR = false; // 1ª execução: false (só a prévia). 2ª, só depois do "aprovado" do Victor: true.
+  const BYTES_ESPERADOS = 0; // o `bytes=` do 4a
+  const ALTURA = 192;
+  const LIMITE = 524288; // 512 KB, o teto da rota
+
+  const b64 = window.__svgB64 || (window.__svgPartes || []).join("");
+  if (!b64) throw new Error("sem window.__svgB64 — refazer o 4b nesta aba");
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  if (bytes.length !== BYTES_ESPERADOS) throw new Error(`bytes=${bytes.length}, esperado ${BYTES_ESPERADOS} (4a)`);
+
+  const doc = new DOMParser().parseFromString(new TextDecoder("utf-8").decode(bytes), "image/svg+xml");
+  if (doc.querySelector("parsererror")) throw new Error("o SVG não parseia");
+  const svg = doc.documentElement;
+  if (svg.nodeName.toLowerCase() !== "svg") throw new Error(`a raiz não é <svg>: ${svg.nodeName}`);
+
+  // Proporção pelo viewBox; sem ele, por width/height (e o viewBox é criado).
+  const vb = (svg.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+  let proporcao;
+  if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) {
+    proporcao = vb[2] / vb[3];
+  } else {
+    const w = parseFloat(svg.getAttribute("width") || "");
+    const h = parseFloat(svg.getAttribute("height") || "");
+    if (!(w > 0 && h > 0)) throw new Error("SVG sem viewBox e sem width/height numéricos");
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    proporcao = w / h;
+  }
+  const largura = Math.round(ALTURA * proporcao);
+  svg.setAttribute("width", String(largura));
+  svg.setAttribute("height", String(ALTURA));
+  if (!svg.getAttribute("xmlns")) svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+  // Blob URL da MESMA origem: o canvas não fica contaminado.
+  const url = URL.createObjectURL(
+    new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" }),
+  );
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = largura;
+    canvas.height = ALTURA;
+    const ctx = canvas.getContext("2d");
+    // SEM fillRect: o fundo do PNG fica transparente.
+    ctx.drawImage(img, 0, 0, largura, ALTURA);
+
+    const { data } = ctx.getImageData(0, 0, largura, ALTURA);
+    let opacos = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] > 0) opacos++;
+    const alfa = (x, y) => data[(y * largura + x) * 4 + 3];
+    const cantos = [alfa(0, 0), alfa(largura - 1, 0), alfa(0, ALTURA - 1), alfa(largura - 1, ALTURA - 1)];
+
+    const blob = await new Promise((ok, erro) =>
+      canvas.toBlob((b) => (b ? ok(b) : erro(new Error("toBlob devolveu null"))), "image/png"),
+    );
+    const cabeca = new Uint8Array(await blob.slice(0, 8).arrayBuffer());
+    const assinaturaPng = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((b, i) => cabeca[i] === b);
+
+    const relatorio = {
+      bytesSvg: bytes.length,
+      largura,
+      altura: ALTURA,
+      opacos,
+      total: largura * ALTURA,
+      cantos,
+      assinaturaPng,
+      tamanhoPng: blob.size,
+    };
+    const problemas = [];
+    if (opacos === 0) problemas.push("nenhum pixel opaco (arte vazia)");
+    if (opacos === largura * ALTURA) problemas.push("todos os pixels opacos (o fundo não é transparente)");
+    if (cantos.some((a) => a !== 0)) problemas.push(`cantos não transparentes: ${cantos.join(",")}`);
+    if (!assinaturaPng) problemas.push("o arquivo gerado não é PNG");
+    if (blob.size > LIMITE) problemas.push(`PNG com ${blob.size} bytes, acima de ${LIMITE}`);
+    if (problemas.length > 0) throw new Error(`recusado: ${problemas.join("; ")} — ${JSON.stringify(relatorio)}`);
+    window.__logoEscuro = { blob, relatorio };
+
+    document.getElementById("previa-da-conversao-do-logo-escuro")?.remove();
+    if (!ENVIAR) {
+      // Prévia: o canvas sobre o fundo do tema escuro, no canto da tela, para a captura.
+      const fundo = document.createElement("div");
+      fundo.id = "previa-da-conversao-do-logo-escuro";
+      Object.assign(fundo.style, {
+        position: "fixed",
+        top: "16px",
+        right: "16px",
+        zIndex: "2147483647",
+        background: "#0B0D10",
+        padding: "24px",
+        borderRadius: "8px",
+      });
+      canvas.style.height = "96px";
+      canvas.style.width = `${Math.round(96 * proporcao)}px`;
+      fundo.appendChild(canvas);
+      document.body.appendChild(fundo);
+      return JSON.stringify({ etapa: "prévia", ...relatorio });
+    }
+
+    // Envio: pelo próprio campo, como se o Victor tivesse escolhido o arquivo.
+    if (!document.querySelector("[data-campo-de-logo='instalacao-escuro'][data-hidratado]")) {
+      throw new Error("o campo do logo escuro não está hidratado");
+    }
+    const entrada = document.getElementById("logo-instalacao-escuro");
+    if (!(entrada instanceof HTMLInputElement) || entrada.type !== "file") {
+      throw new Error("#logo-instalacao-escuro não é um input de arquivo");
+    }
+    const dt = new DataTransfer();
+    dt.items.add(new File([blob], "logo-escuro.png", { type: "image/png" }));
+    entrada.files = dt.files;
+    entrada.dispatchEvent(new Event("change", { bubbles: true }));
+    return JSON.stringify({ etapa: "enviado", ...relatorio });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+})();
+```
+(Antes de rodar, trocar `BYTES_ESPERADOS = 0` pelo `bytes=` do 4a.) Expected da prévia: `{"etapa":"prévia", …}` com `opacos` entre 1 e `total - 1`, `cantos` `[0,0,0,0]`, `assinaturaPng: true`, `tamanhoPng` ≤ 524288. Tirar a captura (`computer` → screenshot) e mostrar ao Victor o logo sobre o `#0B0D10`. Recusa da função (`recusado: …`) ou "não" do Victor: **parar** — nada foi enviado; o caminho é o PNG exportado pela ferramenta de design, como no 4a.
+
+Só com o **"aprovado"** do Victor: rodar o **mesmo** código com `ENVIAR = true` (ele remove a prévia e envia). Expected: `{"etapa":"enviado", …}`. Conferir, nesta ordem:
+- `read_network_requests`: um `POST` para `/api/v1/marca/logo` com status **200**;
+- na tela, o aviso **"Logo atualizado."** (`find`/`get_page_text`);
+- `document.querySelector("[data-previa-do-logo-escuro] img")?.getAttribute("src")` → URL em `/brand-logos/platform/…` com extensão png (o PNG recém-enviado); o campo "Logo" de cima continua com o logo claro;
+- no banco (mesmo `bash -s` do Step 3, só a consulta `LINHA|`): **`LINHA|true|true`**.
 
 - [ ] **Step 5: Conferência em tela, claro e escuro — checklist do Victor + medida por ferramenta**
 
-Com o Claude in Chrome, na sessão do Victor (ele aprova o uso do navegador e cada tela), recarregando sem cache. Para ver o `/login` no escuro: escolher o escuro dentro do `/app` (controle "Tema:" no menu do usuário) e sair — a escolha fica no navegador.
+Com o Claude in Chrome, na sessão do Victor (ele aprova o uso do navegador e cada tela), recarregando sem cache. A troca de tema dentro do `/app` é pelo controle "Tema:" no menu do usuário. **O `/login` não exige sair da conta:** a conferência dele é pelo HTML servido, e a prova visual do `/login` escuro é o e2e do CI (Task 6, `convexy-logo-escuro.spec.ts`, em `pass`).
 
-Em cada tela, medir pelo `javascript_tool`:
+Em cada tela do `/app`, medir pelo `javascript_tool`:
 ```js
 JSON.stringify({
   url: location.pathname,
@@ -2804,12 +2985,16 @@ JSON.stringify({
   })),
 })
 ```
-Checklist (cada item com a medida gravada em `.superpowers/evidence/convexy-logo-escuro/vps-medidas.jsonl`, uma linha JSON por tela, e captura na mesma pasta: vps-barra-claro, vps-barra-escuro, vps-login-claro, vps-login-escuro, vps-admin-marca, vps-barra-escuro-390):
+Para o `/login`, sem sessão (da máquina local, só leitura):
+```bash
+curl -s https://<dominio-de-producao>/login | grep -oE '<img[^>]*data-testid="logo-da-fachada[^"]*"[^>]*>'
+```
+Checklist (cada item com a medida gravada em `.superpowers/evidence/convexy-logo-escuro/vps-medidas.jsonl`, uma linha JSON por tela, e captura na mesma pasta: vps-barra-claro, vps-barra-escuro, vps-admin-marca, vps-barra-escuro-390):
 - [ ] `/app/inbox`, tema **claro**: exatamente um logo `visivel: true` — o claro —, `fundoDoPai` transparente (`rgba(0, 0, 0, 0)`).
 - [ ] `/app/inbox`, tema **escuro**: exatamente um logo `visivel: true` — o escuro —, `fundoDoPai` **não** branco (nada de moldura).
-- [ ] `/login`, tema claro: só o claro visível; tema escuro: só o escuro visível, sem moldura.
+- [ ] `/login` (pelo `curl`): exatamente **duas** tags — `data-testid="logo-da-fachada"` com o `src` do PNG claro, e `data-testid="logo-da-fachada-escuro"` com o `src` do PNG escuro e `class` com `hidden` e `dark:block`. A prova visual (claro só no claro, escuro só no escuro, sem moldura) é o e2e do CI. Se o Victor quiser ver o `/login` escuro com os próprios olhos: ele escolhe o escuro no `/app`, sai e entra de novo — **sabendo que vai precisar do código TOTP** para voltar.
 - [ ] Barra recolhida: a inicial "C" (inalterada).
-- [ ] 390 px de largura, tema escuro: o logo escuro no lugar, sem transbordo (`document.documentElement.scrollWidth > document.documentElement.clientWidth` = `false`).
+- [ ] 390 px de largura, tema escuro: **abrir antes a gaveta/menu** (em 390 px a barra lateral fica recolhida atrás do botão de menu, e sem abrir a medida não acha o `aside img` visível); então o logo escuro no lugar, sem transbordo (`document.documentElement.scrollWidth > document.documentElement.clientWidth` = `false`).
 - [ ] `/admin/marca`: os dois campos, cada um com o seu arquivo.
 - [ ] No olho do Victor: o logo escuro legível sobre o fundo `#0B0D10`/`#131923`.
 
@@ -2817,7 +3002,11 @@ Se a ferramenta só devolver a imagem na conversa, sem arquivo, registrar isso �
 
 - [ ] **Step 6: Se algo estiver errado — regra de decisão e rollback**
 
-Parar e perguntar ao Victor. **Só o logo escuro errado** (arte, contraste): **Remover** no campo "Logo para o tema escuro" — volta o claro com moldura, sem atualização. **Reverter só se algo ficou ilegível ou um fluxo quebrou** (entrar, atender, mover lead, agendar; ou a marca inteira sumiu). Rollback (só com a aprovação dele), conferindo antes que a sessão `tmux` não existe:
+Parar e perguntar ao Victor. **Só o logo escuro errado** (arte, contraste): **Remover** no campo "Logo para o tema escuro" — volta o claro com moldura, sem atualização. **Reverter só se algo ficou ilegível ou um fluxo quebrou** (entrar, atender, mover lead, agendar; ou a marca inteira sumiu).
+
+Antes do rollback, saber o que ele **não** desfaz: o valor `logo_dark_path` da linha `id = 1` e o PNG no bucket `brand-logos` ficam (o Storage é na nuvem, fora do `tar` do `backup.sh`), e a `-cvx.1` não tem campo para removê-los. Se o motivo do rollback é o próprio logo escuro, clicar **Remover** no campo "Logo para o tema escuro" **antes** do rollback.
+
+Rollback (só com a aprovação dele), conferindo antes que a sessão `tmux` não existe:
 ```bash
 ssh -t <host-ssh> 'cd /opt/deskcommcrm && if tmux has-session -t rollback-logo-escuro 2>/dev/null; then echo "JÁ EXISTE: tmux attach -t rollback-logo-escuro"; else tmux new -s rollback-logo-escuro "bash hostgator-setup-kit/update.sh --to v1.47.0-cvx.1 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-logo-escuro.log; echo FIM; read"; fi'
 ```
@@ -2825,7 +3014,22 @@ Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-logo-escuro'`. Confer
 ```bash
 ssh <host-ssh> 'cd /opt/deskcommcrm && git describe --tags --exact-match HEAD; curl -s https://<dominio-de-producao>/api/v1/health | head -c 300; echo; curl -s -o /dev/null -w "%{http_code}\n" https://<dominio-de-producao>/'
 ```
-Esperado: `v1.47.0-cvx.1`; health `"version":"1.47.0-cvx.1"`; `307`; o tema escuro volta ao logo claro com moldura. A coluna `logo_dark_path` fica no banco, inofensiva (`--force` porque o alvo é ancestral do HEAD, `update.sh:107-114`). Depois disso o botão **volta a oferecer** a `-cvx.2` (não é ancestral do HEAD): **não clicar**; a correção sai como `v1.47.0-cvx.3`, e a marca das clínicas desligada (spec 7.4) desloca uma casa — atualizar a tabela de "Base e versões" do `CONVEXY.md`.
+Esperado: `v1.47.0-cvx.1`; health `"version":"1.47.0-cvx.1"`; `307`; o tema escuro volta ao logo claro com moldura. A coluna `logo_dark_path` fica no banco, inofensiva (`--force` porque o alvo é ancestral do HEAD, `update.sh:107-114`).
+
+Se o rollback já foi feito com o logo escuro ainda gravado (e o motivo era ele), limpar o valor pelo `psql_run` do kit (regra do Step 1: nunca `bash -x`/`set -x`):
+```bash
+ssh <host-ssh> 'bash -s' <<'EOF'
+set -euo pipefail
+cd /opt/deskcommcrm
+source hostgator-setup-kit/_common.sh
+enter_project
+psql_run -tA -c "update public.platform_branding set logo_dark_path = null where id = 1;" </dev/null
+psql_run -tA -c "select 'LINHA|' || (logo_path is not null) || '|' || (logo_dark_path is not null) from public.platform_branding where id = 1;" </dev/null
+EOF
+```
+Esperado: `UPDATE 1` e `LINHA|true|false`. O PNG que ficou órfão no bucket (≤ 512 KB) é inofensivo.
+
+Depois do rollback o botão **volta a oferecer** a `-cvx.2` (não é ancestral do HEAD): **não clicar**; a correção sai como `v1.47.0-cvx.3`, e a marca das clínicas desligada (spec 7.4) desloca uma casa — atualizar a tabela de "Base e versões" do `CONVEXY.md`.
 
 ---
 
@@ -2858,9 +3062,9 @@ Esperado: `v1.47.0-cvx.1`; health `"version":"1.47.0-cvx.1"`; `307`; o tema escu
 | 7.3.5 moldura inteira `dark:hidden` + `<img>` irmão `hidden dark:block`; condição `!activeOrg?.marca?.logoUrl`; sem escuro nada muda; CSS sem divergência de hidratação | Task 4 Steps 1–2; teste do desenho |
 | 7.3.6 unitário: `getAllByRole("img")`, classes, "logo da organização → sem segundo `<img>`", rota com variante no POST e no DELETE | Tasks 4 e 2 |
 | 7.3.6 invariante; `test:db` verde | Task 1; Task 8 Step 3 (`invariants`) |
-| 7.3.6 e2e: claro só no claro, escuro só no escuro, sem moldura, barra e login; `afterAll` limpa | Task 6 |
-| 7.3.6 na VPS: enviar o logo escuro depois da atualização | Task 9 Step 4 |
-| 7.3 rollback para a anterior (`--force`), coluna fica, botão reoferece | Task 7 Step 4; Task 9 Step 6 |
+| 7.3.6 e2e: claro só no claro, escuro só no escuro, sem moldura, barra e login; limpeza garantida (`try/finally`, um login só) | Task 6 |
+| 7.3.6 na VPS: enviar o logo escuro depois da atualização | Task 9 Step 4 (SVG da plataforma atual conferido na VPS, convertido para PNG no navegador, prévia aprovada pelo Victor, envio pelo campo) |
+| 7.3 rollback para a anterior (`--force`), coluna fica, botão reoferece; valor e PNG ficam (Remover antes, ou `update … set logo_dark_path = null`) | Task 7 Step 4; Task 9 Step 6 |
 | 7.1 `CONVEXY.md` (trecho, local, motivo, reaplicar; desvios; docs que não valem); `e2e.yml` registrado | Tasks 6 e 7 |
 | 7.1 suítes antes da tag (`test:db` obrigatório nesta versão), depois conferência em tela claro/escuro | Task 8 Step 3 (CI — execução sem recursos locais); Task 9 Step 5 |
 | 5.3 versão com plano, seção no CHANGELOG, rollback e validação em produção | Tasks 7, 8, 9 |
@@ -2872,5 +3076,5 @@ Esperado: `v1.47.0-cvx.1`; health `"version":"1.47.0-cvx.1"`; `307`; o tema escu
 - o banco da VPS tem `logo_dark_path` (`COLUNA|text|YES`, `REGRA|1`) e, depois do envio, `LINHA|true|true` (Task 9 Steps 3–4);
 - as quatro imagens `:1.47.0-cvx.2` publicadas e a `stable` com o mesmo digest de cada uma (Task 8 Step 6);
 - CI do PR com os cinco obrigatórios, as cinco `e2e-parte` e todas as pernas `invariants-majors` em `pass`, nenhuma `skipping` (Task 8 Step 3);
-- na VPS, medido por ferramenta: tema claro só com o logo claro, tema escuro só com o escuro e sem moldura, na barra lateral e no `/login` (Task 9 Step 5);
+- na VPS, medido por ferramenta: tema claro só com o logo claro, tema escuro só com o escuro e sem moldura, na barra lateral; o `/login` servindo as duas tags (`logo-da-fachada` e `logo-da-fachada-escuro`, `curl`), com a prova visual dele no e2e do CI (Task 9 Step 5);
 - `CONVEXY.md` registra cada arquivo do original alterado, os desvios, a linha da versão e o rollback; `git diff --name-only origin/main HEAD` da branch cabe inteiro no `CONVEXY.md` (Task 7 Step 6).
