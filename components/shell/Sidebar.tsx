@@ -112,6 +112,10 @@ export function SidebarContent({
    * descer para ele — que é o contrário do que a precedência por campo promete.
    */
   const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
+  // Convexy (spec 7.3.5): o logo do tema escuro da INSTALAÇÃO só vale quando o
+  // logo exibido é o dela — com logo da organização, nada muda. CONVEXY.md,
+  // "Logo escuro".
+  const logoEscuro = activeOrg?.marca?.logoUrl ? null : (brand.logoDarkUrl ?? null);
   // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
   // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
   const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
@@ -140,15 +144,34 @@ export function SidebarContent({
           // fica com uma moldura branca de sobra. Troca aceita: pior caso
           // "moldura desnecessária" é sempre melhor que pior caso "logo
           // invisível".
-          <div className="rounded-md dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm">
-            {/* <img> em vez de next/image de propósito: a URL vem de quem hospeda
-              (banco ou .env), e next/image exige allowlist de domínios fechada em
-              build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
-              Altura fixa e largura livre porque a arte enviada tem proporção
-              desconhecida; forçar as duas distorceria o logo de quem configurou. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
-          </div>
+          <>
+            <div
+              className={cn(
+                "rounded-md dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm",
+                logoEscuro ? "dark:hidden" : null,
+              )}
+            >
+              {/* <img> em vez de next/image de propósito: a URL vem de quem hospeda
+                (banco ou .env), e next/image exige allowlist de domínios fechada em
+                build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
+                Altura fixa e largura livre porque a arte enviada tem proporção
+                desconhecida; forçar as duas distorceria o logo de quem configurou. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
+            </div>
+            {/* Convexy (spec 7.3.5): com o logo do tema escuro, a moldura INTEIRA
+              some no escuro (acima) e este logo aparece no lugar dela, sem
+              moldura. Troca só por CSS: servidor e cliente desenham o mesmo
+              DOM, sem divergência de hidratação. */}
+            {logoEscuro ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoEscuro}
+                alt={nome}
+                className="hidden h-7 w-auto max-w-[10rem] object-contain dark:block"
+              />
+            ) : null}
+          </>
         ) : marcaDoProduto ? (
           // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`):
           // logotipo com a barra aberta, só o símbolo com ela recolhida.
