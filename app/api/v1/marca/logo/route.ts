@@ -86,6 +86,35 @@ const escopoSchema = z.enum(["instalacao", "organizacao"]);
 type Escopo = z.infer<typeof escopoSchema>;
 
 /**
+ * Convexy (spec 7.3.2) — QUAL logo da instalação esta chamada troca: o do tema
+ * claro (`logo_path`, o de sempre) ou o do tema escuro (`logo_dark_path`,
+ * migration 9001). ALLOWLIST pelo mesmo motivo do escopo: o valor escolhe a
+ * COLUNA gravada. Ausente = `claro`, e é isso que mantém o pedido de sempre
+ * (sem o campo) com o comportamento de antes. `escuro` só existe na marca da
+ * INSTALAÇÃO: a organização não tem coluna para ele. Registro: CONVEXY.md,
+ * "Logo escuro".
+ */
+const varianteSchema = z.enum(["claro", "escuro"]);
+type Variante = z.infer<typeof varianteSchema>;
+
+function colunaDaVariante(variante: Variante): "logo_path" | "logo_dark_path" {
+  return variante === "escuro" ? "logo_dark_path" : "logo_path";
+}
+
+/** A variante do pedido (formulário no POST, query no DELETE), conferida contra o escopo. */
+function lerVariante(
+  bruto: unknown,
+  escopo: Escopo,
+): { readonly variante: Variante } | { readonly recusa: string } {
+  const lida = varianteSchema.safeParse(bruto ?? "claro");
+  if (!lida.success) return { recusa: "Campo 'variante' inválido." };
+  if (lida.data === "escuro" && escopo !== "instalacao") {
+    return { recusa: "O logo para o tema escuro só existe na marca da instalação." };
+  }
+  return { variante: lida.data };
+}
+
+/**
  * 10 trocas de logo por pessoa a cada 5 min.
  *
  * Por USUÁRIO e não por IP: o kit self-host expõe o app sem proxy
@@ -187,15 +216,20 @@ async function abrirContexto(escopo: Escopo): Promise<{ ctx: Contexto } | { recu
 }
 
 /** O caminho HOJE gravado, lido do BANCO. Nunca do cliente. */
-async function caminhoGravado(ctx: Contexto): Promise<string | null> {
+async function caminhoGravado(ctx: Contexto, variante: Variante): Promise<string | null> {
   const admin = createAdminClient();
   if (ctx.escopo === "instalacao") {
+    // Convexy: a coluna da variante — apagar o anterior do escuro nunca apaga o claro.
+    const coluna = colunaDaVariante(variante);
     const { data } = await admin
       .from("platform_branding")
-      .select("logo_path")
+      .select(coluna)
       .eq("id", 1)
       .maybeSingle();
-    return (data as { logo_path?: string | null } | null)?.logo_path ?? null;
+    return (
+      (data as Partial<Record<"logo_path" | "logo_dark_path", string | null>> | null)?.[coluna] ??
+      null
+    );
   }
   const { data } = await admin
     .from("organizations")
@@ -218,12 +252,20 @@ async function caminhoGravado(ctx: Contexto): Promise<string | null> {
  * outros fazem read-modify-write do jsonb inteiro. O `row_count` de volta é o que
  * distingue "gravou" de "não gravou".
  */
-async function gravarCaminho(ctx: Contexto, caminho: string | null): Promise<Recusa | null> {
+async function gravarCaminho(
+  ctx: Contexto,
+  caminho: string | null,
+  variante: Variante,
+): Promise<Recusa | null> {
   const admin = createAdminClient();
   if (ctx.escopo === "instalacao") {
+    // Convexy: só a coluna da variante entra no upsert — a outra fica como está.
     const { error } = await admin
       .from("platform_branding")
-      .upsert({ id: 1, logo_path: caminho, seeded_from_env: false }, { onConflict: "id" });
+      .upsert(
+        { id: 1, [colunaDaVariante(variante)]: caminho, seeded_from_env: false },
+        { onConflict: "id" },
+      );
     if (error) {
       logger.error("[marca/logo] gravação da instalação falhou", {
         codigo: error.code,
@@ -317,12 +359,17 @@ async function registrarAuditoria(
   req: NextRequest,
   requestId: string,
   acao: "definido" | "removido",
+  variante: Variante,
 ): Promise<void> {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const userAgent = req.headers.get("user-agent") ?? null;
   // FORMA, nunca IDENTIDADE — mesma disciplina de `resolve.ts`. O caminho do
   // arquivo não entra: a trilha é lida por quem opera a plataforma inteira.
-  const metadata = { fields_changed: ["logo_path"], logo_definido: acao === "definido" };
+  // Convexy: `fields_changed` diz QUAL das duas colunas mudou.
+  const metadata = {
+    fields_changed: [colunaDaVariante(variante)],
+    logo_definido: acao === "definido",
+  };
 
   if (ctx.escopo === "instalacao") {
     await audit({
@@ -366,6 +413,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!escopoLido.success) {
     return fail("validation_failed", "Campo 'escopo' inválido.", 422, { requestId });
   }
+  const varianteLida = lerVariante(form?.get("variante"), escopoLido.data);
+  if ("recusa" in varianteLida) {
+    return fail("validation_failed", varianteLida.recusa, 422, { requestId });
+  }
+  const { variante } = varianteLida;
 
   const aberto = await abrirContexto(escopoLido.data);
   if ("recusa" in aberto) {
@@ -420,7 +472,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  const anterior = await caminhoGravado(ctx);
+  const anterior = await caminhoGravado(ctx, variante);
   const caminho = caminhoNovoDoLogo(ctx.prefixo, extensaoDe(tipo));
 
   const { error: erroUp } = await createAdminClient()
@@ -431,7 +483,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Erro ao subir o logo.", 500, { requestId });
   }
 
-  const recusa = await gravarCaminho(ctx, caminho);
+  const recusa = await gravarCaminho(ctx, caminho, variante);
   if (recusa) {
     // A gravação falhou DEPOIS do upload: o arquivo novo é que vira órfão, não o
     // antigo. Tentar apagá-lo aqui seria o caminho certo e não é obrigatório —
@@ -441,7 +493,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   await apagarAnterior(ctx, anterior);
-  await registrarAuditoria(ctx, req, requestId, "definido");
+  await registrarAuditoria(ctx, req, requestId, "definido", variante);
 
   return ok(
     { logo_path: caminho, logo_url: urlPublicaDoLogo(caminho, baseDoStorage()) },
@@ -462,10 +514,16 @@ export async function DELETE(req: NextRequest): Promise<Response> {
 
   const requestId = randomUUID();
 
-  const escopoLido = escopoSchema.safeParse(new URL(req.url).searchParams.get("escopo"));
+  const busca = new URL(req.url).searchParams;
+  const escopoLido = escopoSchema.safeParse(busca.get("escopo"));
   if (!escopoLido.success) {
     return fail("validation_failed", "Parâmetro 'escopo' inválido.", 422, { requestId });
   }
+  const varianteLida = lerVariante(busca.get("variante"), escopoLido.data);
+  if ("recusa" in varianteLida) {
+    return fail("validation_failed", varianteLida.recusa, 422, { requestId });
+  }
+  const { variante } = varianteLida;
 
   const aberto = await abrirContexto(escopoLido.data);
   if ("recusa" in aberto) {
@@ -485,12 +543,12 @@ export async function DELETE(req: NextRequest): Promise<Response> {
     });
   }
 
-  const anterior = await caminhoGravado(ctx);
-  const recusa = await gravarCaminho(ctx, null);
+  const anterior = await caminhoGravado(ctx, variante);
+  const recusa = await gravarCaminho(ctx, null, variante);
   if (recusa) return fail(recusa.codigo, recusa.mensagem, recusa.status, { requestId });
 
   await apagarAnterior(ctx, anterior);
-  await registrarAuditoria(ctx, req, requestId, "removido");
+  await registrarAuditoria(ctx, req, requestId, "removido", variante);
 
   return ok({ logo_path: null, logo_url: null }, { requestId });
 }
