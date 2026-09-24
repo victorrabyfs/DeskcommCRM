@@ -32,9 +32,10 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Prova do botão "Atualizar" pelo fork, sem mudança na tela | `v1.44.0-cvx.2` |
 | Paleta, fontes e barra do navegador (spec 7.2) | `v1.44.0-cvx.3` |
 | Atualização para a base 1.47.0 do original (sem mudança da Convexy) | `v1.47.0-cvx.1` |
+| Logo escuro em `/admin/marca` (spec 7.3; migration 9001) | `v1.47.0-cvx.2` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
-vinha depois (logo escuro, spec 7.3; marca das clínicas desligada, spec 7.4) desloca uma casa.
+vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
 Acrescentar uma linha a cada versão publicada.
 
 ## Alterações em arquivos do original
@@ -95,6 +96,44 @@ Conferência depois de um merge do original:
 `convexy-tema-cobre-os-tokens` reprova quando o original renomeia ou cria token nos blocos
 `[data-theme]` do `globals.css`: decidir o valor Convexy e acrescentá-lo ao `tema.css`.
 
+### Logo escuro (etapa 3, `v1.47.0-cvx.2`)
+
+A instalação ganha um segundo logo, para o tema escuro: com ele, a barra lateral e a tela de
+entrada mostram esse arquivo no escuro, sem a moldura branca; sem ele, nada muda. Só vale
+quando o logo exibido é o da instalação (logo de organização ou do `.env` nunca é trocado).
+
+Arquivos novos (código da Convexy — não conflitam num merge):
+`supabase/migrations/20260924180901_9001_logo_escuro_da_instalacao.sql`,
+`tests/invariants/convexy-logo-escuro.test.ts`, `tests/unit/convexy-logo-escuro.test.tsx`,
+`tests/unit/convexy-logo-escuro-rota.test.ts`, `tests/unit/convexy-logo-escuro-leitura.test.ts`,
+`tests/unit/convexy-logo-escuro-campo.test.tsx`, `tests/e2e/convexy-logo-escuro.spec.ts`.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `supabase/baseline.sql` | bloco `-- ---- logo escuro da instalação (migration 9001) ----` logo depois do bloco "logo da marca: BUCKET e COLUNA (migration 0158)" e antes do da 0159 — nunca no fim (lá está a 0340, que levanta ERROR de propósito) | num conflito, prevalece o lado do original e o bloco inteiro é reaplicado no mesmo lugar |
+| `supabase/migrations/MANIFEST.md` | linha `9001_logo_escuro_da_instalacao` no fim | `merge=union`: conferir que não duplicou (`manifest-x-migrations`) |
+| `lib/database.types.ts` | `logo_dark_path` em `Row`/`Insert`/`Update` de `platform_branding`, antes de `logo_path` | reaplicar as três linhas à mão (nunca regenerar o arquivo) |
+| `app/api/v1/marca/logo/route.ts` | `varianteSchema`, `colunaDaVariante`, `lerVariante`; `variante` em `caminhoGravado`, `gravarCaminho` (`[colunaDaVariante(variante)]` no `upsert`), `registrarAuditoria` (`fields_changed`); leitura no `POST` (formulário) e no `DELETE` (`busca.get("variante")`) | reaplicar os blocos com o comentário `Convexy`; a versão da marca das clínicas desligada (spec 7.4) mexe no mesmo arquivo depois |
+| `lib/branding/instalacao.ts` | `logo_dark_path` em `COLUNAS`, com o comentário `Convexy` | manter a coluna na string |
+| `lib/branding/resolve.ts` | `CamadaDeMarca.logoDarkUrl?`; `LinhaDaInstalacao.logo_dark_path?`; em `resolverMarca`, `camadaDoLogo`/`logoDarkUrl` e o espalhamento no `return`; em `camadaDaInstalacao`, `escuro`/`logoDark` nos dois `return` | reaplicar os trechos `Convexy` |
+| `lib/branding.ts` | `logoDarkUrl?: string \| null` em `Branding` | idem |
+| `lib/branding/saida.ts` | `MarcaDeSaida.logoDarkUrl?` e o espalhamento em `marcaDaSaida` | idem |
+| `app/layout.tsx` | `MarcaDosClientComponents` passa `...(marca.logoDarkUrl ? { logoDarkUrl: … } : {})` | idem |
+| `components/shell/Sidebar.tsx` | `const logoEscuro = …`; moldura com `cn(…, logoEscuro ? "dark:hidden" : null)` dentro de um fragmento, e o `<img>` escuro irmão com `hidden … dark:block` | a moldura continua embrulhando DIRETO o `<img>` claro (`logo-nao-some-no-tema-escuro.test.ts`) |
+| `app/(public)/layout.tsx` | `import { cn }`; mesma moldura com `dark:hidden`; `<img data-testid="logo-da-fachada-escuro">` irmão | idem |
+| `components/branding/CampoDeLogo.tsx` | `VarianteDoLogo`, prop `variante`, `chave` (`id`/`data-campo-de-logo` com `-escuro`), `variante` no POST e no DELETE, rótulo "Logo para o tema escuro", ramo `PreviaDoLogoEscuro` (`data-previa-do-logo-escuro`) | o ternário `rotulo === t("Aparência escura") ? "…bg-white…"` fica intacto |
+| `app/admin/(protected)/marca/page.tsx` | `import { logoDaCamada }`; `logo_dark_path` em `gravada`; prop `logoEscuroEmVigor` | reaplicar |
+| `app/admin/(protected)/marca/_form.tsx` | `MarcaGravada.logo_dark_path`; prop `logoEscuroEmVigor`; cartão com o segundo `CampoDeLogo` (`variante="escuro"`) logo depois do cartão do logo | reaplicar o cartão no mesmo lugar |
+| `lib/i18n/dicionario.ts` | quatro chaves (com `es`) logo depois de `"Assim ele aparece:"`, com o comentário `Convexy` | reaplicar o bloco no mesmo lugar, não no fim do objeto |
+| `.github/workflows/e2e.yml` | linha `convexy-logo-escuro.spec.ts` em `SPECS_PARTE_1`, logo depois de `convexy-identidade.spec.ts` | dentro do bloco `>-`, sem comentário |
+| `CHANGELOG.md` | `## [1.47.0-cvx.2]` | ordem de "Base e versões" |
+
+Conferência depois de um merge do original: o CI do PR do merge (checks `verify` e `invariants`)
+com `tests/invariants/convexy-logo-escuro.test.ts`, `tests/unit/convexy-logo-escuro*.test.ts*`,
+`logo-nao-some-no-tema-escuro.test.ts`, `check-do-baseline-nao-diverge-da-cadeia.test.ts`,
+`baseline-reaplicavel.test.ts`, `manifest-x-migrations.test.ts` e
+`i18n-espanhol-cobre-a-tela.test.ts` em `pass`; e o `e2e` com a `SPECS_PARTE_1` em `pass`.
+
 ## Desvios aceitos
 
 - **DoD 17** — sem fragmento em `.changes/`: o CHANGELOG das versões `-cvx` é escrito à mão
@@ -125,6 +164,20 @@ Conferência depois de um merge do original:
   exigido (sem schema).
 - **DoD 13 na `-cvx.3`** — Living System Checklist e `docs/testing/user-journey-map.md` não
   atualizados: mudança só de aparência (sem dado, rota, log, worker ou jornada nova).
+- **Logo escuro (`v1.47.0-cvx.2`)** — só aparece junto com o logo claro da instalação: se a
+  instalação tiver só o escuro, ou se o logo exibido for o de uma organização ou o do `.env`,
+  nada muda (o campo avisa). Um `APP_LOGO_URL` já semeado em `platform_branding.logo_url`
+  conta como logo da instalação (origem "banco") e recebe o escuro — sem efeito na Convexy,
+  que envia o logo pela tela. E-mail, ícone, manifest e MFA continuam com o logo claro
+  (spec, seção 3). O mapa `docs/architecture/marca-propria.architecture.json` (aresta `e58`,
+  "upsert de logo_path") não é editado: a coluna nova e a variante da rota ficam registradas
+  aqui (DoD 13). `docs/testing/user-journey-map.md` não é editado (doc do original); a prova de
+  tela é `tests/e2e/convexy-logo-escuro.spec.ts` e a conferência na VPS.
+- **Testes do logo escuro** — nenhuma suíte rodou na máquina local: a prova é o CI do PR
+  (`verify`, `invariants` com `test:db` e `test:db:update`, `build-and-size`, `e2e` com as
+  cinco partes em `pass`, `imagens-ok`) e a conferência na VPS depois da aplicação.
+- **Migration da faixa 9001+** — numeração própria do fork (nunca colide com a do original).
+  O `checar-colisao-de-migration.sh` passa a sugerir `9002` como "próximo livre" no fork.
 
 ## Afirmações de docs do original que não valem no fork
 
@@ -139,6 +192,9 @@ Conferência depois de um merge do original:
   navegador também é") e o cabeçalho de `lib/branding/barra-do-navegador.ts` (`#faf9f6` /
   `#161510` são a cor da barra): no fork o fundo é `#F8FAFC`/`#0B0D10` e a barra vem de
   `lib/convexy/barra-do-navegador.ts`.
+- `docs/white-label.md:17` e o cabeçalho de `tests/unit/logo-nao-some-no-tema-escuro.test.ts`
+  ("um logo só"): no fork a instalação tem também o logo do tema escuro (`v1.47.0-cvx.2`).
+  `docs/architecture/marca-propria.architecture.json` (`e58`) só cita `logo_path`.
 
 ## Fica apontando para o original, de propósito
 
@@ -333,3 +389,24 @@ Depois disso o botão "Atualizar" **volta a oferecer** a versão revertida (ela 
 do HEAD — `agent.sh:161-164`): **não clicar**; corrigir com a `-cvx` seguinte (e o conteúdo
 que vinha depois desloca uma casa — "Base e versões"). A `-cvx.3` não tem banco nem `.env`:
 o rollback é só código e imagens.
+
+**Da `v1.47.0-cvx.2` (logo escuro) para a `v1.47.0-cvx.1`.** Antes de pensar em rollback: se
+o problema é só o logo escuro (arte errada, contraste), basta **Remover** o logo do campo
+"Logo para o tema escuro" em `/admin/marca` — a tela volta ao logo claro com a moldura, sem
+atualização nenhuma. Rollback só se algo ficou ilegível ou um fluxo quebrou, sempre dentro
+de `tmux`, conferindo antes que a sessão não existe:
+
+    ssh -t <host-ssh> 'cd /opt/deskcommcrm && if tmux has-session -t rollback-logo-escuro 2>/dev/null; then echo "JÁ EXISTE: tmux attach -t rollback-logo-escuro"; else tmux new -s rollback-logo-escuro "bash hostgator-setup-kit/update.sh --to v1.47.0-cvx.1 --force 2>&1 | tee /root/update-$(date +%Y%m%d-%H%M)-rollback-logo-escuro.log; echo FIM; read"; fi'
+
+Se o SSH cair: `ssh -t <host-ssh> 'tmux attach -t rollback-logo-escuro'`. A coluna
+`logo_dark_path` fica no banco, inofensiva: o código da `-cvx.1` não a lê, e o baseline da
+`-cvx.1` não a remove. **O valor gravado e o arquivo também ficam:** o `logo_dark_path` da
+linha `id = 1` e o PNG no bucket `brand-logos` do Storage (na nuvem, fora do `tar` do
+`backup.sh`) não são tocados pelo rollback, e a `-cvx.1` não tem campo para removê-los. Se o
+motivo do rollback é o próprio logo escuro, clicar **Remover** no campo "Logo para o tema
+escuro" **antes** do rollback. Se o rollback já foi feito, limpar o valor pelo `psql_run` do
+kit (mesmo bloco `ssh <host-ssh> 'bash -s'` com `source hostgator-setup-kit/_common.sh` e
+`enter_project` usado na conferência do banco, nunca com `bash -x`/`set -x`):
+`update public.platform_branding set logo_dark_path = null where id = 1;` — o PNG órfão
+(≤ 512 KB) no bucket é inofensivo. Depois do rollback o botão volta a oferecer a `-cvx.2`:
+não clicar; corrigir na `-cvx.3`.
