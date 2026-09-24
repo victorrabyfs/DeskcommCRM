@@ -66,6 +66,12 @@ export type MarcaDeSaida = {
    * (`app/(public)/layout.tsx`).
    */
   readonly logoUrl: string | null;
+  /**
+   * Convexy (spec 7.3.4): o logo do tema escuro da instalação — só a tela de
+   * entrada (`app/(public)/layout.tsx`) o lê. E-mail, ícone, manifest e MFA
+   * ignoram o campo (tema claro sempre, spec seção 3).
+   */
+  readonly logoDarkUrl?: string | null;
   /** `#hex` sempre — o formato que cliente de e-mail e @react-pdf entendem. */
   readonly accent: string;
   /** Preto ou branco, já com o piso de contraste aplicado. */
@@ -198,6 +204,7 @@ export async function marcaDaSaida(organizationId: string | null): Promise<Marca
     return {
       nome: marca.name,
       logoUrl: marca.logoUrl,
+      ...(marca.logoDarkUrl ? { logoDarkUrl: marca.logoDarkUrl } : {}),
       accent,
       // Nunca `#ffffff` fixo: `melhorFrenteSobre` (`contraste.ts:79`) já
       // decide preto ou branco pelo contraste real. Uma marca amarela colada

@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.47.0-cvx.2] — 2026-09-24
+
+Logo para o tema escuro. Em `/admin/marca` há um campo novo, **Logo para o tema escuro** (PNG ou JPG, até 512 KB, fundo transparente). Com ele enviado, o tema escuro mostra esse logo na barra lateral e na tela de entrada, sem a moldura branca; o tema claro continua com o logo de sempre. Sem ele, nada muda. A atualização acrescenta sozinha uma coluna ao banco; não há nada a fazer no `.env`.
+
 ## [1.47.0-cvx.1] — 2026-09-24
 
 Atualização para a 1.47.0 do DeskcommCRM (inclui a 1.45.0 e a 1.46.0 — notas logo abaixo). Mantém a identidade da Convexy (paleta, fontes, barra do navegador) e as imagens de `ghcr.io/victorrabyfs`.

@@ -3,6 +3,7 @@ import { marcaEhADoProduto } from "@/lib/branding";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { createClient } from "@/lib/supabase/server";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { cn } from "@/lib/utils";
 
 /**
  * A casca das telas de acesso — login, cadastro, recuperação, MFA.
@@ -76,7 +77,12 @@ export default async function PublicLayout({ children }: { children: React.React
                 `data-theme` (o `ThemeProvider` embrulha a raiz inteira, login
                 incluso), então um logo escuro contra `--color-surface` escuro tem
                 o mesmo problema de contraste aqui. */}
-              <div className="rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm">
+              <div
+                className={cn(
+                  "rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm",
+                  marca.logoDarkUrl ? "dark:hidden" : null,
+                )}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   data-testid="logo-da-fachada"
@@ -85,6 +91,19 @@ export default async function PublicLayout({ children }: { children: React.React
                   className="h-10 w-auto max-w-[12rem] object-contain"
                 />
               </div>
+              {/* Convexy (spec 7.3.5): o logo do tema escuro da instalação, sem
+                moldura, no lugar da moldura inteira (que some no escuro, acima).
+                `data-testid` próprio: `logo-da-fachada` continua único para
+                tests/e2e/marca-logo.spec.ts. */}
+              {marca.logoDarkUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  data-testid="logo-da-fachada-escuro"
+                  src={marca.logoDarkUrl}
+                  alt={marca.nome}
+                  className="hidden h-10 w-auto max-w-[12rem] object-contain dark:block"
+                />
+              ) : null}
             </div>
           ) : marcaEhADoProduto({ name: marca.nome, logoUrl: null }) ? (
             <div className="flex justify-center">

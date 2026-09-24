@@ -81,6 +81,13 @@ export type CamadaDeMarca = {
   readonly nome?: string | null;
   readonly logoUrl?: string | null;
   /**
+   * Convexy (spec 7.3.4): o logo desta camada para o TEMA ESCURO. Só a camada do
+   * banco da instalação o preenche (`camadaDaInstalacao`), e ele só chega à marca
+   * resolvida quando o logo exibido saiu desta MESMA camada (`resolverMarca`).
+   * CONVEXY.md, "Logo escuro".
+   */
+  readonly logoDarkUrl?: string | null;
+  /**
    * O envelope CRU, como veio da fonte — `unknown` de propósito: validar é
    * trabalho do resolvedor, e uma camada que já entregasse validado esconderia
    * de onde o dado inválido veio.
@@ -320,6 +327,12 @@ export function resolverMarca(
   const nome = primeiroDefinido(camadas, (c) => c.nome);
   const logo = primeiroDefinido(camadas, (c) => c.logoUrl);
   const base = resolveBranding(nome?.valor, logo?.valor);
+  // Convexy (spec 7.3.4): o logo escuro acompanha o logo EXIBIDO — vem da mesma
+  // camada que venceu `logoUrl` (a primeira com logo não vazio, a regra de
+  // `primeiroDefinido`). Logo de organização ou do `.env` nunca é trocado pelo
+  // escuro da instalação: essas camadas não têm `logoDarkUrl`.
+  const camadaDoLogo = camadas.find((c) => (c.logoUrl ?? "").trim().length > 0);
+  const logoDarkUrl = (camadaDoLogo?.logoDarkUrl ?? "").trim();
 
   const motivos: MotivoDaMarca[] = [];
   let cor: CorResolvida | null = null;
@@ -338,6 +351,8 @@ export function resolverMarca(
 
   return {
     ...base,
+    // Só com valor: marca sem logo escuro fica idêntica à de antes.
+    ...(logoDarkUrl.length > 0 ? { logoDarkUrl } : {}),
     cor,
     origens: {
       nome: nome?.origem ?? PADRAO,
@@ -375,6 +390,11 @@ export type LinhaDaInstalacao = {
    * então uma instalação pode voltar a rodar código que não conhece esta coluna.
    */
   readonly logo_path?: string | null;
+  /**
+   * Convexy (migration 9001): o arquivo do logo para o TEMA ESCURO, mesma forma
+   * de `logo_path`. Sem `logo_url` par: não há semente do `.env` para ele.
+   */
+  readonly logo_dark_path?: string | null;
   readonly accent_hex?: string | null;
 };
 
@@ -397,17 +417,21 @@ export function camadaDaInstalacao(linha: LinhaDaInstalacao | null): CamadaDeMar
   const hex = (linha.accent_hex ?? "").trim();
   // O arquivo subido vence a URL colada, DENTRO desta camada — ver `logoDaCamada`.
   const logoUrl = logoDaCamada(linha.logo_path, linha.logo_url);
+  // Convexy (spec 7.3.4): o arquivo do tema escuro; a chave só existe com valor.
+  const escuro = logoDaCamada(linha.logo_dark_path, null);
+  const logoDark = escuro ? { logoDarkUrl: escuro } : {};
   // Mesma regra do `.env`: campo vazio é ausência de configuração, não cor com
   // defeito. Sem isto, uma linha semeada de um `.env` sem cor emitiria
   // `cor_ausente` em toda instalação de fábrica — e aviso no caso normal ensina
   // o operador a ignorar avisos.
   if (hex.length === 0) {
-    return { origem: "banco", nome: linha.app_name, logoUrl };
+    return { origem: "banco", nome: linha.app_name, logoUrl, ...logoDark };
   }
   return {
     origem: "banco",
     nome: linha.app_name,
     logoUrl,
+    ...logoDark,
     cor: envelopeDeSemente(hex),
   };
 }

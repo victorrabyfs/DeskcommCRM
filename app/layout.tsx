@@ -279,7 +279,14 @@ async function MarcaDosClientComponents({ children }: { children: React.ReactNod
   // mandá-los engordaria o payload do RSC de TODA página com dado que ninguém lê.
   return (
     <MarcaDaInstalacaoProvider
-      marca={{ name: marca.name, logoUrl: marca.logoUrl, initial: marca.initial }}
+      marca={{
+        name: marca.name,
+        logoUrl: marca.logoUrl,
+        initial: marca.initial,
+        // Convexy (spec 7.3.4): o logo do tema escuro, só quando existe — o
+        // mesmo objeto chega ao SSR e à hidratação. CONVEXY.md, "Logo escuro".
+        ...(marca.logoDarkUrl ? { logoDarkUrl: marca.logoDarkUrl } : {}),
+      }}
     >
       {children}
     </MarcaDaInstalacaoProvider>

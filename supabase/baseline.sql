@@ -14585,6 +14585,53 @@ alter table public.platform_branding
 notify pgrst, 'reload schema';
 
 
+-- ---- logo escuro da instalação (migration 9001) ----
+--
+-- Convexy (fork victorrabyfs/DeskcommCRM) — spec
+-- docs/superpowers/specs/2026-09-22-identidade-convexy-design.md, seção 7.3.1;
+-- registro em CONVEXY.md, "Logo escuro (etapa 3, v1.47.0-cvx.2)". O mesmo SQL
+-- está em supabase/migrations/20260924180901_9001_logo_escuro_da_instalacao.sql.
+--
+-- A instalação ganha um SEGUNDO logo, para o tema escuro: com ele, a barra
+-- lateral e a tela de entrada trocam o logo claro (dentro da moldura branca)
+-- por este, sem moldura. Mesmo padrão do logo_path (bloco logo acima): caminho,
+-- e NÃO url, sempre platform/<uuid>.<png|jpg>; escrito só pela rota
+-- app/api/v1/marca/logo/route.ts (variante escuro); bucket brand-logos (público,
+-- zero policy). platform_branding só é escrita por service_role: sem RLS nova,
+-- sem policy, sem função.
+--
+-- POR QUE AQUI, e não no fim do arquivo: o fim é onde o original acrescenta os
+-- blocos dele, e o último comando é a conferência de módulos da 0340, que
+-- levanta ERROR de propósito. Num conflito de merge neste arquivo prevalece o
+-- lado do original, e este bloco é reaplicado neste mesmo lugar.
+--
+-- Idempotente e auto-curativo, na ordem da 0158: coluna, backfill do que
+-- estiver fora da forma e só então a regra (drop if exists + add) — o update.sh
+-- roda SEM ON_ERROR_STOP, e uma constraint que estourasse deixaria a coluna sem
+-- validação em silêncio.
+
+alter table public.platform_branding
+  add column if not exists logo_dark_path text;
+
+comment on column public.platform_branding.logo_dark_path is
+  'Convexy (migration 9001): logo da instalação para o TEMA ESCURO. Caminho em storage/brand-logos, sempre platform/<uuid>.<png|jpg>, como logo_path. Com ele, a barra lateral e a tela de entrada mostram este arquivo no tema escuro, sem a moldura branca do logo claro; vale só quando o logo exibido é o da instalação. Escrito por app/api/v1/marca/logo/route.ts (variante escuro).';
+
+update public.platform_branding
+   set logo_dark_path = null
+ where logo_dark_path is not null
+   and logo_dark_path !~ '^platform/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$';
+
+alter table public.platform_branding
+  drop constraint if exists platform_branding_logo_dark_path;
+alter table public.platform_branding
+  add constraint platform_branding_logo_dark_path check (
+    logo_dark_path is null
+    or logo_dark_path ~ '^platform/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$'
+  );
+
+notify pgrst, 'reload schema';
+
+
 -- ---- o teto de IA que vincula (migration 0159) ----
 --
 -- ⚠️ ESTE BLOCO EXISTE EM DOIS ARQUIVOS, PALAVRA POR PALAVRA:

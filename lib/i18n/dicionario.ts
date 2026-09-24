@@ -3687,6 +3687,17 @@ export const DICIONARIO: Traducoes = {
   },
   "Sem logo próprio, o sistema usa o logo": { es: "Sin logo propio, el sistema usa el logo" },
   "Assim ele aparece:": { es: "Así se ve:" },
+  // Convexy (spec 7.3.3): o logo do tema escuro em /admin/marca — CONVEXY.md, "Logo escuro".
+  "Logo para o tema escuro": { es: "Logo para el tema oscuro" },
+  "Como o logo aparece no tema escuro, sem moldura:": {
+    es: "Cómo se ve el logo en el tema oscuro, sin marco:",
+  },
+  "Sem logo para o tema escuro, o sistema mostra o logo claro sobre uma moldura branca.": {
+    es: "Sin logo para el tema oscuro, el sistema muestra el logo claro sobre un marco blanco.",
+  },
+  "Aparece no tema escuro no lugar do logo claro, sem moldura. Só vale junto com o logo claro da instalação (o campo acima).": {
+    es: "Aparece en el tema oscuro en lugar del logo claro, sin marco. Solo vale junto con el logo claro de la instalación (el campo de arriba).",
+  },
 
   // ─── Marca: linguagem.ts (só os avisos de texto FIXO — os compostos
   // dinamicamente com interpolação, ex. "No modo X, os botões usam..." e
@@ -3751,6 +3762,10 @@ export const DICIONARIO: Traducoes = {
   },
   // ─── app/api/v1/marca/logo/route.ts (frontend-traduz via CampoDeLogo.tsx) ───
   "Campo 'escopo' inválido.": { es: "Campo 'escopo' inválido." },
+  "Campo 'variante' inválido.": { es: "Campo 'variante' inválido." },
+  "O logo para o tema escuro só existe na marca da instalação.": {
+    es: "El logo para el tema oscuro solo existe en la marca de la instalación.",
+  },
   "O logo precisa ter até 512 KB. Arquivo maior vai inteiro para o navegador em toda página.": {
     es: "El logo debe pesar 512 KB como máximo. Un archivo más grande se envía completo al navegador en cada página.",
   },
