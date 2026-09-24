@@ -10,8 +10,9 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 
 ## Base e versões
 
-- Base atual: `v1.44.0` do original (`refs/upstream-tags/v1.44.0` no clone).
-- Versões: `v1.44.0-cvx.N`, tag anotada, criada só depois do merge, empurrada pelo nome.
+- Base atual: `v1.47.0` do original (`refs/upstream-tags/v1.47.0` no clone), trazida em 2026-09-24
+  (1.45.0 → 1.47.0: 179 commits, 7 migrations, conflito só em `CHANGELOG.md`). Base anterior: `v1.44.0`.
+- Versões: `vX.Y.Z-cvx.N` sobre a base atual (hoje `v1.47.0-cvx.N`), tag anotada, criada só depois do merge, empurrada pelo nome.
   Nunca `--tags`/`--follow-tags`. Tag publicada nunca é refeita (corrigir = `N+1`).
 - A única tag do original no fork é `v1.44.0`. Versões novas do original ficam em
   `refs/upstream-tags/` no clone: `git fetch --no-tags upstream refs/tags/vA.B.C:refs/upstream-tags/vA.B.C`.
@@ -30,6 +31,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Fork só com infraestrutura (namespace das imagens, filtro de versão do kit, cabeçalho do CHANGELOG) | `v1.44.0-cvx.1` |
 | Prova do botão "Atualizar" pelo fork, sem mudança na tela | `v1.44.0-cvx.2` |
 | Paleta, fontes e barra do navegador (spec 7.2) | `v1.44.0-cvx.3` |
+| Atualização para a base 1.47.0 do original (sem mudança da Convexy) | `v1.47.0-cvx.1` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (logo escuro, spec 7.3; marca das clínicas desligada, spec 7.4) desloca uma casa.
