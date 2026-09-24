@@ -3762,6 +3762,10 @@ export const DICIONARIO: Traducoes = {
   },
   // ─── app/api/v1/marca/logo/route.ts (frontend-traduz via CampoDeLogo.tsx) ───
   "Campo 'escopo' inválido.": { es: "Campo 'escopo' inválido." },
+  "Campo 'variante' inválido.": { es: "Campo 'variante' inválido." },
+  "O logo para o tema escuro só existe na marca da instalação.": {
+    es: "El logo para el tema oscuro solo existe en la marca de la instalación.",
+  },
   "O logo precisa ter até 512 KB. Arquivo maior vai inteiro para o navegador em toda página.": {
     es: "El logo debe pesar 512 KB como máximo. Un archivo más grande se envía completo al navegador en cada página.",
   },
