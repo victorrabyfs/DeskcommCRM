@@ -45,6 +45,26 @@ describe("com o módulo desligado, é o editor do original", () => {
     expect(screen.queryByRole("checkbox", { name: "Início" })).toBeNull();
   });
 
+  it("preset completa, alternar uma área: o Início (fora da tela) não entra no que se grava", () => {
+    const semProvider = desenhar({ preset: "completa" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Tags" }));
+    expect(ultimo(semProvider).destinos).toEqual(expect.arrayContaining(["/app/inbox"]));
+    expect(ultimo(semProvider).destinos).not.toContain("/app");
+    expect(ultimo(semProvider).destinos).not.toContain("/app/settings/tags");
+    cleanup();
+    const desligado = desenhar({ preset: "completa" }, { menuLigado: false, nicho: "clinica" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Tags" }));
+    expect(ultimo(desligado).destinos).not.toContain("/app");
+  });
+
+  it("preset simplificada (que traz o Início), alternar uma área: o Início não entra no que se grava", () => {
+    const onChange = desenhar({ preset: "simplificada" }, { menuLigado: false, nicho: "clinica" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Tarefas" }));
+    expect(ultimo(onChange).destinos).toEqual(expect.arrayContaining(["/app/inbox", "/app/contacts"]));
+    expect(ultimo(onChange).destinos).not.toContain("/app");
+    expect(ultimo(onChange).destinos).not.toContain("/app/tasks");
+  });
+
   it("editar no clássico não apaga o Início escolhido quando o módulo estava ligado", () => {
     const onChange = desenhar({ preset: "completa", destinos: ["/app", "/app/inbox", "/app/settings/tags"] });
     fireEvent.click(screen.getByRole("checkbox", { name: "Tags" }));

@@ -32,8 +32,15 @@ export function InterfaceEditor({
   const selected = new Set<string>(
     value.destinos ?? destinosDaInterface(value, false, role).map((d) => d.href),
   );
-  const options = permitidos(false, role).filter((d) => !essencial(d, role));
   const convexy = useConvexy(); // Convexy: CONVEXY.md, "Menu novo".
+  // Convexy: com o módulo desligado o Início não é opção — só continua se já estava
+  // escolhido. Como toda gravação passa por `options`, nem o `selected` padrão (que
+  // o traz no preset) o injeta. CONVEXY.md, "Menu novo".
+  const options = permitidos(false, role).filter(
+    (d) =>
+      !essencial(d, role) &&
+      (convexy?.menuLigado || d.modulo !== MODULO_DO_MENU || value.destinos?.includes(d.href as NavDestinationId)),
+  );
   return (
     <fieldset disabled={disabled} className="space-y-3 rounded-md border p-4">
       <legend className="px-1 text-sm font-medium">{t("Interface")}</legend>
