@@ -66,11 +66,6 @@ export type MarcaDeSaida = {
    * (`app/(public)/layout.tsx`).
    */
   readonly logoUrl: string | null;
-  /**
-   * Convexy (spec 7.3.4): o logo do tema escuro da instalação — só a tela de
-   * entrada (`app/(public)/layout.tsx`) o lê. E-mail, ícone, manifest e MFA
-   * ignoram o campo (tema claro sempre, spec seção 3).
-   */
   readonly logoDarkUrl?: string | null;
   /** `#hex` sempre — o formato que cliente de e-mail e @react-pdf entendem. */
   readonly accent: string;
