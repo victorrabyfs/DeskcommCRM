@@ -190,7 +190,7 @@ só pelo admin da plataforma (`PATCH /api/v1/admin/tenants/[id]/nicho`, auditado
 | `components/shell/Sidebar.tsx` | `export function MarcaDaBarra` (o cabeçalho `h-14` da marca, recortado do `SidebarContent` sem mudar uma classe) e `<MarcaDaBarra collapsed={collapsed} />` no lugar dele | ver "Reaplicar a `MarcaDaBarra`" abaixo |
 | `app/app/_components/AppShell.tsx` | dois imports; `useConvexy()`; o ternário `MenuConvexy` / `Sidebar` | reaplicar o ternário |
 | `components/shell/MobileSidebar.tsx` | dois imports; `useConvexy()`; o ternário `GavetaConvexy` / `SidebarContent` | reaplicar o ternário |
-| `components/team/InterfaceEditor.tsx` | três imports; `useConvexy()`; `<InterfacePorPortas>` como irmão do bloco do original; a abertura `{!convexy?.menuLigado && NAV_GROUPS.map(` e `&& d.modulo !== MODULO_DO_MENU` na linha `items` | o bloco do original (handler inclusive) fica como vier; reaplicar só as duas linhas e o irmão |
+| `components/team/InterfaceEditor.tsx` | três imports; `useConvexy()` antes de `options`; o filtro de `options` ganha `&& (convexy?.menuLigado \|\| d.modulo !== MODULO_DO_MENU \|\| value.destinos?.includes(…))` (com o módulo desligado o Início não é gravado, a menos que já estivesse escolhido); `<InterfacePorPortas>` como irmão do bloco do original; a abertura `{!convexy?.menuLigado && NAV_GROUPS.map(` e `&& d.modulo !== MODULO_DO_MENU` na linha `items` | o bloco do original (handler inclusive) fica como vier; reaplicar só o filtro de `options`, as duas linhas e o irmão |
 | `components/shell/NavHub.tsx` | dois imports; `destinoDoHub` + `redirect` antes de `hubSections` | reaplicar as duas linhas |
 | `app/app/page.tsx` | `destinosDoInicio` e `<Inicio>` antes do `redirect` | reaplicar |
 | `.github/workflows/e2e.yml` | `convexy-menu.spec.ts` na `SPECS_PARTE_N` escolhida pela sonda (a) | reaplicar a linha, sem comentário no bloco; se o original redistribuir as partes, repetir a sonda |
@@ -274,8 +274,10 @@ sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não s
   a spec vai à revisão 5): a paleta desenha `t(d.label)` e o `AlertsBell` desenha
   `t("Central de avisos")`, então "Inbox", "Funis" e "Central de avisos" aparecem lá pelo
   vocabulário; os rótulos próprios do mapa (Pacientes, Anúncios, Assistentes) não chegam à busca.
-  Provado em `tests/e2e/convexy-menu.spec.ts` ("o vocabulário do nicho aparece num título do
-  useT cliente e na busca ⌘K").
+  Provado em `tests/e2e/convexy-menu.spec.ts` ("o vocabulário do nicho aparece no sino (useT
+  cliente) e na busca ⌘K"): o nome acessível do sino vira "Pedidos da IA" e a busca mostra
+  "Funil de pacientes". O `<h1>` de `/app/kanban` não prova nada disso — é desenhado no servidor
+  com `traduzir()` e continua "Funis" (desvio acima).
 - **Menu novo — entradas que continuam indo para o Inbox:** trocar de organização, entrar e sair
   do suporte e terminar o onboarding, como no original. Onde: `git grep -n '"/app/inbox"' -- app/actions app/onboarding app/api/v1/impersonate lib/auth components/shell`.
 - **Menu novo — "Tipo de negócio" num cartão da página do tenant**, e não dentro do
@@ -305,10 +307,17 @@ sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não s
   vigiado por teste de equivalência entre os dois (ruling da Task 8). Nos dois casos a duplicação
   é exigida pelo plano para não reescrever o arquivo do original; mudança futura do handler ou da
   régua do original precisa ser espelhada manualmente — o teste acusa quando alguém esquece.
-- **Menu novo — uma leitura extra de `modulosLigados` no `/app`:** o layout usa a lista de
-  módulos que `resolveActiveOrg` já traz em `activeOrg.modulos_ligados`; quando ela não vem (ver
-  o `Promise.all` de `app/app/layout.tsx`), o Início aceita UMA consulta a mais a
-  `modulosLigados(db)` em vez de propagar o campo por mais lugares do original.
+- **Menu novo — o `/app` sempre faz uma leitura a mais de `modulosLigados`:** a página
+  (`app/app/page.tsx` → `destinosDoInicio`, `app/app/_convexy/inicio/visibilidade.ts`) consulta
+  `modulosLigados(db)` em TODA visita a `/app`, inclusive com o módulo desligado (é essa leitura
+  que decide entre o Início e o redirect do original). O layout já tem a lista em
+  `activeOrg.modulos_ligados`, mas não repassa `activeOrg` à página; propagar o campo exigiria
+  mexer em mais lugares do original. Custo: uma leitura de `platform_config` por visita a `/app`.
+- **Menu novo — a consulta própria do nicho no layout:** `app/app/layout.tsx` lê
+  `organizations.nicho` numa consulta a mais em TODA navegação dentro do app, inclusive com o
+  módulo desligado. Ela roda dentro do `Promise.all` que já existe (em paralelo, sem somar
+  espera em série) e é separada da leitura de `onboarded_at`/`status` para que coluna ausente ou
+  leitura recusada virem o nicho genérico sem alcançar os gates de onboarding e suspensão.
 - **Menu novo — os rótulos das portas no trilho mantêm `truncate`.** O maior rótulo ("Assistente
   de IA") cabe nos 236px do trilho aberto; quebrar linha mudaria a altura fixa de 38px da spec.
   Nome de porta futura mais longo aparece com reticências — a queixa que motivou a régua era dos
@@ -317,8 +326,9 @@ sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não s
   typecheck/lint pelo `verify`; migration e RLS pelo `invariants` (install e update); a tela
   pelo `e2e` (`convexy-menu.spec.ts`, na parte escolhida pela sonda (a)) e pela conferência na
   VPS. A fase vermelha dos cinco guardas do "Review Focus" do plano foi vista no CI antes de cada
-  implementação. Evidência visual em
-  `.superpowers/evidence/convexy-menu/` (artefatos do e2e e capturas da VPS).
+  implementação. A evidência visual é a captura feita na VPS. As capturas que o e2e grava em
+  `.superpowers/evidence/convexy-menu/` não duram: a pasta é ignorada pelo git e o CI só sobe
+  artefatos quando o e2e falha.
 
 ## Afirmações de docs do original que não valem no fork
 

@@ -60,7 +60,7 @@ export type GrupoId =
 
 type Icone = NavDestination["icon"];
 
-export interface DefinicaoDeGrupo {
+interface DefinicaoDeGrupo {
   readonly id: GrupoId;
   /** `null` no grupo principal de uma porta: ele não tem título. */
   readonly rotulo: Texto | null;
@@ -69,7 +69,7 @@ export interface DefinicaoDeGrupo {
   readonly hrefs: readonly string[];
 }
 
-export interface DefinicaoDePorta {
+interface DefinicaoDePorta {
   readonly id: PortaId;
   readonly rotulo: RotuloPorNicho;
   readonly Icone: Icone;

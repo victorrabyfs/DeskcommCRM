@@ -22,7 +22,7 @@ import type { LimitesDoDia } from "./dia";
  * Client de SESSÃO (RLS) e `organization_id` da sessão, nunca o admin client.
  * Cada bloco lança quando não consegue responder; `carregarBloco` isola a falha.
  */
-export const LINHAS_POR_BLOCO = 5;
+const LINHAS_POR_BLOCO = 5;
 
 /** O padrão da rota da agenda (`GET /api/v1/agenda/agendamentos`). */
 export const LIMITE_DA_AGENDA = 200;
@@ -46,7 +46,7 @@ export async function carregarBloco<T>(
   }
 }
 
-export interface ConversaEsperando {
+interface ConversaEsperando {
   readonly id: string;
   readonly nome: string;
   readonly desde: string | null;
@@ -91,7 +91,7 @@ export async function conversasEsperando(
   };
 }
 
-export interface CompromissoDeHoje {
+interface CompromissoDeHoje {
   readonly id: string;
   readonly titulo: string;
   readonly inicio: string;
@@ -125,7 +125,7 @@ export async function agendaDeHoje(
   };
 }
 
-export interface TarefaDeHoje {
+interface TarefaDeHoje {
   readonly id: string;
   readonly titulo: string;
   readonly atrasada: boolean;

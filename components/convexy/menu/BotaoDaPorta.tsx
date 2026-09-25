@@ -8,7 +8,7 @@ import type { PortaDoMenu } from "@/lib/convexy/menu/montar";
 import { CaretRight } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
-export interface BotaoDaPortaProps {
+interface BotaoDaPortaProps {
   readonly porta: PortaDoMenu;
   readonly ativa: boolean;
   /** `undefined` na gaveta do celular: lá a porta troca o conteúdo, não expande nada. */

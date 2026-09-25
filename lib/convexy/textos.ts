@@ -12,7 +12,7 @@ import type { Idioma } from "@/lib/i18n/idiomas";
  * A tela desenha por variável — `texto(TEXTOS.x, idioma)` —, nunca por literal.
  * `tests/unit/convexy-menu-textos.test.ts` cobra o espanhol das duas formas.
  */
-export interface TextoConvexy {
+interface TextoConvexy {
   readonly pt: string;
   readonly es: string;
 }
