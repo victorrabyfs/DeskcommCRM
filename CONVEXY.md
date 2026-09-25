@@ -141,6 +141,18 @@ Conferência depois de um merge do original: o CI do PR do merge em `pass`, com 
 logo do próprio original (`logo-por-tema*`, `logo-nao-some-no-tema-escuro.test.ts`,
 `tests/invariants/logo-por-tema.test.ts`, `tests/e2e/logo-moldura-no-tema-escuro.spec.ts`).
 
+### Teste de colisão de migration (`v1.48.0-cvx.1`)
+
+`tests/shell/colisao-de-migration.test.sh` ganha `unset GITHUB_REF` logo depois de
+`set -uo pipefail`, com o comentário `Convexy`. O gate tira da conta o PR em que o CI roda,
+lido do `GITHUB_REF` (`refs/pull/N/merge`); os casos do teste montam PRs fictícios `#7`, `#8`
+e `#9`, e no fork os PRs reais têm esses números (o PR da `1.48.0` foi o `#7` e reprovou nove
+casos). No original os PRs estão na casa dos milhares e isso não aparece.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `tests/shell/colisao-de-migration.test.sh` | bloco `# Convexy` + `unset GITHUB_REF` depois de `set -uo pipefail` | reaplicar o bloco no mesmo lugar |
+
 ## Desvios aceitos
 
 - **DoD 17** — sem fragmento em `.changes/`: o CHANGELOG das versões `-cvx` é escrito à mão

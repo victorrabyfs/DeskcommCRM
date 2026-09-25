@@ -50,6 +50,11 @@
 #  30. mais de 30 PRs abertos: o gate pede --limit, senão o gh corta calado em 30.
 set -uo pipefail
 
+# Convexy: os casos montam PRs fictícios #7, #8 e #9, e o gate tira da conta o PR em que o CI
+# roda (lido do GITHUB_REF). No fork os PRs reais têm esses números, e o #7 real apagava o
+# fictício. Cada caso é um repositório descartável: o GITHUB_REF do CI não é dele.
+unset GITHUB_REF
+
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GATE_ORIGEM="$RAIZ/scripts/checar-colisao-de-migration.sh"
 
