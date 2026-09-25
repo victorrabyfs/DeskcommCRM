@@ -24,6 +24,10 @@ import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
 import { VoiceCallProvider } from "@/components/voice/VoiceCallContext";
 import { ProvedorDaOcupacaoDoRodape } from "@/lib/ui/rodape-ocupado";
 import { acessoFoiRevogado } from "@/lib/auth/vinculo-revogado";
+// Convexy: menu novo e nicho — CONVEXY.md, "Menu novo".
+import { ConvexyProvider } from "@/lib/convexy/contexto";
+import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
+import { NICHO_PADRAO, lerNicho, type Nicho } from "@/lib/convexy/nicho";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await loadAuthUser();
@@ -61,6 +65,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let conexoesCaidas: ConexaoCaida[] = [];
   let enrolled = false;
   let needsMfaGate = false;
+  // Convexy: o nicho da organização (o menu e o vocabulário). CONVEXY.md, "Menu novo".
+  let nicho: Nicho = NICHO_PADRAO;
 
   if (activeOrg) {
     const admin = createAdminClient();
@@ -88,7 +94,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
      *    este layout — a cerca anterior lia o texto-fonte e reprovava esta
      *    refatoração sem que nada tivesse quebrado.
      */
-    const [orgRes, conexoes, isEnrolled, mfaRequired, modulos] = await Promise.all([
+    const [orgRes, conexoes, isEnrolled, mfaRequired, modulos, nichoRes] = await Promise.all([
       admin
         .from("organizations")
         .select("onboarded_at, status, settings")
@@ -104,12 +110,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       ),
       // Da INSTALAÇÃO: decide se a porta de um módulo opcional entra no menu.
       modulosLigados(admin),
+      // Convexy: o nicho numa consulta PRÓPRIA — coluna ausente ou leitura recusada
+      // viram o nicho genérico e nunca alcançam os gates de onboarding e
+      // suspensão, que leem a consulta de cima. CONVEXY.md, "Menu novo".
+      admin.from("organizations").select("nicho").eq("id", activeOrg.orgId).maybeSingle(),
     ]);
 
     const orgRow = orgRes.data;
     conexoesCaidas = conexoes;
     enrolled = isEnrolled;
     needsMfaGate = mfaRequired;
+    nicho = lerNicho(nichoRes.data?.nicho);
 
     if (orgRow && !orgRow.onboarded_at && !user.support) redirect("/onboarding");
     if (orgRow?.status === "suspended") redirect("/account-suspended");
@@ -217,6 +228,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // pergunta quem está logado. Ver `lib/i18n/IdiomaProvider`: foi o
     // acoplamento com a autenticação que derrubou 32 casos.
     <IdiomaProvider locale={user.idioma}>
+    {/* Convexy: o contexto do menu da Convexy, por pedido. CONVEXY.md, "Menu novo". */}
+    <ConvexyProvider menuLigado={activeOrg?.modulos_ligados?.includes(MODULO_DO_MENU) === true} nicho={nicho}>
     <AuthProvider user={user} activeOrg={activeOrg}>
       {/*
         A COR DA ETIQUETA, uma leitura por tela.
@@ -262,6 +275,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
       </ProvedorDeCoresDasEtiquetas>
     </AuthProvider>
+    </ConvexyProvider>
     </IdiomaProvider>
   );
 }
