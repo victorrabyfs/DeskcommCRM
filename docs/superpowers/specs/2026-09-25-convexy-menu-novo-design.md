@@ -1,6 +1,6 @@
 # Menu novo da Convexy — desenho
 
-**Status:** revisão 3, para aprovação · **Data:** 2026-09-25 · **Fork:** `victorrabyfs/DeskcommCRM`
+**Status:** revisão 4, para aprovação · **Data:** 2026-09-25 · **Fork:** `victorrabyfs/DeskcommCRM`
 **Base:** `v1.48.0` do original (`main` do fork depois do PR #7).
 **Entrega 1 de 2.** A entrega 2 (painel Início por nicho) terá spec própria.
 **Protótipo aprovado:** artefato "Menu da Convexy", rodada 2, versão 7.
@@ -63,32 +63,46 @@ Fora do escopo:
 |---|---|---|
 | Início | `House` | direto: `/app` (seção 7) |
 | Conversas | `ChatCircle` | `/app/inbox`, `/app/radar`, `/app/templates` · *Envios:* `/app/campaigns`, `/app/calls` |
-| Agenda | `CalendarBlank` | `/app/agenda`, `/app/comandas` · *Ajustes:* `/app/settings/tenant/agenda` |
+| Agenda | `CalendarBlank` | `/app/agenda`, `/app/comandas`, `/app/settings/tenant/agenda` |
 | Contatos | `Users` | `/app/contacts`, `/app/prospecting`, `/app/products` · *Orientações instaladas:* uma entrada por guia de extensão ativa (seção 3.4) |
 | Funil | `Funnel` | direto: `/app/kanban` |
 | Tarefas | `CheckSquare` | direto: `/app/tasks` |
-| Assistente de IA | `Robot` | `/app/ai/agents`, `/app/ai/followups`, `/app/ai/atendimento`, `/app/ai/knowledge/sources`, `/app/ai/inbox` · *Acompanhar:* `/app/ai/cases`, `/app/ai/proposals`, `/app/ai/runs`, `/app/ai/usage`, `/app/ai/cases/avisos` · *Avançado:* `/app/ai/routers`, `/app/ai/providers`, `/app/ai/credentials`, `/app/ai/memory`, `/app/ai/skills` |
-| Resultados | `ChartBar` | `/app/metrics`, `/app/faturamento`, `/app/ads/meta`, `/app/activities` · *Mais:* `/app/ai/evolution`, `/app/audit` |
-| Configurações (rodapé) | `GearSix` | *Organização:* `/app/settings/tenant`, `/app/team`, `/app/settings/tenant/financeiro`, `/app/settings/marca`, `/app/settings/tags`, `/app/settings/tenant/pipelines`, `/app/settings/atendimento`, `/app/settings/conversoes` · *Integrações:* `/app/connections`, `/app/settings/meta-ads`, `/app/webhooks`, `/app/integrations/nuvemshop`, `/app/settings/api-tokens`, `/app/settings/voip-trunk`, `/app/extensions`, `/app/integracao-dados` · *Minha conta:* `/app/settings/profile`, `/app/settings/security`, `/app/settings/notifications`, `/app/lgpd/requests`, `/app/settings/billing` · *Sistema (só admin de plataforma):* `/app/settings/atualizacao` |
+| Assistente de IA | `Robot` | `/app/ai/agents`, `/app/ai/followups`, `/app/ai/routers`, `/app/ai/providers`, `/app/ai/knowledge/sources`, `/app/ai/atendimento`, `/app/ai/inbox` · *Acompanhar:* `/app/ai/cases`, `/app/ai/proposals`, `/app/ai/runs`, `/app/ai/usage`, `/app/ai/cases/avisos` · *Avançado:* `/app/ai/credentials`, `/app/ai/memory`, `/app/ai/skills` |
+| Resultados | `ChartBar` | `/app/metrics`, `/app/ads/meta`, `/app/activities`, `/app/faturamento` · *Mais:* `/app/ai/evolution`, `/app/audit` |
+| Configurações (rodapé) | `GearSix` | *Canais e integrações:* `/app/connections`, `/app/integrations/nuvemshop`, `/app/webhooks`, `/app/settings/meta-ads`, `/app/settings/api-tokens`, `/app/settings/voip-trunk`, `/app/extensions`, `/app/integracao-dados` · *Organização:* `/app/settings/tenant`, `/app/team`, `/app/settings/tenant/financeiro`, `/app/settings/marca`, `/app/settings/tags`, `/app/settings/tenant/pipelines`, `/app/settings/atendimento`, `/app/settings/conversoes` · *Minha conta:* `/app/settings/profile`, `/app/settings/security`, `/app/settings/notifications`, `/app/lgpd/requests`, `/app/settings/billing` · *Sistema (só admin de plataforma):* `/app/settings/atualizacao` |
 
 As 55 entradas do `NAV_CATALOG` da `1.48.0`, mais o Início, aparecem cada uma uma vez. Os nomes
 são os do nicho `generico`; a seção 6 diz o que muda por nicho.
+
+**Nada importante fica de fora:**
+- **O que o original marca como uso diário fica no primeiro grupo da sua porta.** Toda entrada com
+  `sidebar: true` no catálogo (o "uso diário" que o original escolheu para o menu clássico) nunca
+  vai para grupo secundário ("Acompanhar", "Avançado", "Mais"). O teste cobra isso. Por isso
+  Roteadores, Provedores e Tipos de agendamento estão no grupo principal, e "Canais e
+  integrações", com Conexões (o WhatsApp), abre Configurações.
+- **A saúde da conexão aparece de fora.** O ponto de saúde de Conexões sobe para a porta
+  Configurações, inclusive no trilho compacto.
+- **A descrição de cada tela continua à vista.** A descrição que as páginas-hub mostravam
+  (`description` do catálogo) aparece como dica do item na sub-sidebar, depois de meio segundo
+  com o mouse em cima ou no foco do teclado, e continua pesquisável no ⌘K.
 
 ### 3.2 Como uma tela nova do original entra sozinha
 
 O `mapa.ts` da Convexy tem duas partes:
 1. **Posições explícitas:** a tabela acima, por href.
 2. **Posição padrão por grupo do original:** uma entrada do catálogo que não está nas posições
-   explícitas vai para a porta e o grupo definidos pelo `group` que o próprio original deu a ela.
+   explícitas vai para a porta do `group` que o próprio original deu a ela. Vai para o grupo
+   principal da porta se o original a marcou como uso diário (`sidebar: true`), e para o grupo
+   secundário da tabela se não marcou.
 
-| `group` do original | Porta · grupo da sub-sidebar |
-|---|---|
-| `atendimento` | Conversas · (principal) |
-| `crm` | Contatos · (principal) |
-| `ia` | Assistente de IA · Avançado |
-| `canais` | Configurações · Integrações |
-| `analise` | Resultados · Mais |
-| `organizacao` | Configurações · Organização |
+| `group` do original | Porta | Principal | Secundário |
+|---|---|---|---|
+| `atendimento` | Conversas | (principal) | Envios |
+| `crm` | Contatos | (principal) | (principal) |
+| `ia` | Assistente de IA | (principal) | Avançado |
+| `canais` | Configurações | Canais e integrações | Canais e integrações |
+| `analise` | Resultados | (principal) | Mais |
+| `organizacao` | Configurações | Organização | Organização |
 
 - A tela nova já nasce com nome, ícone, papel mínimo, módulo e descrição, porque tudo vem do
   catálogo do original. A Convexy só decide onde ela fica.
@@ -120,12 +134,15 @@ O `mapa.ts` da Convexy tem duas partes:
   existem porque o menu clássico não tinha espaço. No menu novo, a sub-sidebar é a lista completa
   de cada porta, e os hubs não aparecem.
 - Com o módulo ligado, o `NavHub` redireciona para o primeiro item visível da porta
-  correspondente. O `NavHub` é o componente único dos quatro hubs, então é uma alteração só no
+  correspondente: `/app/crm` → Contatos, `/app/ai` → Assistente de IA, `/app/analise` →
+  Resultados, `/app/settings` → Configurações. O `NavHub` é o componente único dos quatro hubs, então é uma alteração só no
   original. Link antigo ou favorito continua funcionando.
 - O único conteúdo exclusivo de um hub são as **orientações de extensões** do `/app/crm`
   (`loadCrmExtensions`). Elas passam a ser itens do grupo "Orientações instaladas" da porta
   Contatos:
-  - carregadas quando essa sub-sidebar abre;
+  - carregadas quando essa sub-sidebar abre, por uma rota de leitura da Convexy
+    (`app/api/v1/convexy/orientacoes/route.ts`, GET) que chama o mesmo `loadCrmExtensions`, com a
+    organização resolvida da sessão;
   - com as mesmas regras de hoje: só as ativas, e aviso quando não dá para ler;
   - cada uma leva a `/app/extensions/[id]`.
 
@@ -138,37 +155,50 @@ O `mapa.ts` da Convexy tem duas partes:
 - Item fora da lista não aparece. Grupo sem itens some. Porta sem itens some.
 - Porta com **um** item visível navega direto para ele, sem sub-sidebar.
 - Clicar numa porta com sub-sidebar abre a sub-sidebar e vai ao primeiro item visível.
-- `/app/settings/atualizacao` segue a regra do original: só admin de plataforma.
+- `/app/settings/atualizacao` não está no catálogo, então não passa por `searchable()`. Aparece
+  com a mesma condição do `VersionFooter` do original: `user.is_platform_admin && !user.support`.
 - `healthDot` (hoje só `/app/connections`) aparece no item e sobe para a porta.
 - O rodapé mantém o `VersionFooter`. A barra do topo não muda.
 
-### 3.6 Esconder por organização e por pessoa (tela de interface)
+### 3.6 Esconder por organização e por pessoa: a tela que já existe
 
-- A tela que já existe para isso é o `InterfaceEditor`
-  (`components/team/InterfaceEditor.tsx`), usada:
-  - na organização (`/app/settings/tenant`);
-  - no membro (`MemberInterfaceDialog`);
-  - no convite (`InviteForm`);
-  - na criação de organização pelo admin.
-- **Com o módulo ligado, ela mostra a estrutura nova:**
-  - uma seção por porta, na ordem do menu, com os grupos da sub-sidebar;
-  - uma caixa por item;
-  - uma caixa na porta que marca ou desmarca todos os itens dela.
-- **O dado gravado continua o mesmo do original** (`interface_settings.destinos`, lista de hrefs
-  do catálogo). Com o módulo desligado, a tela volta a ser a do original com a mesma escolha.
-  Nada se perde nos dois sentidos.
-- As portas essenciais do original (perfil, segurança, equipe e organização para quem administra)
-  continuam impossíveis de esconder, como hoje.
+Isto **já existe no original** e é reaproveitado inteiro. O menu novo não cria tela, dado nem
+regra de visibilidade.
+- **Onde se configura:**
+  - "Menu lateral" da organização (`app/app/settings/tenant/_interface.tsx`);
+  - "Interface de [membro]" na tela Equipe (`components/team/MemberInterfaceDialog.tsx`);
+  - o convite (`InviteForm`) e a criação de organização no admin.
+  - Todas usam o mesmo componente, o `InterfaceEditor` (`components/team/InterfaceEditor.tsx`).
+- **O que já vale hoje e continua igual:**
+  - perfil "Completa" ou "Simplificada";
+  - escolha área por área;
+  - áreas essenciais que não se escondem (perfil, segurança, equipe e organização para quem
+    administra);
+  - aviso de áreas antigas;
+  - validação de "ao menos uma área de trabalho";
+  - gravação em `interface_settings.destinos`;
+  - para cada pessoa vale a **combinação** da escolha da organização com a do membro
+    (`combinarInterfaces`, `lib/navigation/interface.ts`).
+- **A única mudança está no agrupamento.** Hoje o `InterfaceEditor` agrupa as áreas pelos grupos
+  do menu clássico (`NAV_GROUPS`). Com o módulo ligado, agrupa pelas **portas e grupos do menu
+  novo**, na mesma ordem e com os mesmos nomes do menu, e ganha uma caixa por porta que marca ou
+  desmarca todas as áreas dela. O agrupamento vem do mesmo `mapa.ts` que monta o menu. Uma tela
+  nova do original aparece na tela de interface na mesma porta em que aparece no menu.
+- Com o módulo desligado, o `InterfaceEditor` é exatamente o do original. O dado gravado é o mesmo
+  nos dois modos, então nada se perde ao ligar ou desligar o menu novo.
 - **O Início também pode ser escondido:**
   - entra no catálogo do original como uma entrada com `modulo: "menu_convexy"` (seção 5), com
-    ícone `Gauge`, que já existe no registro de ícones, para o `registry.ts` não mudar (o menu
-    novo desenha a casa por conta própria);
-  - assim ele existe na interface, no ⌘K e no menu só com o módulo ligado, e some por completo no
-    clássico;
-  - quem esconde o Início entra direto na primeira tela visível, pela regra `homeDaInterface` do
+    ícone `Gauge`, que já existe no registro de ícones, para o `registry.ts` não mudar. O menu novo
+    desenha a casa por conta própria.
+  - Assim ele existe na interface, no ⌘K e no menu só com o módulo ligado, e some por completo no
+    clássico.
+  - Quem esconde o Início entra direto na primeira tela visível, pela regra `homeDaInterface` do
     original.
-- A estrutura é **derivada do mesmo `mapa.ts`** que monta o menu. Tela nova do original aparece
-  na tela de interface na mesma porta em que aparece no menu.
+  - O Início entra na lista do perfil "Simplificada" (`SIMPLIFICADA`, em
+    `lib/navigation/interface.ts`). Sem isso, a recepção, que é quem mais usa esse perfil, ficaria
+    sem o Início. No clássico, a entrada some pelo módulo, então a lista não muda nada.
+- `/app/settings/atualizacao` não está no catálogo e não aparece nessa tela: é só do admin de
+  plataforma, como no original.
 
 ## 4. Comportamento e aparência
 
@@ -177,7 +207,7 @@ O `mapa.ts` da Convexy tem duas partes:
 **Trilho compacto:** 64px, só ícones de 20px.
 - **Dica com o nome** no hover e no foco. Em toque (`pointer: coarse`) não há hover: o menu largo
   é a forma padrão, e o compacto só aparece com a sub-sidebar aberta, cujo título diz onde se está.
-- **Contador ou ponto** vira uma bolinha no canto do ícone.
+- **Ponto de saúde** da conexão (seção 3.5) vira uma bolinha no canto do ícone.
 - **Compactação automática** (sub-sidebar aberta) é estado de tela. Não chama `toggleSidebar`,
   que revalida o layout no servidor.
 - **Recolher manual** pela alça usa o cookie e a ação que já existem (`sidebar_collapsed`,
@@ -227,7 +257,8 @@ barra `fixed` e `ml-*`. O `AppShell` mantém `useOcupacaoDoRodape` e `estiloDaRe
   - ligado e desligado pelo admin da plataforma em `/admin/sistema`, com a ação
     `updateModuloDaInstalacao`, que já existe e já audita;
   - chega à tela por `activeOrg.modulos_ligados`, que o layout já carrega. Não há consulta nova.
-- **Ligado:** menu novo, Início, tela de interface nova, vocabulário, e hubs redirecionando.
+- **Ligado:** menu novo, Início, tela de interface agrupada por portas, vocabulário, e hubs
+  redirecionando.
 - **Desligado:** tudo exatamente como o original.
 - **Padrão:** o original trata módulo ausente como desligado. Na instalação da Convexy o módulo é
   ligado no passo de implantação desta versão e fica ligado. Instalação nova do fork liga em
@@ -262,10 +293,17 @@ barra `fixed` e `ml-*`. O `AppShell` mantém `useOcupacaoDoRodape` e `estiloDaRe
 ### 6.2 Nomes do menu
 
 - Os rótulos de portas, grupos e itens vêm do `mapa.ts`, por **href e nicho**, com `{pt, es}`.
+- Rótulos que mudam por nicho (o resto é igual em todos):
+
+| Onde | `clinica` | `servicos` | `generico` |
+|---|---|---|---|
+| Porta Contatos e item `/app/contacts` | Pacientes | Contatos | Contatos |
+| Porta Funil (item `/app/kanban`) | Funil de pacientes | Funil de vendas | Funil |
+
 - Item sem rótulo próprio usa o rótulo do catálogo do original, traduzido como hoje. Isso vale
   também para as telas novas que chegam pelo padrão.
-- Os dois "Meta Ads" ficam distintos: o de Resultados vira "Anúncios", e o de Integrações
-  continua "Meta Ads".
+- Os dois "Meta Ads" ficam distintos: o de Resultados vira "Anúncios", e o de "Canais e
+  integrações" continua "Meta Ads".
 - A busca ⌘K continua com os nomes do original.
 
 ### 6.3 Títulos das telas: `useT` da Convexy
@@ -276,7 +314,8 @@ barra `fixed` e `ml-*`. O `AppShell` mantém `useOcupacaoDoRodape` e `estiloDaRe
   - aplica o vocabulário só com o módulo ligado e nicho em vigor, lidos do `ConvexyProvider`,
     que é por pedido e nunca global;
   - troca **só textos exatos** de uma lista curta de títulos;
-  - em qualquer outro caso, devolve exatamente o `traduzir(texto, idioma)` do original.
+  - em qualquer outro caso, devolve exatamente o `traduzir(texto, idioma)` do original. Isso
+    vale também fora do app (`/admin`, telas públicas, onboarding), onde não há `ConvexyProvider`.
 
 | Texto original | `clinica` | `servicos` | `generico` |
 |---|---|---|---|
@@ -345,10 +384,16 @@ Nunca aplicar o vocabulário em `lib/agent-engine`, `lib/notifications` ou `work
   - porta com um item fica direta;
   - porta vazia some;
   - `healthDot` sobe.
-- **Tela de interface:** com o módulo ligado, mostra portas e itens do `mapa.ts`, e a caixa da
-  porta marca e desmarca todos. O valor gravado é igual ao do original. Com o módulo desligado,
-  a tela é a do original.
+- **Tela de interface:**
+  - com o módulo ligado, o `InterfaceEditor` agrupa por portas do `mapa.ts`, e a caixa da porta
+    marca e desmarca todas;
+  - o valor gravado é igual ao do original para a mesma escolha;
+  - com o módulo desligado, o agrupamento é o `NAV_GROUPS` do original;
+  - o `combinarInterfaces` continua valendo.
+- **Uso diário:** nenhuma entrada com `sidebar: true` cai em grupo secundário.
 - **Módulo:** desligado dá menu clássico, `/app` com redirect e vocabulário inativo.
+- **Hubs:** cada hub redireciona para a primeira tela visível da sua porta.
+- **Atualização do sistema:** o item aparece só para admin de plataforma fora do suporte.
 - **Vocabulário:** troca só os textos exatos da lista; sem nicho, dá o mesmo resultado do
   `traduzir`; tem espanhol.
 - **Gates existentes verdes:** `barra-lateral-nao-flutua`, `rodape-ocupado-contrato`,
@@ -380,9 +425,10 @@ Cobre:
 - `lib/convexy/menu/{mapa,montar,dono}.ts`
 - `lib/convexy/{nicho,vocabulario,textos}.ts`
 - `components/convexy/menu/*` (trilho, sub-sidebar, alça, gaveta)
-- `components/convexy/InterfaceEditorConvexy.tsx`, `components/convexy/ConvexyProvider.tsx`
+- `components/convexy/ConvexyProvider.tsx`
 - `app/app/_convexy/inicio/*`
 - `app/api/v1/admin/tenants/[id]/nicho/route.ts`
+- `app/api/v1/convexy/orientacoes/route.ts`
 - `supabase/migrations/<ts>_9001_nicho_da_organizacao.sql`
 - testes: `tests/unit/convexy-menu-*`, `tests/invariants/convexy-nicho.test.ts`,
   `tests/e2e/convexy-menu.spec.ts`
@@ -401,7 +447,8 @@ Cobre:
 | `app/app/_components/AppShell.tsx` | menu novo ou `Sidebar`, pelo módulo | onde o `Sidebar` é montado |
 | `components/shell/MobileSidebar.tsx` | idem para a gaveta | onde o `SidebarContent` é montado |
 | `components/shell/NavHub.tsx` | redireciona com o módulo ligado | componente único dos 4 hubs |
-| `components/team/InterfaceEditor.tsx` | usa o editor da Convexy com o módulo ligado | componente único da tela de interface |
+| `lib/navigation/interface.ts` | `"/app"` na lista `SIMPLIFICADA` | lista do perfil |
+| `components/team/InterfaceEditor.tsx` | agrupa pelas portas do `mapa.ts` com o módulo ligado, e caixa por porta | o bloco que agrupa por `NAV_GROUPS` |
 | `hooks/i18n/useT.ts` | reexporta o `useT` da Convexy | reexportação de uma linha |
 | `app/app/page.tsx` | Início ou redirect (seção 7) | ponto de entrada |
 | `components/admin/tenants/TenantOverview.tsx` | campo "Tipo de negócio" | tela do tenant |
@@ -452,3 +499,15 @@ os dois modos, e a nova redação fica registrada no `CONVEXY.md`.
   - o módulo da instalação substitui a constante, a variável e o cookie;
   - ícone de Configurações definido (engrenagem);
   - padrão WAI-ARIA "Disclosure Navigation".
+- **Revisão 4:**
+  - a tela de interface é o `InterfaceEditor` do original reaproveitado, e só o agrupamento muda;
+  - o uso diário do original fica sempre no grupo principal (Roteadores, Provedores, Tipos de
+    agendamento, Conexões);
+  - "Canais e integrações" abre Configurações;
+  - a descrição de cada tela vira dica na sub-sidebar;
+  - Início no perfil "Simplificada";
+  - destino de cada hub;
+  - rota de leitura das orientações;
+  - rótulos por nicho;
+  - regra da tela de atualização;
+  - sem "contador" que não existe.
