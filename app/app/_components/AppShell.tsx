@@ -1,6 +1,9 @@
 "use client";
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/shell/Sidebar";
+// Convexy: o menu novo com o módulo menu_convexy ligado — CONVEXY.md, "Menu novo".
+import { MenuConvexy } from "@/components/convexy/menu/MenuConvexy";
+import { useConvexy } from "@/lib/convexy/contexto";
 import { TopBar } from "@/components/shell/TopBar";
 import { BarraDeProgressoNavegacao } from "@/components/shell/BarraDeProgressoNavegacao";
 import { useSinalDePresenca } from "@/hooks/atendimento/useSinalDePresenca";
@@ -39,11 +42,17 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
   // o `p-6` inteiro é rodapé. Com o painel de chamada na tela, é ele que
   // decide a faixa que o conteúdo perde, e ninguém mais mede isso por fora.
   const ocupacaoDoRodape = useOcupacaoDoRodape();
+  const convexy = useConvexy();
   return (
     <div className="flex min-h-screen w-full bg-background">
       <BarraDeProgressoNavegacao />
       <div className="hidden md:block">
-        <Sidebar collapsed={sidebarCollapsed} />
+        {/* Convexy: menu da Convexy ou o Sidebar do original, pelo módulo. CONVEXY.md, "Menu novo". */}
+        {convexy?.menuLigado ? (
+          <MenuConvexy recolhido={sidebarCollapsed} />
+        ) : (
+          <Sidebar collapsed={sidebarCollapsed} />
+        )}
       </div>
       {/*
         `min-w-0` é o que permite a coluna de conteúdo ENCOLHER. Um flex item

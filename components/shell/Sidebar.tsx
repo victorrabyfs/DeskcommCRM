@@ -82,111 +82,9 @@ export function SidebarContent({
     });
   }
 
-  const brand = useMarcaDaInstalacao();
-  /**
-   * O CONSUMIDOR do nome por organização.
-   *
-   * Sem ele, `settings.branding.app_name` seria campo decorativo: medido, o nome
-   * da org não aparece em lugar nenhum da casca para o cliente típico de um
-   * revendedor — o único leitor é o `TenantSwitcher`, e ele devolve `null` com
-   * uma organização só.
-   *
-   * A marca da INSTALAÇÃO continua embaixo: a organização que não definiu nome
-   * vê exatamente o que via antes. O que mudou é POR ONDE ela chega — era
-   * `branding()`, que no navegador lê `window.__PUBLIC_ENV__` e no servidor lê
-   * `process.env`, e essas duas fontes passaram a divergir quando o layout raiz
-   * começou a injetar a marca do BANCO. Divergência entre SSR e cliente aqui não
-   * é detalhe: com logo no banco e `APP_LOGO_URL` vazio, o servidor desenhava o
-   * `<span>` de baixo e o cliente desenhava o `<img>` — React #418 em toda tela.
-   * Hoje a marca vem por PROP do servidor (`useMarcaDaInstalacao`), pela mesma
-   * rota de `activeOrg`, e os dois lados leem o mesmo objeto por construção.
-   */
-  const nome = activeOrg?.marca?.nome ?? brand.name;
-  /**
-   * O mesmo desenho para o LOGO — e é este par de linhas que fecha o caminho do
-   * `logo_url` gravado até a tela.
-   *
-   * `||` e não `??`: vazio é AUSÊNCIA de logo, não "logo em branco". É a regra
-   * que `resolveBranding` e `primeiroDefinido` já aplicam nas camadas de baixo, e
-   * com `??` um `""` vindo de cima apagaria o logo do revendedor em vez de
-   * descer para ele — que é o contrário do que a precedência por campo promete.
-   */
-  const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
-  const logoEscuro =
-    activeOrg?.marca?.logoDarkUrl !== undefined
-      ? activeOrg.marca.logoDarkUrl
-      : activeOrg?.marca?.logoUrl
-        ? null
-        : brand.logoDarkUrl;
-  // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
-  // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
-  const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
-
   return (
     <>
-      <div
-        className={cn(
-          "flex h-14 items-center border-b px-4",
-          collapsed ? "justify-center" : "justify-start",
-        )}
-      >
-        {(logo || logoEscuro) && !collapsed ? (
-          // Sem arte própria para o escuro, preserva a proteção de contraste.
-          <div
-            className={cn(
-              "rounded-md",
-              !logoEscuro && "dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm",
-            )}
-          >
-            {/* <img> em vez de next/image de propósito: a URL vem de quem hospeda
-              (banco ou .env), e next/image exige allowlist de domínios fechada em
-              build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
-              Altura fixa e largura livre porque a arte enviada tem proporção
-              desconhecida; forçar as duas distorceria o logo de quem configurou. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {logo ? (
-              <img
-                src={logo}
-                alt={nome}
-                className={cn(
-                  // Convexy: `h-10` (40px) no lugar do `h-7` — CONVEXY.md, "Logo maior".
-                  "h-10 w-auto max-w-[10rem] object-contain",
-                  logoEscuro && "dark:hidden",
-                )}
-              />
-            ) : (
-              <span className="dark:hidden">{nome}</span>
-            )}
-            {logoEscuro ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoEscuro}
-                alt={nome}
-                className="hidden h-10 w-auto max-w-[10rem] object-contain dark:block"
-              />
-            ) : null}
-          </div>
-        ) : marcaDoProduto ? (
-          // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`):
-          // logotipo com a barra aberta, só o símbolo com ela recolhida.
-          collapsed ? (
-            <SimboloDoProduto nome={nome} className="h-8 w-8" />
-          ) : (
-            <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
-          )
-        ) : (
-          <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>{nome}</span>
-        )}
-        {collapsed && !marcaDoProduto && (
-          <span aria-hidden className="text-lg font-bold text-primary">
-            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
-                quebraria no meio do code point. Mesma regra de `resolveBranding`
-                — a inicial precisa acompanhar o nome que a barra mostra, senão
-                recolher o menu troca a marca. */}
-            {[...nome][0]?.toUpperCase() ?? brand.initial}
-          </span>
-        )}
-      </div>
+      <MarcaDaBarra collapsed={collapsed} />
       {/*
         A DENSIDADE É MEDIDA, NÃO ESTÉTICA.
 
@@ -367,6 +265,123 @@ export function SidebarContent({
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * O cabeçalho da barra, com a marca (logo claro, logo escuro, moldura, símbolo
+ * ou inicial recolhidos).
+ *
+ * Convexy: extraído do `SidebarContent` SEM mudar uma classe, para o menu da
+ * Convexy desenhar o mesmo logo sem copiar esta lógica. Reaplicar ao atualizar
+ * o upstream: CONVEXY.md, "Menu novo" (inclui o caso "Logo maior").
+ */
+export function MarcaDaBarra({ collapsed }: { collapsed: boolean }) {
+  const { activeOrg } = useAuth();
+  const brand = useMarcaDaInstalacao();
+  /**
+   * O CONSUMIDOR do nome por organização.
+   *
+   * Sem ele, `settings.branding.app_name` seria campo decorativo: medido, o nome
+   * da org não aparece em lugar nenhum da casca para o cliente típico de um
+   * revendedor — o único leitor é o `TenantSwitcher`, e ele devolve `null` com
+   * uma organização só.
+   *
+   * A marca da INSTALAÇÃO continua embaixo: a organização que não definiu nome
+   * vê exatamente o que via antes. O que mudou é POR ONDE ela chega — era
+   * `branding()`, que no navegador lê `window.__PUBLIC_ENV__` e no servidor lê
+   * `process.env`, e essas duas fontes passaram a divergir quando o layout raiz
+   * começou a injetar a marca do BANCO. Divergência entre SSR e cliente aqui não
+   * é detalhe: com logo no banco e `APP_LOGO_URL` vazio, o servidor desenhava o
+   * `<span>` de baixo e o cliente desenhava o `<img>` — React #418 em toda tela.
+   * Hoje a marca vem por PROP do servidor (`useMarcaDaInstalacao`), pela mesma
+   * rota de `activeOrg`, e os dois lados leem o mesmo objeto por construção.
+   */
+  const nome = activeOrg?.marca?.nome ?? brand.name;
+  /**
+   * O mesmo desenho para o LOGO — e é este par de linhas que fecha o caminho do
+   * `logo_url` gravado até a tela.
+   *
+   * `||` e não `??`: vazio é AUSÊNCIA de logo, não "logo em branco". É a regra
+   * que `resolveBranding` e `primeiroDefinido` já aplicam nas camadas de baixo, e
+   * com `??` um `""` vindo de cima apagaria o logo do revendedor em vez de
+   * descer para ele — que é o contrário do que a precedência por campo promete.
+   */
+  const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
+  const logoEscuro =
+    activeOrg?.marca?.logoDarkUrl !== undefined
+      ? activeOrg.marca.logoDarkUrl
+      : activeOrg?.marca?.logoUrl
+        ? null
+        : brand.logoDarkUrl;
+  // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
+  // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
+  const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
+
+  return (
+      <div
+        className={cn(
+          "flex h-14 items-center border-b px-4",
+          collapsed ? "justify-center" : "justify-start",
+        )}
+      >
+        {(logo || logoEscuro) && !collapsed ? (
+          // Sem arte própria para o escuro, preserva a proteção de contraste.
+          <div
+            className={cn(
+              "rounded-md",
+              !logoEscuro && "dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm",
+            )}
+          >
+            {/* <img> em vez de next/image de propósito: a URL vem de quem hospeda
+              (banco ou .env), e next/image exige allowlist de domínios fechada em
+              build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
+              Altura fixa e largura livre porque a arte enviada tem proporção
+              desconhecida; forçar as duas distorceria o logo de quem configurou. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {logo ? (
+              <img
+                src={logo}
+                alt={nome}
+                className={cn(
+                  // Convexy: `h-10` (40px) no lugar do `h-7` — CONVEXY.md, "Logo maior".
+                  "h-10 w-auto max-w-[10rem] object-contain",
+                  logoEscuro && "dark:hidden",
+                )}
+              />
+            ) : (
+              <span className="dark:hidden">{nome}</span>
+            )}
+            {logoEscuro ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoEscuro}
+                alt={nome}
+                className="hidden h-10 w-auto max-w-[10rem] object-contain dark:block"
+              />
+            ) : null}
+          </div>
+        ) : marcaDoProduto ? (
+          // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`):
+          // logotipo com a barra aberta, só o símbolo com ela recolhida.
+          collapsed ? (
+            <SimboloDoProduto nome={nome} className="h-8 w-8" />
+          ) : (
+            <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
+          )
+        ) : (
+          <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>{nome}</span>
+        )}
+        {collapsed && !marcaDoProduto && (
+          <span aria-hidden className="text-lg font-bold text-primary">
+            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
+                quebraria no meio do code point. Mesma regra de `resolveBranding`
+                — a inicial precisa acompanhar o nome que a barra mostra, senão
+                recolher o menu troca a marca. */}
+            {[...nome][0]?.toUpperCase() ?? brand.initial}
+          </span>
+        )}
+      </div>
   );
 }
 

@@ -1,0 +1,59 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Convexy — o movimento do menu novo (spec
+   docs/superpowers/specs/2026-09-25-convexy-menu-novo-design.md, seção 4, e
+   o protótipo aprovado, rodada 2). Registro: CONVEXY.md, "Menu novo".
+
+   CSS à mão, como `.card-pulse` do app/globals.css: o `tailwindcss-animate`
+   não está instalado. Só anima com movimento permitido — fora deste media
+   query nada se mexe. `data-animar` só vira "true" depois de a pessoa abrir
+   uma porta: a primeira pintura (link direto, recarregar, voltar) nunca anima.
+   As propriedades individuais (`scale`, `translate`) não disputam o
+   `transform` dos utilitários.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .convexy-sub-conteudo[data-animar="true"] {
+    animation: convexy-sub-entra 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* Os grupos entram em cascata: a ordem vem de `--convexy-ordem`. */
+  .convexy-sub-conteudo[data-animar="true"] .convexy-grupo {
+    animation: convexy-grupo-entra 350ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--convexy-ordem, 0) * 60ms);
+  }
+
+  /* A barra do ativo cresce a partir do centro. */
+  .convexy-barra[data-animar="true"] {
+    animation: convexy-barra-cresce 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+@keyframes convexy-sub-entra {
+  from {
+    opacity: 0;
+    translate: -10px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes convexy-grupo-entra {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes convexy-barra-cresce {
+  from {
+    scale: 1 0;
+  }
+  to {
+    scale: 1 1;
+  }
+}
