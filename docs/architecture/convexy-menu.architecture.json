@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Menu novo da Convexy",
+    "subtitle": "Projeção do catálogo do original, por módulo da instalação e nicho da organização",
+    "output": "convexy-menu.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "humano", "label": "Pessoa" },
+    { "id": "app", "label": "Aplicativo" },
+    { "id": "db", "label": "Banco" },
+    { "id": "ci", "label": "CI" }
+  ],
+  "mainPath": ["modulo", "provider", "catalogo", "mapa", "menu", "inicio"],
+  "nodes": [
+    { "id": "admin", "lane": "humano", "col": 0, "type": "ui", "label": "/admin/sistema e /admin/tenants/[id]" },
+    { "id": "modulo", "lane": "db", "col": 1, "type": "database", "label": "platform_config MODULO_MENU_CONVEXY" },
+    { "id": "nicho", "lane": "db", "col": 1, "type": "database", "label": "organizations.nicho (migration 9001)" },
+    { "id": "rotanicho", "lane": "app", "col": 1, "type": "service", "label": "GET/PATCH admin/tenants/[id]/nicho" },
+    { "id": "auditoria", "lane": "db", "col": 2, "type": "database", "label": "api_audit_log tenant.nicho_changed · platform.modulo_updated" },
+    { "id": "provider", "lane": "app", "col": 2, "type": "service", "label": "app/app/layout → ConvexyProvider" },
+    { "id": "catalogo", "lane": "app", "col": 3, "type": "service", "label": "NAV_CATALOG → searchable()" },
+    { "id": "mapa", "lane": "app", "col": 4, "type": "service", "label": "mapa.ts → dono.ts → montar.ts" },
+    { "id": "menu", "lane": "humano", "col": 5, "type": "ui", "label": "Trilho, sub-sidebar e gaveta" },
+    { "id": "vocabulario", "lane": "app", "col": 5, "type": "service", "label": "useT da Convexy (títulos por nicho)" },
+    { "id": "interface", "lane": "humano", "col": 5, "type": "ui", "label": "InterfaceEditor agrupado por portas" },
+    { "id": "hubs", "lane": "app", "col": 5, "type": "service", "label": "NavHub → primeira tela da porta" },
+    { "id": "orientacoes", "lane": "app", "col": 6, "type": "service", "label": "GET convexy/orientacoes → loadCrmExtensions" },
+    { "id": "inicio", "lane": "humano", "col": 6, "type": "ui", "label": "Início: fila, agenda e tarefas do dia" },
+    { "id": "gate", "lane": "ci", "col": 4, "type": "service", "label": "convexy-menu-mapa: group novo reprova, telas novas listadas" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "admin", "to": "modulo", "label": "liga/desliga o menu" },
+    { "id": "e2", "from": "admin", "to": "rotanicho", "label": "escolhe o tipo de negócio" },
+    { "id": "e3", "from": "rotanicho", "to": "nicho", "label": "grava (valor inválido: CHECK recusa; nulo = generico)" },
+    { "id": "e4", "from": "rotanicho", "to": "auditoria", "label": "antes e depois" },
+    { "id": "e5", "from": "modulo", "to": "auditoria", "label": "quem ligou, de/para" },
+    { "id": "e6", "from": "modulo", "to": "provider", "label": "modulos_ligados" },
+    { "id": "e7", "from": "nicho", "to": "provider", "label": "lerNicho, consulta própria no Promise.all" },
+    { "id": "e8", "from": "catalogo", "to": "mapa", "label": "tela nova entra pelo group" },
+    { "id": "e9", "from": "provider", "to": "mapa", "label": "nicho e idioma" },
+    { "id": "e10", "from": "mapa", "to": "menu", "label": "portas, grupos, um dono por tela" },
+    { "id": "e11", "from": "provider", "to": "menu", "label": "menu novo ou Sidebar do original" },
+    { "id": "e12", "from": "provider", "to": "vocabulario", "label": "só com o módulo ligado" },
+    { "id": "e13", "from": "vocabulario", "to": "menu", "label": "mesmos rótulos por nicho" },
+    { "id": "e14", "from": "mapa", "to": "interface", "label": "mesmo agrupamento" },
+    { "id": "e15", "from": "interface", "to": "catalogo", "label": "interface_settings.destinos (mesmo dado)" },
+    { "id": "e16", "from": "mapa", "to": "hubs", "label": "PORTA_DO_HUB" },
+    { "id": "e17", "from": "hubs", "to": "menu", "label": "link antigo abre a porta" },
+    { "id": "e18", "from": "orientacoes", "to": "menu", "label": "grupo Orientações instaladas" },
+    { "id": "e19", "from": "catalogo", "to": "inicio", "label": "Início visível em searchable()" },
+    { "id": "e20", "from": "mapa", "to": "inicio", "label": "porta Início" },
+    { "id": "e21", "from": "gate", "to": "mapa", "label": "laço de retorno do merge do original" },
+    { "id": "e22", "from": "catalogo", "to": "gate", "label": "cobertura do catálogo" }
+  ]
+}

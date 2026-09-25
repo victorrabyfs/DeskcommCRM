@@ -44,6 +44,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Logo escuro em `/admin/marca` (spec 7.3; migration 9001) | `v1.47.0-cvx.2` |
 | Logo maior na barra lateral (40px de altura em vez de 28px) | `v1.47.0-cvx.3` |
 | Atualização para a base 1.48.0; logo escuro passa a ser o do original (0406) | `v1.48.0-cvx.1` |
+| Menu novo da Convexy: portas, sub-sidebar, Início, tipo de negócio por organização (módulo `menu_convexy`; migration 9001) | `v1.48.0-cvx.2` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -134,7 +135,7 @@ do tema escuro (`dark:py-1`) o conjunto fica em 48px e cabe. A largura segue lim
 
 | Arquivo | O que muda | Ao mesclar o original |
 |---|---|---|
-| `components/shell/Sidebar.tsx` | `h-7` → `h-10` nos dois `<img>` do logo, com o comentário `Convexy` | reaplicar a troca de classe |
+| `components/shell/Sidebar.tsx` | `h-7` → `h-10` nos dois `<img>` do logo, com o comentário `Convexy` — desde a `-cvx.2`, dentro de `MarcaDaBarra` | reaplicar a troca de classe dentro de `MarcaDaBarra` ("Menu novo") |
 | `CHANGELOG.md` | `## [1.47.0-cvx.3]` | ordem de "Base e versões" |
 
 Conferência depois de um merge do original: o CI do PR do merge em `pass`, com os testes de
@@ -153,6 +154,76 @@ casos). No original os PRs estão na casa dos milhares e isso não aparece.
 |---|---|---|
 | `tests/shell/colisao-de-migration.test.sh` | bloco `# Convexy` + `unset GITHUB_REF` depois de `set -uo pipefail` | reaplicar o bloco no mesmo lugar |
 
+### Menu novo (`v1.48.0-cvx.2`)
+
+Spec `docs/superpowers/specs/2026-09-25-convexy-menu-novo-design.md`; plano
+`docs/superpowers/plans/2026-09-25-convexy-menu-novo.md`. O menu da Convexy é um **módulo
+opcional da instalação** (`menu_convexy`, linha `MODULO_MENU_CONVEXY` em `platform_config`,
+sem migration): desligado, o app é exatamente o do original. **Ligar e desligar é em
+`/admin/sistema` › Módulos opcionais › "Menu da Convexy"** — voltar ao menu clássico é
+desligar ali, na hora, sem publicar versão e sem perder escolha de interface. Instalação nova
+do fork nasce com ele desligado: ligar em `/admin/sistema` e escolher o "Tipo de negócio" de
+cada empresa em `/admin/tenants/<id>`.
+
+O menu é uma projeção do `NAV_CATALOG` do original (`lib/convexy/menu/mapa.ts`): tela nova do
+original entra sozinha na porta do `group` dela, e o CI só reprova um `group` novo. O nicho
+mora em `organizations.nicho` (migration `9001_nicho_da_organizacao`, faixa do fork), escrito
+só pelo admin da plataforma (`PATCH /api/v1/admin/tenants/[id]/nicho`, auditado como
+`tenant.nicho_changed`).
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `lib/instalacao/modulos.ts` | `"menu_convexy"` no fim de `MODULOS_OPCIONAIS`; `menu_convexy: "MODULO_MENU_CONVEXY"` em `CHAVE_DO_MODULO` (comentários `Convexy`) | reacrescentar os dois; módulo novo do original entra antes do nosso |
+| `app/admin/(protected)/sistema/_form.tsx` | objeto `modulo: "menu_convexy"` no fim de `MODULOS_NA_TELA` | reacrescentar no fim da lista |
+| `lib/navigation/catalogo.ts` | entrada `href: "/app"` (Início, `modulo: "menu_convexy"`, **sem** `sidebar`) no fim do `NAV_CATALOG` | manter como última entrada do array, sem `sidebar` |
+| `lib/i18n/dicionario.ts` | três linhas: a descrição do Início depois de `Buscar: { es: "Buscar" },`; `"Menu da Convexy"` e a descrição do módulo depois da linha `"Ligado, cada empresa pode conectar o banco…"` | reacrescentar as três nos mesmos vizinhos; se o original criar a mesma chave, apagar a nossa |
+| `lib/navigation/interface.ts` | `"/app"` no fim de `SIMPLIFICADA`; `&& d.href !== "/app"` em `interfaceTemDestino` e no segundo `find` de `homeDaInterface` | reaplicar as três condições |
+| `tests/unit/interface-por-empresa.test.ts` | `:47` chama `sidebarGroups(false, role, settings as InterfaceSettings \| undefined, [])`, com comentário `Convexy` | manter o `[]` (a casca do original chama assim; sem ele o Início contaria no menu clássico) |
+| `lib/audit/actions.ts` | `"tenant.nicho_changed"` no fim de `AUDIT_ACTIONS` | manter no fim, depois dos códigos novos do original |
+| `app/admin/(protected)/tenants/[id]/page.tsx` | quatro imports; `moduloLigado(createAdminClient(), MODULO_DO_MENU)` e o fragmento com `<CampoDoNicho>` depois do `<TenantOverviewClient>` | inserir de novo; o resto da página é o do original |
+| `supabase/baseline.sql` | bloco `-- ---- nicho da organização (migration 9001) ----`, logo depois do bloco da 0208 | prevalece o original no resto; reaplicar o bloco no mesmo lugar |
+| `supabase/migrations/MANIFEST.md` | linha `9001_nicho_da_organizacao` no fim (cita a rota do nicho) | `merge=union`; conferir que ficou uma vez |
+| `lib/database.types.ts` | `nicho` em `organizations` (`Row`/`Insert`/`Update`) | reacrescentar se o original regenerar o arquivo |
+| `hooks/i18n/useT.ts` | `export { useT } from "@/lib/convexy/vocabulario";` | manter a nossa reexportação |
+| `app/app/layout.tsx` | imports Convexy; `let nicho`; `nichoRes` no `Promise.all` (consulta própria do nicho); `nicho = lerNicho(…)` depois do primeiro `needsMfaGate = mfaRequired;`; `<ConvexyProvider>` entre `<IdiomaProvider>` e `<AuthProvider>` | reaplicar os cinco pontos |
+| `lib/ui/icons.ts` | `CheckSquare` e `GearSix` depois de `House` | reacrescentar |
+| `components/shell/Sidebar.tsx` | `export function MarcaDaBarra` (o cabeçalho `h-14` da marca, recortado do `SidebarContent` sem mudar uma classe) e `<MarcaDaBarra collapsed={collapsed} />` no lugar dele | ver "Reaplicar a `MarcaDaBarra`" abaixo |
+| `app/app/_components/AppShell.tsx` | dois imports; `useConvexy()`; o ternário `MenuConvexy` / `Sidebar` | reaplicar o ternário |
+| `components/shell/MobileSidebar.tsx` | dois imports; `useConvexy()`; o ternário `GavetaConvexy` / `SidebarContent` | reaplicar o ternário |
+| `components/team/InterfaceEditor.tsx` | três imports; `useConvexy()`; `<InterfacePorPortas>` como irmão do bloco do original; a abertura `{!convexy?.menuLigado && NAV_GROUPS.map(` e `&& d.modulo !== MODULO_DO_MENU` na linha `items` | o bloco do original (handler inclusive) fica como vier; reaplicar só as duas linhas e o irmão |
+| `components/shell/NavHub.tsx` | dois imports; `destinoDoHub` + `redirect` antes de `hubSections` | reaplicar as duas linhas |
+| `app/app/page.tsx` | `destinosDoInicio` e `<Inicio>` antes do `redirect` | reaplicar |
+| `.github/workflows/e2e.yml` | `convexy-menu.spec.ts` na `SPECS_PARTE_N` escolhida pela sonda (a) | reaplicar a linha, sem comentário no bloco; se o original redistribuir as partes, repetir a sonda |
+| `docs/testing/user-journey-map.md` | seção `## JCVX1` no fim | manter no fim do arquivo (exceção ao DoD 16, ver "Desvios aceitos") |
+| `CHANGELOG.md` | `## [1.48.0-cvx.2]` | ordem de "Base e versões" |
+
+Código só da Convexy, sem reaplicação: `lib/convexy/` (`modulo.ts` com `MODULO_DO_MENU`, `nicho.ts`,
+`textos.ts`, `contexto.tsx`, `vocabulario.ts`, `orientacoes.ts`, `menu/`), `components/convexy/`,
+`app/app/_convexy/inicio/`, `GET`/`PATCH /api/v1/admin/tenants/[id]/nicho` (leitura própria do
+nicho: o painel do tenant e a rota `GET` do tenant do original não mudam) e
+`GET /api/v1/convexy/orientacoes`.
+
+**Reaplicar a `MarcaDaBarra`** quando o original mexer no cabeçalho da barra: (1) aceitar o
+`Sidebar.tsx` do original; (2) recortar de novo o bloco `const brand = useMarcaDaInstalacao();` …
+`const marcaDoProduto = …` e o `<div className={cn("flex h-14 …")}>` para dentro de
+`MarcaDaBarra`, sem mudar uma classe (passo a passo na Task 6 do plano); (3) reaplicar o "Logo
+maior" (`h-7` → `h-10` nos dois `<img>`), que agora mora dentro de `MarcaDaBarra`; (4) conferir
+com `git diff -U0 components/shell/Sidebar.tsx | grep -E '^[-+]' | grep -vE '^(\+\+\+|---)' | sed 's/^[-+]//' | sort | uniq -u`
+— só as linhas da função nova e da chamada aparecem.
+
+**Reaplicar a Fila do Início** quando `tests/unit/convexy-inicio-fila-do-inbox.test.ts` reprovar
+depois de um merge do original: ler o diff de `app/api/v1/conversations/counts/route.ts`, levar a
+régua nova para `conversasEsperando` (`app/app/_convexy/inicio/blocos.ts`) e ajustar as
+asserções do teste de fonte no MESMO commit. Nunca só afrouxar o teste: é ele que garante que o
+número do Início é o badge da Fila.
+
+Conferência depois de um merge do original: o CI do PR do merge em `pass`, lendo em especial
+`tests/unit/convexy-menu-mapa.test.ts` — um `group` novo reprova com a mensagem que diz o que
+decidir, e a linha `[convexy-menu] posições por padrão` do log mostra as telas novas que entraram
+sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não servir) —,
+`convexy-menu-dono.test.ts` (página nova sem dono), `convexy-menu-modulo.test.tsx` e
+`convexy-inicio-fila-do-inbox.test.ts`.
+
 ## Desvios aceitos
 
 - **DoD 17** — sem fragmento em `.changes/`: o CHANGELOG das versões `-cvx` é escrito à mão
@@ -160,6 +231,9 @@ casos). No original os PRs estão na casa dos milhares e isso não aparece.
 - **DoD 15** — "bump não exige ação manual": a `-cvx.1` exige trocar o `origin` e limpar tags
   na VPS (procedimento abaixo). Só na transição do original para o fork.
 - **DoD 16** — docs do original não são editados; o que não vale no fork está listado abaixo.
+  Exceção desde a `-cvx.2`: `docs/testing/user-journey-map.md` ganha a seção `JCVX1` (menu
+  novo), porque o DoD 12 manda registrar ali a jornada provada em tela; reaplicar mantendo a
+  seção no fim do arquivo ("Menu novo").
 - **Rollback sem ensaio em VM** (decisão de 23/09): o procedimento abaixo foi conferido contra
   o código do kit, não executado.
 - **Paleta (`-cvx.3`)** — popover igual ao cartão (`#131923` no escuro, e não `#171E2A` do
@@ -185,7 +259,66 @@ casos). No original os PRs estão na casa dos milhares e isso não aparece.
   atualizados: mudança só de aparência (sem dado, rota, log, worker ou jornada nova).
 - **Logo escuro (`v1.47.0-cvx.2`)** — aposentado na `v1.48.0-cvx.1` em favor do recurso do
   original (ver "Logo escuro"). A faixa de migrations `9001+` continua reservada ao fork; hoje
-  não há nenhuma.
+  há a `9001_nicho_da_organizacao` (menu novo, `v1.48.0-cvx.2`).
+- **Menu novo (`-cvx.2`) — títulos desenhados no servidor.** O vocabulário por nicho troca só
+  quatro títulos exatos ("Inbox", "Radar de risco", "Funis", "Central de avisos") e só no que
+  passa pelo `useT` do cliente. Ficam com o nome do original: os títulos desenhados no servidor
+  com `traduzir()` direto, os títulos fixos sem `t()`, o `metadata.title` da aba, e-mails,
+  notificações e mensagens do agente (o vocabulário nunca é aplicado em `lib/agent-engine`,
+  `lib/notifications` ou `workers`). A lista se mede, não se escreve:
+  `git grep -l "traduzir(" -- 'app/app/*.tsx' 'app/app/**/*.tsx' | xargs grep -L '^"use client"'`
+  (as telas de servidor que traduzem), e
+  `git grep -nE '(t|traduzir)\("(Inbox|Funis|Radar de risco|Central de avisos)"' -- app components`
+  (onde os quatro títulos aparecem e por qual caminho).
+- **Menu novo — o vocabulário alcança a busca ⌘K e o sino** (decisão aceita na revisão do plano;
+  a spec vai à revisão 5): a paleta desenha `t(d.label)` e o `AlertsBell` desenha
+  `t("Central de avisos")`, então "Inbox", "Funis" e "Central de avisos" aparecem lá pelo
+  vocabulário; os rótulos próprios do mapa (Pacientes, Anúncios, Assistentes) não chegam à busca.
+  Provado em `tests/e2e/convexy-menu.spec.ts` ("o vocabulário do nicho aparece num título do
+  useT cliente e na busca ⌘K").
+- **Menu novo — entradas que continuam indo para o Inbox:** trocar de organização, entrar e sair
+  do suporte e terminar o onboarding, como no original. Onde: `git grep -n '"/app/inbox"' -- app/actions app/onboarding app/api/v1/impersonate lib/auth components/shell`.
+- **Menu novo — "Tipo de negócio" num cartão da página do tenant**, e não dentro do
+  `TenantOverview`: a página já é servidor e decide o módulo sem prop nova nos componentes do
+  original, e o cartão lê o nicho pela rota dele (`GET …/nicho`) — o painel do tenant não muda. Na **criação** de organização pelo `/admin` (sem `ConvexyProvider`) a tela de
+  interface fica no agrupamento do original, sem o Início; o Início chega pelo perfil
+  Simplificada ou pela Completa.
+- **Menu novo — `tests/unit/i18n-espanhol-cobre-a-tela.test.ts`** diz que "o português não
+  muda". Com o módulo ligado, o `useT` da Convexy muda de propósito os quatro títulos acima.
+- **Menu novo — estado "fechada no ×"** vive na aba enquanto ela navega no app (estado de tela,
+  o menu mora no layout); recarregar reabre. Ler `sessionStorage` depois da hidratação faria a
+  primeira pintura abrir e fechar a sub-sidebar.
+- **Menu novo — orientações instaladas:** o endereço de uma orientação é dela (item de
+  Contatos) depois que a sub-sidebar de Contatos abriu na aba; numa carga direta de
+  `/app/extensions/<id>` antes disso, o dono é Extensões (Configurações). Com uma só tela de
+  Contatos visível a porta vira link direto, e as orientações ficam em Configurações › Extensões.
+- **Menu novo — `navegacao-completude.test.ts` não é editado** (o plano vence a spec §10: editar
+  seria churn num arquivo do original). O motivo escrito na allowlist de `/app` do teste do
+  original fica desatualizado no modo com o módulo ligado — o Início do menu novo dá alcance à
+  tela que a allowlist descreve por outro caminho. Aceito porque o teste continua vigiando o
+  modo clássico (módulo desligado), que é o do original.
+- **Menu novo — dois blocos copiados do original, cada um vigiado por teste:** (1) o predicado
+  da Fila do Início (`conversasEsperando`, `app/app/_convexy/inicio/blocos.ts`) repete a régua de
+  `app/api/v1/conversations/counts/route.ts`, vigiado por
+  `tests/unit/convexy-inicio-fila-do-inbox.test.ts` (ver "Reaplicar a Fila do Início" acima); (2)
+  o toggle de área do `InterfacePorPortas` repete o handler do `InterfaceEditor` original,
+  vigiado por teste de equivalência entre os dois (ruling da Task 8). Nos dois casos a duplicação
+  é exigida pelo plano para não reescrever o arquivo do original; mudança futura do handler ou da
+  régua do original precisa ser espelhada manualmente — o teste acusa quando alguém esquece.
+- **Menu novo — uma leitura extra de `modulosLigados` no `/app`:** o layout usa a lista de
+  módulos que `resolveActiveOrg` já traz em `activeOrg.modulos_ligados`; quando ela não vem (ver
+  o `Promise.all` de `app/app/layout.tsx`), o Início aceita UMA consulta a mais a
+  `modulosLigados(db)` em vez de propagar o campo por mais lugares do original.
+- **Menu novo — os rótulos das portas no trilho mantêm `truncate`.** O maior rótulo ("Assistente
+  de IA") cabe nos 236px do trilho aberto; quebrar linha mudaria a altura fixa de 38px da spec.
+  Nome de porta futura mais longo aparece com reticências — a queixa que motivou a régua era dos
+  SUBMENUS cortando texto, não do trilho.
+- **Testes da `-cvx.2`** — nenhuma suíte rodou na máquina local: unitários, cercas e
+  typecheck/lint pelo `verify`; migration e RLS pelo `invariants` (install e update); a tela
+  pelo `e2e` (`convexy-menu.spec.ts`, na parte escolhida pela sonda (a)) e pela conferência na
+  VPS. A fase vermelha dos cinco guardas do "Review Focus" do plano foi vista no CI antes de cada
+  implementação. Evidência visual em
+  `.superpowers/evidence/convexy-menu/` (artefatos do e2e e capturas da VPS).
 
 ## Afirmações de docs do original que não valem no fork
 

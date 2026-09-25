@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.48.0-cvx.2] — 2026-09-25
+
+Menu novo da Convexy, desligado até o dono do servidor ligar em Configurações do sistema › Módulos opcionais ("Menu da Convexy"). Ligado: poucas portas grandes — Início, Conversas, Agenda, Contatos, Funil, Tarefas, Assistente de IA, Resultados e Configurações no rodapé —, a lista de telas de cada porta ao lado, o menu só com ícones enquanto a lista está aberta, a gaveta no celular e o Início com as conversas esperando, a agenda de hoje e as suas tarefas. Cada empresa ganha um "Tipo de negócio", escolhido pelo dono do servidor na tela da empresa, que troca os nomes do menu: numa clínica, Contatos vira Pacientes. A tela de interface (Organização › Menu lateral, e a de cada pessoa em Equipe) passa a mostrar as mesmas portas. Desligado, tudo como antes. O banco ganha a coluna do tipo de negócio, aplicada sozinha pela atualização.
+
 ## [1.48.0-cvx.1] — 2026-09-25
 
 Atualização para a 1.48.0 do DeskcommCRM (notas logo abaixo). O logo para o tema escuro passa a ser o do original, que faz o mesmo que o da `1.47.0-cvx.2` e vale também para a marca de cada organização: os logos já enviados continuam valendo, sem nada a refazer. Mantém a identidade da Convexy (paleta, fontes, barra do navegador, logo maior na barra lateral) e as imagens de `ghcr.io/victorrabyfs`.
