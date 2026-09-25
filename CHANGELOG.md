@@ -10,7 +10,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [1.48.0-cvx.2] — 2026-09-25
 
-Menu novo da Convexy, desligado até o dono do servidor ligar em Configurações do sistema › Módulos opcionais ("Menu da Convexy"). Ligado: poucas portas grandes — Início, Conversas, Agenda, Contatos, Funil, Tarefas, Assistente de IA, Resultados e Configurações no rodapé —, a lista de telas de cada porta ao lado, o menu só com ícones enquanto a lista está aberta, a gaveta no celular e o Início com as conversas esperando, a agenda de hoje e as suas tarefas. Cada empresa ganha um "Tipo de negócio", escolhido pelo dono do servidor na tela da empresa, que troca os nomes do menu: numa clínica, Contatos vira Pacientes. A tela de interface (Organização › Menu lateral, e a de cada pessoa em Equipe) passa a mostrar as mesmas portas. Desligado, tudo como antes. O banco ganha a coluna do tipo de negócio, aplicada sozinha pela atualização.
+Menu novo da Convexy, desligado até ligar em /admin/sistema › Módulos opcionais ("Menu da Convexy"). Ligado: portas grandes (Início, Conversas, Agenda, Contatos, Funil, Tarefas, Assistente de IA, Resultados, Configurações), e o Início com conversas esperando, agenda e tarefas do dia. Cada empresa ganha "Tipo de negócio" em /admin/tenants (clínica: Contatos vira Pacientes). Desligado, tudo como antes; o banco ganha a coluna do tipo de negócio, aplicada pela atualização.
 
 ## [1.48.0-cvx.1] — 2026-09-25
 
