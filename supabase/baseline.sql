@@ -17554,6 +17554,51 @@ end $$;
 comment on column public.organizations.currency is
   'Moeda do negócio desta organização, ISO-4217. CONTRATO: é a fonte na ESCRITA — o produto herda esta moeda no cadastro, e a moeda que venha no corpo da requisição não decide (corpo não decide unidade, como não decide escopo). A linha do produto guarda a moeda com que nasceu: pedido pago em BRL não vira MXN depois.';
 
+-- ---- nicho da organização (migration 9001) ----
+--
+-- Convexy (fork victorrabyfs/DeskcommCRM) — spec
+-- docs/superpowers/specs/2026-09-25-convexy-menu-novo-design.md, seção 6.1;
+-- registro em CONVEXY.md, "Menu novo (v1.48.0-cvx.2)". O mesmo SQL está em
+-- supabase/migrations/20260925180901_9001_nicho_da_organizacao.sql.
+--
+-- A organização ganha o tipo de negócio, que escolhe os nomes do menu da
+-- Convexy e o vocabulário dos títulos. Coluna própria, e não chave em
+-- `settings`: `settings` tem vários escritores que leem, alteram e regravam o
+-- objeto inteiro, e uma escrita concorrente perderia o nicho. A RLS de
+-- organizations já cobre (orgs_select lê; só orgs_write_platform_admin
+-- escreve): sem policy, sem função.
+--
+-- POR QUE AQUI, e não no fim do arquivo: é a família da 0208 (coluna de
+-- organizations com CHECK), e o fim é onde o original acrescenta os blocos
+-- dele — o último comando é a conferência de módulos da 0340. Num conflito de
+-- merge neste arquivo prevalece o lado do original, e este bloco é reaplicado
+-- neste mesmo lugar.
+--
+-- Idempotente e auto-curativo: coluna, backfill do que estiver fora do
+-- vocabulário e só então a regra (drop if exists + add) — o update.sh roda
+-- SEM ON_ERROR_STOP.
+
+alter table public.organizations
+  add column if not exists nicho text;
+
+comment on column public.organizations.nicho is
+  'Convexy (migration 9001): o tipo de negócio da organização, um de clinica, servicos, imobiliaria, curso, loja, generico (os ids de lib/onboarding/pacotes-de-funil.ts). Nulo vale generico. Escolhe os nomes do menu da Convexy (lib/convexy/menu/mapa.ts) e o vocabulário dos títulos (lib/convexy/vocabulario.ts). Escrito só pelo admin da plataforma, por app/api/v1/admin/tenants/[id]/nicho/route.ts.';
+
+update public.organizations
+   set nicho = null
+ where nicho is not null
+   and nicho not in ('clinica', 'servicos', 'imobiliaria', 'curso', 'loja', 'generico');
+
+alter table public.organizations
+  drop constraint if exists organizations_nicho_valido;
+alter table public.organizations
+  add constraint organizations_nicho_valido check (
+    nicho is null
+    or nicho in ('clinica', 'servicos', 'imobiliaria', 'curso', 'loja', 'generico')
+  );
+
+notify pgrst, 'reload schema';
+
 -- ---- elegibilidade da IA por origem do lead (migration 0206) ----
 --
 -- Gate OPT-IN por canal (`channel_sessions.metadata.ai_gate = 'allowlist'`):
