@@ -1,6 +1,6 @@
 # Menu novo da Convexy — desenho
 
-**Status:** revisão 4, para aprovação · **Data:** 2026-09-25 · **Fork:** `victorrabyfs/DeskcommCRM`
+**Status:** revisão 5 (ajustes do plano), aprovada · **Data:** 2026-09-25 · **Fork:** `victorrabyfs/DeskcommCRM`
 **Base:** `v1.48.0` do original (`main` do fork depois do PR #7).
 **Entrega 1 de 2.** A entrega 2 (painel Início por nicho) terá spec própria.
 **Protótipo aprovado:** artefato "Menu da Convexy", rodada 2, versão 7.
@@ -283,10 +283,13 @@ barra `fixed` e `ml-*`. O `AppShell` mantém `useOcupacaoDoRodape` e `estiloDaRe
     `admin/tenants/[id]/suspend`.
   - Na ordem: `requirePlatformAdmin()` (com MFA), `requireSupportWrite(id)` e validação Zod.
   - Audit `tenant.nicho_changed` com o antes e o depois, e o código entra em `AUDIT_ACTIONS`.
-- **Onde se escolhe:** campo "Tipo de negócio" em `components/admin/tenants/TenantOverview`,
-  visível só com o módulo ligado.
-- **Leitura:** o layout do app já seleciona a organização. Passa a selecionar `nicho` e o entrega
-  ao `ConvexyProvider`, sem consulta nova.
+- **Onde se escolhe:** campo "Tipo de negócio" num cartão próprio da página do tenant no admin
+  (`app/admin/(protected)/tenants/[id]/page.tsx`, inserido sem reescrever a página), visível só com
+  o módulo ligado. O `TenantOverview` do original não muda.
+- **Leitura:** o nicho é lido numa **consulta própria**, em paralelo às que o layout já faz, e cai
+  para `generico` em qualquer erro. Ele não entra no `select` da organização, para que uma coluna
+  ausente (atualização interrompida) nunca desligue a verificação de organização suspensa ou do
+  onboarding.
 - **Implantação:** a Convexy recebe `servicos`, e a organização de teste indicada pelo Victor
   recebe `clinica`.
 
@@ -304,7 +307,9 @@ barra `fixed` e `ml-*`. O `AppShell` mantém `useOcupacaoDoRodape` e `estiloDaRe
   também para as telas novas que chegam pelo padrão.
 - Os dois "Meta Ads" ficam distintos: o de Resultados vira "Anúncios", e o de "Canais e
   integrações" continua "Meta Ads".
-- A busca ⌘K continua com os nomes do original.
+- A busca ⌘K e o sino de alertas desenham os rótulos por `t()`, então, com o módulo ligado, mostram
+  os títulos do vocabulário da seção 6.3 (ex.: "Conversas" em vez de "Inbox"). É o comportamento
+  coerente com a tela: o mesmo nome em todo lugar.
 
 ### 6.3 Títulos das telas: `useT` da Convexy
 
@@ -363,9 +368,11 @@ Nunca aplicar o vocabulário em `lib/agent-engine`, `lib/notifications` ou `work
 - Os textos novos da Convexy (portas, grupos, "‹ Voltar", blocos do Início, "Tipo de negócio",
   módulo em `/admin/sistema`) ficam em `lib/convexy/textos.ts` como `{pt, es}` e são desenhados
   por variável.
-- **Exceção:** o rótulo e a descrição da entrada "Início" do catálogo. O
-  `i18n-catalogo-do-menu.test.ts` cobra a tradução de `label` e `description` no dicionário do
-  original, então ele ganha duas linhas ali, junto do bloco do menu.
+- **Exceção:** o dicionário do original ganha três linhas, e só elas:
+  - a descrição da entrada "Início" do catálogo (o rótulo "Início" já existe lá), cobrada pelo
+    `i18n-catalogo-do-menu.test.ts`;
+  - o nome e a descrição do módulo em `/admin/sistema`, que traduz pelo dicionário como os módulos
+    do original.
 - Um teste da Convexy cobra `es` em todo rótulo do `mapa.ts` e do `textos.ts`.
 
 ## 9. Testes (todos rodam no CI do fork, nunca na máquina local)
@@ -442,16 +449,20 @@ Cobre:
 | `lib/instalacao/modulos.ts` | `menu_convexy` em `MODULOS_OPCIONAIS` e `CHAVE_DO_MODULO` | lista de módulos |
 | `app/admin/(protected)/sistema/_form.tsx` | uma entrada na lista de módulos | lista de módulos |
 | `lib/navigation/catalogo.ts` | entrada do Início com `modulo: "menu_convexy"` | lista do catálogo |
-| `lib/i18n/dicionario.ts` | rótulo e descrição do Início em espanhol | exigido pelo teste do catálogo |
+| `lib/i18n/dicionario.ts` | três linhas em espanhol (descrição do Início; nome e descrição do módulo) | exigido pelos testes de espanhol |
 | `app/app/layout.tsx` | seleciona `nicho` e monta o `ConvexyProvider` | onde a organização já é lida |
 | `app/app/_components/AppShell.tsx` | menu novo ou `Sidebar`, pelo módulo | onde o `Sidebar` é montado |
 | `components/shell/MobileSidebar.tsx` | idem para a gaveta | onde o `SidebarContent` é montado |
 | `components/shell/NavHub.tsx` | redireciona com o módulo ligado | componente único dos 4 hubs |
 | `lib/navigation/interface.ts` | `"/app"` na lista `SIMPLIFICADA` | lista do perfil |
-| `components/team/InterfaceEditor.tsx` | agrupa pelas portas do `mapa.ts` com o módulo ligado, e caixa por porta | o bloco que agrupa por `NAV_GROUPS` |
+| `components/team/InterfaceEditor.tsx` | com o módulo ligado, o bloco de `NAV_GROUPS` não desenha e o agrupamento por portas entra ao lado; bloco do original intacto | o bloco que agrupa por `NAV_GROUPS` |
 | `hooks/i18n/useT.ts` | reexporta o `useT` da Convexy | reexportação de uma linha |
 | `app/app/page.tsx` | Início ou redirect (seção 7) | ponto de entrada |
-| `components/admin/tenants/TenantOverview.tsx` | campo "Tipo de negócio" | tela do tenant |
+| `app/admin/(protected)/tenants/[id]/page.tsx` | cartão "Tipo de negócio" inserido | tela do tenant |
+| `components/shell/Sidebar.tsx` | o bloco do logo vira `MarcaDaBarra` exportado, usado pelos dois menus | evita duplicar a lógica do logo |
+| `lib/ui/icons.ts` | `CheckSquare` e `GearSix` no barril de ícones | lista de ícones |
+| `tests/unit/interface-por-empresa.test.ts` | passa `[]` de módulos a `sidebarGroups`, como o `Sidebar.tsx` real | o teste ignorava módulos |
+| `docs/testing/user-journey-map.md` | jornada do menu novo | DoD 13 |
 | `lib/audit/actions.ts` | `tenant.nicho_changed` | lista de ações |
 | `supabase/baseline.sql`, `MANIFEST.md`, `lib/database.types.ts` | 9001 e `nicho` no tipo | padrão de migration |
 | `.github/workflows/e2e.yml` | uma linha em `SPECS_PARTE_1` | lista de specs |
@@ -499,6 +510,13 @@ os dois modos, e a nova redação fica registrada no `CONVEXY.md`.
   - o módulo da instalação substitui a constante, a variável e o cookie;
   - ícone de Configurações definido (engrenagem);
   - padrão WAI-ARIA "Disclosure Navigation".
+- **Revisão 5 (ajustes do plano, depois de quatro revisões do plano):**
+  - nicho lido em consulta própria;
+  - ⌘K e sino com o vocabulário;
+  - "Tipo de negócio" num cartão da página do tenant;
+  - três linhas no dicionário;
+  - arquivos do original a mais (`Sidebar.tsx` com `MarcaDaBarra`, ícones, um teste do
+    original que ignorava módulos, mapa de jornadas).
 - **Revisão 4:**
   - a tela de interface é o `InterfaceEditor` do original reaproveitado, e só o agrupamento muda;
   - o uso diário do original fica sempre no grupo principal (Roteadores, Provedores, Tipos de
