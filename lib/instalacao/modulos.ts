@@ -39,7 +39,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { logger } from "@/lib/logger";
 
-export const MODULOS_OPCIONAIS = ["banco_externo", "fluxos_atendimento"] as const;
+// Convexy: `menu_convexy` é o menu novo da Convexy, desligado por padrão como os
+// outros. CONVEXY.md, "Menu novo".
+export const MODULOS_OPCIONAIS = ["banco_externo", "fluxos_atendimento", "menu_convexy"] as const;
 export type ModuloOpcional = (typeof MODULOS_OPCIONAIS)[number];
 
 /** A linha de cada módulo em `platform_config`. O formato é o da CHECK da 0341. */
@@ -49,6 +51,9 @@ export const CHAVE_DO_MODULO: Record<ModuloOpcional, string> = {
   // a conduzir um roteiro de perguntas no turno — quem não liga não carrega o
   // caminho novo (`lib/agent-engine/agent/roteiro-no-turno.ts`).
   fluxos_atendimento: "MODULO_FLUXOS_DE_ATENDIMENTO",
+  // Convexy: o menu novo da Convexy. A chave cabe na CHECK de formato da 0341,
+  // sem migration. CONVEXY.md, "Menu novo".
+  menu_convexy: "MODULO_MENU_CONVEXY",
 };
 
 const LIGADO = "ligado";

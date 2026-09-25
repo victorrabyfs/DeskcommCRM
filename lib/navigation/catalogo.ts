@@ -913,6 +913,20 @@ export const NAV_CATALOG = [
     // existe onde quem administra o servidor o ligou, em `/admin/sistema`.
     modulo: "banco_externo",
   },
+  {
+    // Convexy: o Início do menu da Convexy (spec
+    // docs/superpowers/specs/2026-09-25-convexy-menu-novo-design.md, 3.6 e 7).
+    // Existe só com o módulo `menu_convexy` ligado; no menu clássico some pelo
+    // módulo. SEM `sidebar`: o menu da Convexy o posiciona explicitamente. `Gauge`
+    // é um ícone que o registro já conhece (o menu novo desenha a casa). No FIM
+    // do array para não mudar a ordem do que já existe. CONVEXY.md, "Menu novo".
+    href: "/app",
+    label: "Início",
+    description: "O resumo do dia: conversas esperando, a agenda de hoje e as suas tarefas.",
+    icon: "Gauge",
+    group: "atendimento",
+    modulo: "menu_convexy",
+  },
 ] as const satisfies readonly NavMetadata[];
 
 export type NavDestinationId = (typeof NAV_CATALOG)[number]["href"];

@@ -44,7 +44,9 @@ const hrefs = (settings: unknown, role: "agent" | "admin" = "admin") =>
  * só os grupos que aparecem na dobra, sem o grupo do rodapé.
  */
 const itensNoMenuLateral = (settings: unknown, role: "agent" | "admin" = "admin") =>
-  sidebarGroups(false, role, settings as InterfaceSettings | undefined)
+  // Convexy: com os módulos da casca (`?? []`, como o Sidebar.tsx:48), a porta
+  // de um módulo desligado não entra na conta. CONVEXY.md, "Menu novo".
+  sidebarGroups(false, role, settings as InterfaceSettings | undefined, [])
     .filter((grupo) => grupo.group.id !== GRUPO_NO_RODAPE)
     .reduce((total, grupo) => total + grupo.items.length, 0);
 
