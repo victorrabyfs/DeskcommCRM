@@ -27,13 +27,7 @@
 
 import { resolveBranding, type Branding } from "@/lib/branding";
 
-import {
-  derivarMarca,
-  type CodigoDeMotivo,
-  type Marca,
-  type Regua,
-  type Tema,
-} from "./contraste";
+import { derivarMarca, type CodigoDeMotivo, type Marca, type Regua, type Tema } from "./contraste";
 import { logoDaCamada } from "./logo";
 import { normalizarHex } from "./rampa";
 import {
@@ -80,12 +74,6 @@ export type CamadaDeMarca = {
   readonly origem: string;
   readonly nome?: string | null;
   readonly logoUrl?: string | null;
-  /**
-   * Convexy (spec 7.3.4): o logo desta camada para o TEMA ESCURO. Só a camada do
-   * banco da instalação o preenche (`camadaDaInstalacao`), e ele só chega à marca
-   * resolvida quando o logo exibido saiu desta MESMA camada (`resolverMarca`).
-   * CONVEXY.md, "Logo escuro".
-   */
   readonly logoDarkUrl?: string | null;
   /**
    * O envelope CRU, como veio da fonte — `unknown` de propósito: validar é
@@ -109,6 +97,7 @@ export type MarcaResolvida = Branding & {
   readonly origens: {
     readonly nome: string;
     readonly logoUrl: string;
+    readonly logoDarkUrl?: string;
     readonly cor: string;
   };
   readonly motivos: readonly MotivoDaMarca[];
@@ -204,11 +193,7 @@ function resolverCor(
   regua: Regua,
 ): { cor: CorResolvida | null; motivos: MotivoDaMarca[] } {
   const motivos: MotivoDaMarca[] = [];
-  const anotar = (
-    codigo: CodigoDaResolucao,
-    detalhe: string,
-    alvo: string | null = null,
-  ) => {
+  const anotar = (codigo: CodigoDaResolucao, detalhe: string, alvo: string | null = null) => {
     motivos.push({ codigo, origem, tema: null, alvo, detalhe });
   };
 
@@ -229,9 +214,7 @@ function resolverCor(
     // inclusive campo AUSENTE ou de tipo errado no mesmo caminho, é forma do
     // envelope. Sem o `code`, um envelope sem `semente_hex` seria reportado como
     // cor mal digitada, e o operador iria procurar o erro no lugar errado.
-    const noHex = lido.error.issues.some(
-      (i) => i.path[0] === "semente_hex" && i.code === "custom",
-    );
+    const noHex = lido.error.issues.some((i) => i.path[0] === "semente_hex" && i.code === "custom");
     if (noHex) {
       anotar("semente_invalida", "semente_hex não é um hex de cor (#rgb ou #rrggbb)");
     } else {
@@ -302,10 +285,7 @@ function resolverCor(
     // Não é `catch` que silencia: o motivo sai com a mensagem real (sem o hex).
     // Existe porque a alternativa é a exceção subir até o layout e derrubar o
     // produto inteiro por causa de uma cor.
-    anotar(
-      "derivacao_falhou",
-      semIdentidade(erro instanceof Error ? erro.message : String(erro)),
-    );
+    anotar("derivacao_falhou", semIdentidade(erro instanceof Error ? erro.message : String(erro)));
     return { cor: { semente, papel, derivada: null }, motivos };
   }
 }
@@ -320,19 +300,21 @@ function resolverCor(
  * anotada e a busca continua descendo. Numa instalação de revendedor, uma
  * organização que grava lixo tem de cair na marca do revendedor, não na nossa.
  */
-export function resolverMarca(
-  camadas: readonly CamadaDeMarca[],
-  regua: Regua,
-): MarcaResolvida {
+export function resolverMarca(camadas: readonly CamadaDeMarca[], regua: Regua): MarcaResolvida {
   const nome = primeiroDefinido(camadas, (c) => c.nome);
   const logo = primeiroDefinido(camadas, (c) => c.logoUrl);
   const base = resolveBranding(nome?.valor, logo?.valor);
-  // Convexy (spec 7.3.4): o logo escuro acompanha o logo EXIBIDO — vem da mesma
-  // camada que venceu `logoUrl` (a primeira com logo não vazio, a regra de
-  // `primeiroDefinido`). Logo de organização ou do `.env` nunca é trocado pelo
-  // escuro da instalação: essas camadas não têm `logoDarkUrl`.
-  const camadaDoLogo = camadas.find((c) => (c.logoUrl ?? "").trim().length > 0);
-  const logoDarkUrl = (camadaDoLogo?.logoDarkUrl ?? "").trim();
+  // Uma camada com logo próprio encerra a herança do par: a empresa não pode
+  // ganhar o logo escuro de OUTRA marca só porque enviou apenas o padrão.
+  let logoEscuro: { valor: string; origem: string } | undefined;
+  for (const camada of camadas) {
+    const escuro = camada.logoDarkUrl?.trim();
+    if (escuro) {
+      logoEscuro = { valor: escuro, origem: camada.origem };
+      break;
+    }
+    if (camada.logoUrl?.trim()) break;
+  }
 
   const motivos: MotivoDaMarca[] = [];
   let cor: CorResolvida | null = null;
@@ -351,12 +333,12 @@ export function resolverMarca(
 
   return {
     ...base,
-    // Só com valor: marca sem logo escuro fica idêntica à de antes.
-    ...(logoDarkUrl.length > 0 ? { logoDarkUrl } : {}),
+    ...(logoEscuro ? { logoDarkUrl: logoEscuro.valor } : {}),
     cor,
     origens: {
       nome: nome?.origem ?? PADRAO,
       logoUrl: logo?.origem ?? PADRAO,
+      ...(logoEscuro ? { logoDarkUrl: logoEscuro.origem } : {}),
       cor: origemDaCor,
     },
     motivos,
@@ -390,10 +372,6 @@ export type LinhaDaInstalacao = {
    * então uma instalação pode voltar a rodar código que não conhece esta coluna.
    */
   readonly logo_path?: string | null;
-  /**
-   * Convexy (migration 9001): o arquivo do logo para o TEMA ESCURO, mesma forma
-   * de `logo_path`. Sem `logo_url` par: não há semente do `.env` para ele.
-   */
   readonly logo_dark_path?: string | null;
   readonly accent_hex?: string | null;
 };
@@ -417,21 +395,24 @@ export function camadaDaInstalacao(linha: LinhaDaInstalacao | null): CamadaDeMar
   const hex = (linha.accent_hex ?? "").trim();
   // O arquivo subido vence a URL colada, DENTRO desta camada — ver `logoDaCamada`.
   const logoUrl = logoDaCamada(linha.logo_path, linha.logo_url);
-  // Convexy (spec 7.3.4): o arquivo do tema escuro; a chave só existe com valor.
-  const escuro = logoDaCamada(linha.logo_dark_path, null);
-  const logoDark = escuro ? { logoDarkUrl: escuro } : {};
+  const logoDarkUrl = logoDaCamada(linha.logo_dark_path, null);
   // Mesma regra do `.env`: campo vazio é ausência de configuração, não cor com
   // defeito. Sem isto, uma linha semeada de um `.env` sem cor emitiria
   // `cor_ausente` em toda instalação de fábrica — e aviso no caso normal ensina
   // o operador a ignorar avisos.
   if (hex.length === 0) {
-    return { origem: "banco", nome: linha.app_name, logoUrl, ...logoDark };
+    return {
+      origem: "banco",
+      nome: linha.app_name,
+      logoUrl,
+      ...(logoDarkUrl ? { logoDarkUrl } : {}),
+    };
   }
   return {
     origem: "banco",
     nome: linha.app_name,
     logoUrl,
-    ...logoDark,
+    ...(logoDarkUrl ? { logoDarkUrl } : {}),
     cor: envelopeDeSemente(hex),
   };
 }
@@ -487,6 +468,7 @@ export type MarcaDaOrganizacao = {
    * continua com o logo da instalação, pela precedência por campo.
    */
   readonly logo_path?: string | null;
+  readonly logo_dark_path?: string | null;
 };
 
 /**
@@ -519,11 +501,19 @@ export function camadaDaOrganizacao(marca: MarcaDaOrganizacao | null): CamadaDeM
   if (!marca) return { origem: "organizacao" };
   const hex = (marca.accent_hex ?? "").trim();
   const logoUrl = logoDaCamada(marca.logo_path, null);
-  if (hex.length === 0) return { origem: "organizacao", nome: marca.app_name, logoUrl };
+  const logoDarkUrl = logoDaCamada(marca.logo_dark_path, null);
+  if (hex.length === 0)
+    return {
+      origem: "organizacao",
+      nome: marca.app_name,
+      logoUrl,
+      ...(logoDarkUrl ? { logoDarkUrl } : {}),
+    };
   return {
     origem: "organizacao",
     nome: marca.app_name,
     logoUrl,
+    ...(logoDarkUrl ? { logoDarkUrl } : {}),
     cor: envelopeDeSemente(hex),
   };
 }

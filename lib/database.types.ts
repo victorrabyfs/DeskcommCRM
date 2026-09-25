@@ -7520,7 +7520,6 @@ export type Database = {
           fallback_at: string | null
           fallback_reason: string | null
           id: number
-          logo_dark_path: string | null
           logo_path: string | null
           logo_url: string | null
           seeded_from_env: boolean
@@ -7534,7 +7533,6 @@ export type Database = {
           fallback_at?: string | null
           fallback_reason?: string | null
           id?: number
-          logo_dark_path?: string | null
           logo_path?: string | null
           logo_url?: string | null
           seeded_from_env?: boolean
@@ -7548,7 +7546,6 @@ export type Database = {
           fallback_at?: string | null
           fallback_reason?: string | null
           id?: number
-          logo_dark_path?: string | null
           logo_path?: string | null
           logo_url?: string | null
           seeded_from_env?: boolean

@@ -23,15 +23,10 @@ export type Branding = {
   name: string;
   /** URL do logo, ou `null` quando a marca deve aparecer como texto. */
   logoUrl: string | null;
+  /** Arte opcional preparada para o tema escuro; ausente preserva o logo padrão. */
+  logoDarkUrl?: string | null;
   /** Primeira letra do nome — usada onde só cabe um caractere (sidebar recolhida). */
   initial: string;
-  /**
-   * Convexy (spec 7.3.4): o logo da INSTALAÇÃO para o tema escuro. Opcional de
-   * propósito — os testes montam `Branding` literal — e só presente quando o
-   * logo exibido veio do banco da instalação (`resolverMarca`). CONVEXY.md,
-   * "Logo escuro".
-   */
-  logoDarkUrl?: string | null;
 };
 
 /**

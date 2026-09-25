@@ -31,11 +31,6 @@ export interface MarcaGravada {
    * ponteiro é gravado por escritor próprio.
    */
   readonly logo_path: string | null;
-  /**
-   * Convexy (spec 7.3.3): o arquivo do logo do TEMA ESCURO. Também não vai no
-   * `Salvar` — mesma rota, com `variante=escuro`. CONVEXY.md, "Logo escuro".
-   */
-  readonly logo_dark_path: string | null;
   readonly accent_hex: string | null;
   readonly show_powered_by: boolean;
 }
@@ -51,10 +46,9 @@ interface Props {
    * interface aparece com o nome em texto.
    */
   readonly logoEmVigor: string | null;
+  readonly logoEscuroEmVigor?: string | null;
   /** O que apareceria SEM o arquivo subido — a URL colada no `.env`, se houver. */
   readonly logoDoAmbiente: string | null;
-  /** Convexy: a URL do logo do tema escuro gravado; `null` = nenhum. */
-  readonly logoEscuroEmVigor: string | null;
   readonly origens: { readonly nome: string; readonly logoUrl: string; readonly cor: string };
   readonly definidoNestaTela: boolean;
   readonly fallbackEm: string | null;
@@ -75,8 +69,8 @@ export function FormularioDaMarca({
   gravada,
   nomeEmVigor,
   logoEmVigor,
-  logoDoAmbiente,
   logoEscuroEmVigor,
+  logoDoAmbiente,
   origens,
   definidoNestaTela,
   fallbackEm,
@@ -347,29 +341,11 @@ export function FormularioDaMarca({
           escopo="instalacao"
           // Literal, nunca memoizado: a identidade deste objeto é o que diz ao
           // campo que houve render NOVO do servidor. Ver os Props de CampoDeLogo.
-          logoDaCamada={{ url: gravada.logo_path ? logoEmVigor : null }}
+          logoDaCamada={{
+            url: gravada.logo_path ? logoEmVigor : null,
+            escuraUrl: logoEscuroEmVigor,
+          }}
           logoHerdado={logoDoAmbiente}
-          origemDoHerdado="do arquivo de instalação do servidor"
-          nomeEmVigor={nomeEmVigor}
-        />
-      </Card>
-
-      {/*
-        Convexy (spec 7.3.3): o logo do TEMA ESCURO, em cartão próprio pela mesma
-        razão do de cima (não passa pelo Salvar). CONVEXY.md, "Logo escuro".
-      */}
-      <Card className="space-y-4 p-6">
-        <p className="text-xs text-text-muted">
-          {t(
-            "Aparece no tema escuro no lugar do logo claro, sem moldura. Só vale junto com o logo claro da instalação (o campo acima).",
-          )}
-        </p>
-        <CampoDeLogo
-          escopo="instalacao"
-          variante="escuro"
-          // Literal, nunca memoizado — ver os Props de CampoDeLogo.
-          logoDaCamada={{ url: gravada.logo_dark_path ? logoEscuroEmVigor : null }}
-          logoHerdado={null}
           origemDoHerdado="do arquivo de instalação do servidor"
           nomeEmVigor={nomeEmVigor}
         />
