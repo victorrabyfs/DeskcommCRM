@@ -81,6 +81,11 @@ describe("tema, foco e movimento", () => {
     expect(TUDO).toContain("focus-visible:outline-hidden");
   });
 
+  it("nome longo quebra a linha na sub-sidebar, nunca é cortado", () => {
+    expect(semComentarios(leia("components/convexy/menu/SubSidebar.tsx"))).not.toMatch(/\btruncate\b/);
+    expect(semComentarios(leia("components/convexy/menu/ListaDaPorta.tsx"))).not.toMatch(/\btruncate\b/);
+  });
+
   it("rótulo de grupo em text-muted (contraste AA no escuro)", () => {
     expect(semComentarios(leia("components/convexy/menu/ListaDaPorta.tsx"))).toMatch(/uppercase[^"]*text-text-muted|text-text-muted[^"]*uppercase/);
   });

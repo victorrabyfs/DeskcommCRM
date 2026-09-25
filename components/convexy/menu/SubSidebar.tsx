@@ -10,8 +10,8 @@ import type { EstadoDasOrientacoes } from "./useOrientacoes";
 /**
  * A sub-sidebar de uma porta (spec 4): caixa fixa de 240px (quem anima a
  * largura é o invólucro, no `MenuConvexy`, para o conteúdo não pular), título de
- * 15,5px com × afastado da borda, lista que rola por dentro sem arrastar a
- * página. Esc chama `aoEsc` (fechar em tela larga; só a sobreposição entre `md`
+ * 15,5px que quebra a linha, com × afastado da borda, lista que rola por
+ * dentro sem arrastar a página. Esc chama `aoEsc` (fechar em tela larga; só a sobreposição entre `md`
  * e `lg`), e o foco volta à porta por quem fecha.
  */
 export function SubSidebar({
@@ -46,8 +46,11 @@ export function SubSidebar({
       className="flex h-full w-60 flex-col border-r border-border bg-surface"
     >
       <div data-animar={animar} className="convexy-sub-conteudo flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center justify-between gap-2 pt-3.5 pr-3 pb-2 pl-5">
-          <h2 className="min-w-0 truncate text-[15.5px] font-semibold text-text">{porta.rotulo}</h2>
+        <div className="flex items-start justify-between gap-2 pt-3.5 pr-3 pb-2 pl-5">
+          {/* Nome longo quebra a linha (spec 4), nunca é cortado; o × fica no alto. */}
+          <h2 className="min-w-0 flex-1 pt-0.5 text-[15.5px] leading-snug font-semibold break-words text-text">
+            {porta.rotulo}
+          </h2>
           <button
             type="button"
             onClick={aoFechar}

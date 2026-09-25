@@ -38,9 +38,12 @@ function focarPorta(id: PortaId) {
  * Estado, todo de tela:
  *  - `fechadas`: portas fechadas no × nesta aba (Decisão 9 do plano);
  *  - `escolha`: a porta clicada, até a navegação chegar;
- *  - `sobreposicao`: aberta por clique; entre `md` e `lg` cobre a página. Vale
- *    enquanto o caminho é o de quando abriu (ou o destino do clique): navegar por
- *    outro caminho a desfaz, sem efeito que grave estado.
+ *  - `sobreposicao`: aberta por clique; entre `md` e `lg` cobre a página;
+ *  - `ultimaComSub`: a última porta com sub mostrada, que a sub-sidebar segue
+ *    desenhando enquanto recolhe a largura (ir a uma porta direta não pula).
+ * Mudar de caminho desfaz `escolha` e `sobreposicao` no próprio render (o
+ * "ajustar estado quando a prop muda" do React, sem efeito): só a sobreposição
+ * sobrevive à navegação que ela mesma pediu. Voltar e avançar nunca as revivem.
  * A compactação automática (sub aberta) é CSS em `lg:` e nunca chama
  * `toggleSidebar`; só a alça chama, e o servidor desenha certo pelo cookie.
  */
@@ -54,6 +57,12 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
   const [escolha, setEscolha] = useState<{ porta: PortaId; noCaminho: string } | null>(null);
   const [sobreposicao, setSobreposicao] = useState<{ noCaminho: string; destino: string | null } | null>(null);
   const [animar, setAnimar] = useState(false);
+  const [caminhoAnterior, setCaminhoAnterior] = useState(pathname);
+  if (caminhoAnterior !== pathname) {
+    setCaminhoAnterior(pathname);
+    setEscolha(null);
+    setSobreposicao(sobreposicao?.destino === pathname ? { noCaminho: pathname, destino: null } : null);
+  }
   const [trocando, startTransition] = useTransition();
 
   const escolhida = escolha && escolha.noCaminho === pathname ? escolha.porta : null;
@@ -63,8 +72,10 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
   const idExibida = escolhida ?? ativo?.porta ?? null;
   const exibida = portas.find((p) => p.id === idExibida && !p.direta) ?? null;
   const aberta = exibida !== null && !fechadas.has(exibida.id);
-  const sobrepondo =
-    aberta && sobreposicao !== null && (pathname === sobreposicao.noCaminho || pathname === sobreposicao.destino);
+  const [ultimaComSub, setUltimaComSub] = useState<PortaId | null>(exibida?.id ?? null);
+  if (exibida && exibida.id !== ultimaComSub) setUltimaComSub(exibida.id);
+  const naSub = exibida ?? portas.find((p) => p.id === ultimaComSub && !p.direta) ?? null;
+  const sobrepondo = aberta && sobreposicao !== null;
   const compactaEmTelaLarga = aberta && !recolhido;
   const mostrarNome = recolhido || (compactaEmTelaLarga && larga);
   const idParaFoco = exibida?.id ?? null;
@@ -122,7 +133,7 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
         compactaEmTelaLarga={compactaEmTelaLarga}
         mostrarNome={mostrarNome}
         animar={animar}
-        controla={exibida ? ID_DA_SUB_SIDEBAR : undefined}
+        controla={naSub ? ID_DA_SUB_SIDEBAR : undefined}
         aoAbrir={() => abrir(porta)}
       />
     );
@@ -152,11 +163,13 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
             disabled={trocando}
             aria-label={recolhido ? t("Expandir sidebar") : t("Recolher sidebar")}
             className={cn(
-              "absolute top-11 -right-3 z-10 grid size-6 place-items-center rounded-full border border-border-strong bg-surface text-text-muted shadow-sm transition-[opacity,scale,background-color,color,border-color] duration-200 hover:border-accent hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden motion-reduce:transition-none [@media(pointer:coarse)]:hidden",
+              "absolute top-11 -right-3 z-10 grid size-6 place-items-center rounded-full border border-border-strong bg-surface text-text-muted shadow-sm transition-[opacity,scale,background-color,color,border-color] duration-200 hover:border-accent hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden motion-reduce:transition-none",
+              // Em toque o largo é a forma padrão (spec 4): a alça só aparece
+              // recolhida, para devolver o menu largo — sem hover, é o único caminho.
               recolhido
                 ? "opacity-100"
-                : "scale-90 opacity-0 group-hover/trilho:scale-100 group-hover/trilho:opacity-100 focus-visible:scale-100 focus-visible:opacity-100",
-              compactaEmTelaLarga && "lg:hidden",
+                : "scale-90 opacity-0 group-hover/trilho:scale-100 group-hover/trilho:opacity-100 focus-visible:scale-100 focus-visible:opacity-100 [@media(pointer:coarse)]:hidden",
+              aberta && "lg:hidden",
               sobrepondo && "hidden",
             )}
           >
@@ -202,20 +215,20 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
             className="absolute inset-y-0 left-full z-30 w-[calc(100vw-100%)] bg-overlay lg:hidden"
           />
         ) : null}
-        {exibida ? (
-          <div
-            aria-hidden={aberta ? undefined : true}
-            inert={aberta ? undefined : true}
-            className={cn(
-              "h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none",
-              aberta ? "lg:w-60" : "lg:w-0",
-              sobrepondo ? "absolute top-0 left-full z-40 w-60 lg:static" : "hidden lg:block",
-            )}
-          >
+        <div
+          aria-hidden={aberta ? undefined : true}
+          inert={aberta ? undefined : true}
+          className={cn(
+            "h-full shrink-0 overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none",
+            aberta ? "lg:w-60" : "lg:w-0",
+            sobrepondo ? "absolute top-0 left-full z-40 w-60 lg:static" : "hidden lg:block",
+          )}
+        >
+          {naSub ? (
             <SubSidebar
-              key={exibida.id}
+              key={naSub.id}
               id={ID_DA_SUB_SIDEBAR}
-              porta={exibida}
+              porta={naSub}
               ativoHref={ativo?.href ?? null}
               animar={animar}
               orientacoes={orientacoes}
@@ -223,8 +236,8 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
               aoFechar={fechar}
               aoEscolher={() => setSobreposicao(null)}
             />
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </aside>
     </TooltipProvider>
   );

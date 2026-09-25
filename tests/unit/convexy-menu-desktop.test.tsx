@@ -253,6 +253,75 @@ describe("saúde, atualização e alça", () => {
   });
 });
 
+describe("voltar, avançar e trocar de porta", () => {
+  it("voltar depois de abrir outra porta não revive a escolha antiga", () => {
+    const { rerender } = render(arvore());
+    fireEvent.click(within(menu()).getByRole("button", { name: "Assistente de IA" }));
+    expect(estado.push).toHaveBeenCalledWith("/app/ai/agents");
+    estado.pathname = "/app/ai/agents";
+    rerender(arvore());
+    expect(sub("Assistente de IA")).toBeInTheDocument();
+    estado.pathname = "/app/contacts";
+    rerender(arvore());
+    expect(within(menu()).getByRole("button", { name: "Pacientes" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByRole("navigation", { name: "Assistente de IA" })).toBeNull();
+  });
+
+  it("entre md e lg, voltar ao caminho onde a sobreposição abriu não a reabre", () => {
+    estado.larga = false;
+    const { rerender } = render(arvore());
+    fireEvent.click(within(menu()).getByRole("button", { name: "Pacientes" }));
+    expect(involucro("Pacientes")).toHaveClass("absolute");
+    estado.pathname = "/app/kanban";
+    rerender(arvore());
+    estado.pathname = "/app/contacts";
+    rerender(arvore());
+    expect(involucro("Pacientes")).toHaveClass("hidden", "lg:block");
+    expect(menu().querySelector(".bg-overlay")).toBeNull();
+  });
+
+  it("a sobreposição sobrevive à navegação que ela mesma pediu", () => {
+    estado.larga = false;
+    const { rerender } = render(arvore());
+    fireEvent.click(within(menu()).getByRole("button", { name: "Assistente de IA" }));
+    estado.pathname = "/app/ai/agents";
+    rerender(arvore());
+    expect(involucro("Assistente de IA")).toHaveClass("absolute", "lg:static");
+  });
+
+  it("ir a uma porta direta recolhe a sub-sidebar pela largura, sem desmontá-la", () => {
+    const { rerender } = render(arvore());
+    const antes = involucro("Pacientes");
+    estado.pathname = "/app/kanban";
+    rerender(arvore());
+    const caixa = document.getElementById("menu-convexy-sub");
+    expect(caixa?.parentElement).toBe(antes);
+    expect(antes).toHaveClass("lg:w-0");
+    expect(antes).toHaveAttribute("inert");
+    expect(screen.queryByRole("navigation", { name: "Pacientes" })).toBeNull();
+    estado.pathname = "/app/contacts";
+    rerender(arvore());
+    expect(involucro("Pacientes")).toBe(antes);
+    expect(antes).toHaveClass("lg:w-60");
+  });
+});
+
+describe("a alça no recolhido e no toque", () => {
+  it("recolhido com sub-sidebar aberta, a alça some em tela larga", () => {
+    render(arvore(true));
+    expect(screen.getByRole("button", { name: "Expandir sidebar" })).toHaveClass("lg:hidden");
+  });
+
+  it("em toque, a alça some no menu largo e fica disponível recolhido (para voltar ao largo)", () => {
+    estado.pathname = "/app/kanban";
+    const { unmount } = render(arvore());
+    expect(screen.getByRole("button", { name: "Recolher sidebar" })).toHaveClass("[@media(pointer:coarse)]:hidden");
+    unmount();
+    render(arvore(true));
+    expect(screen.getByRole("button", { name: "Expandir sidebar" })).not.toHaveClass("[@media(pointer:coarse)]:hidden");
+  });
+});
+
 describe("hidratação", () => {
   it("o HTML do servidor hidrata sem erro recuperável", async () => {
     const container = document.createElement("div");
