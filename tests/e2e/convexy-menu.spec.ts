@@ -364,10 +364,14 @@ test.describe("como admin da organização, no tema escuro", () => {
     expect(fundo.real).toBe(fundo.esperado);
     const ativa = await corEToken(porta(page, "Pacientes"), "color", "--color-accent");
     expect(ativa.real).toBe(ativa.esperado);
-    const rotulo = subSidebar(page, "Pacientes").locator("h3").first();
+    await page.screenshot({ path: evidencia("06-tema-escuro.png"), fullPage: true });
+    // A porta Pacientes tem só o grupo principal, que não tem rótulo; Configurações
+    // abre com o grupo "Canais", rotulado.
+    await page.goto("/app/settings/profile");
+    const rotulo = subSidebar(page, "Configurações").locator("h3").first();
+    await expect(rotulo).toBeVisible();
     const cinza = await corEToken(rotulo, "color", "--color-text-muted");
     expect(cinza.real).toBe(cinza.esperado);
-    await page.screenshot({ path: evidencia("06-tema-escuro.png"), fullPage: true });
   });
 });
 
