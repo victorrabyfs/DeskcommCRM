@@ -3,6 +3,10 @@ import { useT } from "@/hooks/i18n/useT";
 import { useId } from "react";
 import type { Role } from "@/lib/auth/types";
 import { NAV_GROUPS, type NavDestinationId } from "@/lib/navigation/catalogo";
+// Convexy: agrupamento pelas portas com o menu da Convexy ligado — CONVEXY.md, "Menu novo".
+import { InterfacePorPortas } from "@/components/convexy/InterfacePorPortas";
+import { useConvexy } from "@/lib/convexy/contexto";
+import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
 import {
   destinosDaInterface,
   essencial,
@@ -29,6 +33,7 @@ export function InterfaceEditor({
     value.destinos ?? destinosDaInterface(value, false, role).map((d) => d.href),
   );
   const options = permitidos(false, role).filter((d) => !essencial(d, role));
+  const convexy = useConvexy(); // Convexy: CONVEXY.md, "Menu novo".
   return (
     <fieldset disabled={disabled} className="space-y-3 rounded-md border p-4">
       <legend className="px-1 text-sm font-medium">{t("Interface")}</legend>
@@ -52,8 +57,21 @@ export function InterfaceEditor({
           {t("Personalizar áreas visíveis")}{value.destinos ? t(" (personalizada)") : ""}
         </summary>
         <div className="mt-3 max-h-64 space-y-4 overflow-y-auto">
-          {NAV_GROUPS.map((group) => {
-            const items = options.filter((d) => d.group === group.id);
+          {/* Convexy: com o módulo ligado, as mesmas opções agrupadas pelas portas; o
+              agrupamento do original não mostra o Início, que continua entre as
+              opções (editar aqui não apaga a escolha feita com o módulo ligado).
+              CONVEXY.md, "Menu novo". */}
+          {convexy?.menuLigado && (
+            <InterfacePorPortas
+              opcoes={options}
+              valor={value}
+              selecionados={selected}
+              aoMudar={onChange}
+              nicho={convexy.nicho}
+            />
+          )}
+          {!convexy?.menuLigado && NAV_GROUPS.map((group) => {
+            const items = options.filter((d) => d.group === group.id && d.modulo !== MODULO_DO_MENU);
             if (!items.length) return null;
             return (
               <fieldset key={group.id} className="space-y-2">
