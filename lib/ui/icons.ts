@@ -23,6 +23,10 @@ export {
   ShieldCheck,
   Gear,
   House,
+  // Convexy: portas Tarefas e Configurações do menu novo (a engrenagem é a
+  // GearSix, que não lembra o sol/lua do tema). CONVEXY.md, "Menu novo".
+  CheckSquare,
+  GearSix,
   // admin platform
   Buildings,
   FlowArrow,
