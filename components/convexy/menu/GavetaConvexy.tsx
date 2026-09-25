@@ -30,6 +30,7 @@ export function GavetaConvexy({ aoNavegar }: { aoNavegar: () => void }) {
   const idioma = useIdioma();
   const pathname = usePathname();
   const portas = useMenuConvexy();
+  // Sem reset por pathname de propósito: o Sheet (Radix Dialog, sem forceMount) desmonta a gaveta ao fechar e toda navegação por ela a fecha (`aoNavegar`), então `aberta` sempre renasce nula.
   const [aberta, setAberta] = useState<PortaId | null>(null);
   const orientacoes = useOrientacoes(aberta === PORTA_DAS_ORIENTACOES);
   const ativo = ativoNoCaminho(pathname, portas, orientacoes.itens.map((o) => o.href));

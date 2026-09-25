@@ -3,8 +3,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const deps = vi.hoisted(() => ({ get: vi.fn() }));
+const deps = vi.hoisted(() => ({ get: vi.fn(), orgId: "org-1" }));
 vi.mock("@/lib/api/client", () => ({ apiClient: { get: deps.get } }));
+vi.mock("@/hooks/auth/AuthProvider", () => ({ useAuth: () => ({ activeOrg: { orgId: deps.orgId } }) }));
 
 import { useOrientacoes } from "@/components/convexy/menu/useOrientacoes";
 
@@ -16,7 +17,10 @@ function comConsulta() {
   };
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  deps.orgId = "org-1";
+});
 
 describe("useOrientacoes", () => {
   it("não consulta enquanto a porta Contatos não abre", () => {
@@ -45,5 +49,21 @@ describe("useOrientacoes", () => {
     deps.get.mockRejectedValue(new Error("rede"));
     const { result } = renderHook(() => useOrientacoes(true), { wrapper: comConsulta() });
     await waitFor(() => expect(result.current.indisponivel).toBe(true), { timeout: 5_000 });
+  });
+
+  it("o cache é por organização: trocar de organização não mostra as orientações da anterior", async () => {
+    deps.get.mockResolvedValueOnce({
+      data: { orientacoes: [{ installation_id: "a", titulo: "Da org 1" }], indisponivel: false },
+    });
+    const { result, rerender } = renderHook(() => useOrientacoes(true), { wrapper: comConsulta() });
+    await waitFor(() => expect(result.current.itens.map((i) => i.rotulo)).toEqual(["Da org 1"]));
+    deps.get.mockResolvedValueOnce({
+      data: { orientacoes: [{ installation_id: "b", titulo: "Da org 2" }], indisponivel: false },
+    });
+    deps.orgId = "org-2";
+    rerender();
+    expect(result.current.itens.map((i) => i.rotulo)).not.toContain("Da org 1");
+    await waitFor(() => expect(result.current.itens.map((i) => i.rotulo)).toEqual(["Da org 2"]));
+    expect(deps.get).toHaveBeenCalledTimes(2);
   });
 });

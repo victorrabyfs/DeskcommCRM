@@ -81,9 +81,8 @@ export async function PATCH(req: NextRequest, { params }: Contexto) {
     .select("id, slug, nicho")
     .eq("id", tenantId)
     .maybeSingle();
-  if (orgError || !org) {
-    return fail("not_found", "Tenant not found", 404, { requestId });
-  }
+  if (orgError) return fail("internal_error", "Failed to read tenant", 500, { requestId });
+  if (!org) return fail("not_found", "Tenant not found", 404, { requestId });
 
   const antes = (org.nicho as string | null) ?? null;
   if (antes === body.nicho) {

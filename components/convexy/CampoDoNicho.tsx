@@ -21,14 +21,26 @@ export function CampoDoNicho({ organizationId }: { organizationId: string }) {
   const consultas = useQueryClient();
   const caminho = `/api/v1/admin/tenants/${organizationId}/nicho`;
   const chave = ["admin", "tenant", organizationId, "nicho"] as const;
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: chave,
     queryFn: async () => (await apiClient.get<{ data: { id: string; nicho: Nicho } }>(caminho)).data,
     staleTime: 60_000,
   });
   const [falhou, setFalhou] = useState(false);
   const [salvando, startTransition] = useTransition();
-  if (!data) return null;
+  // Leitura que falhou mostra a linha de erro em vez de sumir: sem ela o admin
+  // não sabe que o campo existe nem que algo deu errado.
+  if (!data) {
+    if (!isError) return null;
+    return (
+      <section className="mt-6 space-y-2 rounded-lg border bg-card p-5">
+        <p className="text-sm font-semibold">{texto(TEXTOS.nicho.tipoDeNegocio, idioma)}</p>
+        <p role="alert" className="text-sm text-destructive">
+          {texto(TEXTOS.nicho.erro, idioma)}
+        </p>
+      </section>
+    );
+  }
 
   function escolher(nicho: Nicho) {
     setFalhou(false);

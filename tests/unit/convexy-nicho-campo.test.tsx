@@ -20,7 +20,8 @@ import TenantDetailPage from "@/app/admin/(protected)/tenants/[id]/page";
 import { CampoDoNicho } from "@/components/convexy/CampoDoNicho";
 
 function comConsulta(arvore: ReactElement) {
-  return render(<QueryClientProvider client={new QueryClient()}>{arvore}</QueryClientProvider>);
+  const consultas = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={consultas}>{arvore}</QueryClientProvider>);
 }
 
 beforeEach(() => {
@@ -47,6 +48,14 @@ describe("Tipo de negócio no admin", () => {
     comConsulta(<CampoDoNicho organizationId={ORG} />);
     fireEvent.change(await screen.findByLabelText("Tipo de negócio"), { target: { value: "loja" } });
     expect(await screen.findByRole("alert")).toHaveTextContent("Não deu para salvar. Tente de novo em instantes.");
+  });
+
+  it("a leitura que falha mostra a linha de erro em vez de sumir", async () => {
+    deps.get.mockRejectedValueOnce(new Error("500"));
+    comConsulta(<CampoDoNicho organizationId={ORG} />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Não deu para salvar. Tente de novo em instantes.");
+    expect(screen.getByText("Tipo de negócio")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).toBeNull();
   });
 
   it("a página só o mostra com o menu da Convexy ligado", async () => {

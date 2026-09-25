@@ -1,6 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 
+import { useAuth } from "@/hooks/auth/AuthProvider";
 import { apiClient } from "@/lib/api/client";
 import { hrefDaOrientacao, type RespostaDasOrientacoes } from "@/lib/convexy/orientacoes";
 
@@ -11,13 +12,15 @@ export interface EstadoDasOrientacoes {
 
 /**
  * As orientações instaladas, carregadas quando a porta Contatos abre (spec 3.4).
- * Uma chave só no react-query: desktop e gaveta dividem o cache, e depois da
- * primeira leitura os itens seguem disponíveis com a consulta desligada.
+ * Uma chave por organização no react-query: desktop e gaveta dividem o cache,
+ * depois da primeira leitura os itens seguem disponíveis com a consulta
+ * desligada, e trocar de organização nunca mostra as orientações da anterior.
  * Falha de rede vale como "não deu para ler" — o aviso aparece, como no hub.
  */
 export function useOrientacoes(consultar: boolean): EstadoDasOrientacoes {
+  const orgId = useAuth().activeOrg?.orgId ?? null;
   const { data, isError } = useQuery({
-    queryKey: ["convexy", "orientacoes"],
+    queryKey: ["convexy", "orientacoes", orgId],
     queryFn: async () =>
       (await apiClient.get<{ data: RespostaDasOrientacoes }>("/api/v1/convexy/orientacoes")).data,
     enabled: consultar,

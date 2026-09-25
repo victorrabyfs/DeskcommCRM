@@ -15,6 +15,7 @@ const deps = vi.hoisted(() => ({
   requireSupportWrite: vi.fn(),
   audit: vi.fn(),
   linha: null as { id: string; slug: string; nicho: string | null } | null,
+  erroDeLeitura: null as { message: string } | null,
   gravadas: [] as Array<{ id: string }>,
   cadeias: [] as Array<Array<[string, ...unknown[]]>>,
   ordem: [] as string[],
@@ -36,7 +37,8 @@ vi.mock("@/lib/supabase/admin", () => ({
           return cadeia;
         };
       }
-      cadeia.maybeSingle = async () => ({ data: deps.linha, error: null });
+      cadeia.maybeSingle = async () =>
+        deps.erroDeLeitura ? { data: null, error: deps.erroDeLeitura } : { data: deps.linha, error: null };
       cadeia.then = (resolver: (valor: unknown) => unknown) =>
         Promise.resolve({ data: deps.gravadas, error: null }).then(resolver);
       return cadeia;
@@ -61,6 +63,7 @@ beforeEach(() => {
   deps.cadeias.length = 0;
   deps.ordem.length = 0;
   deps.linha = { id: ORG, slug: "org", nicho: null };
+  deps.erroDeLeitura = null;
   deps.gravadas = [{ id: ORG }];
   deps.requirePlatformAdmin.mockImplementation(async () => {
     deps.ordem.push("admin");
@@ -146,6 +149,15 @@ describe("PATCH /api/v1/admin/tenants/[id]/nicho", () => {
     deps.linha = null;
     expect((await PATCH(pedido({ nicho: "clinica" }), contexto())).status).toBe(404);
     expect(deps.ordem).not.toContain("update");
+  });
+
+  it("erro ao ler a organização é 500 (como no GET), não 404, e nada é gravado", async () => {
+    deps.erroDeLeitura = { message: "column does not exist" };
+    const res = await PATCH(pedido({ nicho: "clinica" }), contexto());
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.code).toBe("internal_error");
+    expect(deps.ordem).not.toContain("update");
+    expect(deps.audit).not.toHaveBeenCalled();
   });
 
   it("o mesmo valor não grava nem audita — não houve mudança", async () => {
