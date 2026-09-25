@@ -890,6 +890,10 @@ export const AUDIT_ACTIONS = [
   // o dado que importa quando alguém pergunta "por que este cliente voltou a
   // receber?".
   "contact.unblocked",
+  // Convexy: o admin da plataforma troca o tipo de negócio da organização
+  // (PATCH /api/v1/admin/tenants/[id]/nicho), com o antes e o depois no
+  // metadata. CONVEXY.md, "Menu novo".
+  "tenant.nicho_changed",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

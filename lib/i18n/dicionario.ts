@@ -856,6 +856,9 @@ export const DICIONARIO: Traducoes = {
   Configurações: { es: "Configuración" },
   Recolher: { es: "Contraer" },
   Buscar: { es: "Buscar" },
+  // Convexy: a descrição do Início do catálogo — o rótulo "Início" já existe
+  // mais abaixo. CONVEXY.md, "Menu novo".
+  "O resumo do dia: conversas esperando, a agenda de hoje e as suas tarefas.": { es: "El resumen del día: conversaciones en espera, la agenda de hoy y tus tareas." },
 
   // ─── Inbox: filtros e lista ───
   "Nenhuma conversa com esses filtros": { es: "No hay conversaciones con esos filtros" },
@@ -2541,6 +2544,11 @@ export const DICIONARIO: Traducoes = {
   },
   "Ligado, cada empresa pode conectar o banco de outro sistema (um ERP, outro CRM) para o agente consultar. Isso guarda a senha daquele banco neste servidor e abre conexão com ele. Desligado, a tela, o menu e as ferramentas do agente somem.": {
     es: "Si está activado, cada empresa puede conectar la base de datos de otro sistema (un ERP, otro CRM) para que el agente la consulte. Eso guarda la contraseña de esa base en este servidor y abre una conexión con ella. Si está desactivado, la pantalla, el menú y las herramientas del agente desaparecen.",
+  },
+  // Convexy: o módulo do menu novo em /admin/sistema. CONVEXY.md, "Menu novo".
+  "Menu da Convexy": { es: "Menú de Convexy" },
+  "Ligado, o app mostra o menu da Convexy: poucas portas grandes, a lista de telas de cada porta ao lado, o Início com o resumo do dia e os nomes pelo tipo de negócio de cada empresa. Desligado, volta o menu original na hora, sem perder nenhuma escolha de interface.": {
+    es: "Si está activado, la app muestra el menú de Convexy: pocas puertas grandes, la lista de pantallas de cada puerta al lado, el Inicio con el resumen del día y los nombres según el tipo de negocio de cada empresa. Si está desactivado, vuelve el menú original al instante, sin perder ninguna elección de interfaz.",
   },
   "Abrimos um aviso na Central de avisos. A IA continua respondendo normalmente.": {
     es: "Abrimos un aviso en la Central de avisos. La IA sigue respondiendo normalmente.",

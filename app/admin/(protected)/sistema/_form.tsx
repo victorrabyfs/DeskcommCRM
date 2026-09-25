@@ -197,6 +197,15 @@ const MODULOS_NA_TELA: ReadonlyArray<{ modulo: ModuloOpcional; id: string; rotul
     descricao:
       "Ligado, cada empresa pode montar roteiros de perguntas que a IA conduz durante a conversa (nome, CPF, interesse…), e as respostas aparecem na ficha do cliente. Desligado, a tela, o menu e o roteiro no atendimento da IA somem.",
   },
+  // Convexy: o menu novo da Convexy; rótulo e descrição com espanhol no
+  // dicionário, como os módulos do original. CONVEXY.md, "Menu novo".
+  {
+    modulo: "menu_convexy",
+    id: "modulo-menu-convexy",
+    rotulo: "Menu da Convexy",
+    descricao:
+      "Ligado, o app mostra o menu da Convexy: poucas portas grandes, a lista de telas de cada porta ao lado, o Início com o resumo do dia e os nomes pelo tipo de negócio de cada empresa. Desligado, volta o menu original na hora, sem perder nenhuma escolha de interface.",
+  },
 ];
 
 export function FormularioDeModulos({ ligados }: { ligados: readonly ModuloOpcional[] }) {

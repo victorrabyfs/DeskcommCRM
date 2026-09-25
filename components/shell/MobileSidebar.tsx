@@ -11,6 +11,9 @@ import {
 import { useT } from "@/hooks/i18n/useT";
 import { SidebarContent } from "@/components/shell/Sidebar";
 import { List } from "@/lib/ui/icons";
+// Convexy: a gaveta do menu da Convexy com o módulo ligado — CONVEXY.md, "Menu novo".
+import { GavetaConvexy } from "@/components/convexy/menu/GavetaConvexy";
+import { useConvexy } from "@/lib/convexy/contexto";
 
 /**
  * Navegação mobile do app autenticado.
@@ -22,6 +25,7 @@ import { List } from "@/lib/ui/icons";
 export function MobileSidebar() {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const convexy = useConvexy();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -41,11 +45,16 @@ export function MobileSidebar() {
         className="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-0 p-0 sm:max-w-xs"
       >
         <SheetTitle className="sr-only">{t("Navegação principal")}</SheetTitle>
-        <SidebarContent
-          collapsed={false}
-          showCollapseControl={false}
-          onNavigate={() => setOpen(false)}
-        />
+        {/* Convexy: a gaveta da Convexy ou a do original, pelo módulo. CONVEXY.md, "Menu novo". */}
+        {convexy?.menuLigado ? (
+          <GavetaConvexy aoNavegar={() => setOpen(false)} />
+        ) : (
+          <SidebarContent
+            collapsed={false}
+            showCollapseControl={false}
+            onNavigate={() => setOpen(false)}
+          />
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -25,6 +25,9 @@ const SIMPLIFICADA: readonly NavDestinationId[] = [
   "/app/contacts",
   "/app/tasks",
   "/app/connections",
+  // Convexy: o Início entra no perfil da recepção (spec 3.6). No menu clássico
+  // ele some pelo módulo. CONVEXY.md, "Menu novo".
+  "/app",
 ];
 /** Portas pessoais e recuperação administrativa não são removíveis. Atualização
  * e administração de plataforma têm consumidores próprios com seus gates atuais.
@@ -118,13 +121,19 @@ export function interfaceTemDestino(
   role: Role,
   platform = false,
 ): boolean {
-  return destinosDaInterface(settings, platform, role).some((d) => !essencial(d, role, platform));
+  // Convexy: o Início só resume as outras telas — sozinho não é área de trabalho.
+  // CONVEXY.md, "Menu novo".
+  return destinosDaInterface(settings, platform, role).some(
+    (d) => !essencial(d, role, platform) && d.href !== "/app",
+  );
 }
 export function homeDaInterface(raw: unknown, platform: boolean, role: Role | null): string {
   const visible = destinosDaInterface(raw, platform, role);
   return (
     visible.find((d) => d.href === "/app/inbox")?.href ??
-    visible.find((d) => !essencial(d, role, platform))?.href ??
+    // Convexy: `/app` é o próprio Início — nunca o destino do redirect de `/app`
+    // (seria laço com o módulo desligado). CONVEXY.md, "Menu novo".
+    visible.find((d) => !essencial(d, role, platform) && d.href !== "/app")?.href ??
     "/app/settings/profile"
   );
 }

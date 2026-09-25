@@ -2953,3 +2953,33 @@ Port do #1130 (@vgamkt), PR 3 de 4. Spec: `tests/e2e/fluxo-de-atendimento.spec.t
 | J33.4 | Três mensagens pelo webhook do WAHA; a ficha mostra o roteiro «Concluído» com CPF e modelo (caixa medida por `boundingBox` e estilo computado) |
 
 **NÃO coberto por esta spec:** o turno do agente roda com o worker e o modelo de verdade — no CI não há nenhum dos dois, e a spec chama as mesmas funções do motor (`prepararRoteiroDoTurno`, `garantirPerguntaDoRoteiro`) com o validador devolvendo `indefinido`. A pergunta enviada ao cliente pelo WhatsApp e a leitura pelo validador de modelo ficam para a prova do PR 4.
+
+## JCVX1 — Navegar pelo menu novo da Convexy `[P1]` (fork Convexy, `v1.48.0-cvx.2`)
+
+Spec: `tests/e2e/convexy-menu.spec.ts` (job e2e, parte escolhida pela sonda (a) do `e2e.yml`).
+Liga o módulo `menu_convexy` pela tela de `/admin/sistema` no preparo e devolve no fim a linha
+do módulo, o nicho e a interface exatamente como os encontrou. Só roda contra banco local ou no CI.
+
+| Caso | Esperado |
+|---|---|
+| JCVX1.1 | O dono do servidor liga "Menu da Convexy" e escolhe "Clínica" como tipo de negócio da empresa |
+| JCVX1.2 | `/app` é o Início, com Conversas esperando, Agenda de hoje, Minhas tarefas e "Atualizado às" |
+| JCVX1.3 | A porta Pacientes abre a sub-sidebar (240px), o trilho vai a 64px, o item ativo tem `aria-current`, e nenhum erro de hidratação |
+| JCVX1.4 | Medidas por `getComputedStyle`: porta 38px/14,5px, compacta 40px, item 32px; a barra do ativo centrada na porta e encostada na borda do trilho |
+| JCVX1.5 | Abrir uma porta só estreita o conteúdo (largura medida quadro a quadro, nunca volta a crescer) |
+| JCVX1.6 | Navegar dentro da porta mantém o mesmo nó do menu |
+| JCVX1.7 | Link direto para tela interna acende um dono só (Tipos de agendamento, Aviso no WhatsApp) |
+| JCVX1.8 | A alça recolhe (64px) e a escolha sobrevive ao recarregar |
+| JCVX1.9 | Os hubs levam à primeira tela da porta |
+| JCVX1.10 | Esc fecha a sub-sidebar e devolve o foco à porta |
+| JCVX1.11 | Área escondida em Organização › Menu lateral some do menu |
+| JCVX1.12 | Clínica × Serviços: Pacientes/Funil de pacientes × Contatos/Funil de vendas |
+| JCVX1.13 | Tema escuro: trilho, porta ativa e rótulo de grupo com as cores dos tokens do escuro |
+| JCVX1.14 | Em 900px a sub-sidebar só aparece por clique, por cima, sem rolagem horizontal; Esc fecha e devolve o foco |
+| JCVX1.15 | No celular, a gaveta troca pela lista da porta com "‹ Voltar" (≥ 44px) e fecha ao escolher |
+| JCVX1.16 | O agente não vê itens de gerente/admin |
+| JCVX1.17 | O vocabulário alcança o que o `useT` do cliente desenha — o nome acessível do sino vira "Pedidos da IA" — e a busca ⌘K mostra "Funil de pacientes". O `<h1>` de `/app/kanban` é desenhado no servidor com `traduzir()` e continua "Funis" (desvio aceito no CONVEXY.md) |
+
+**NÃO coberto por esta spec:** os blocos do Início com dados reais de fila, agenda e tarefas (o
+banco do e2e não tem conversa esperando) — cobertos pelos unitários `convexy-inicio-*` e
+conferidos na VPS.
