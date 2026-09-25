@@ -61,8 +61,18 @@ function falhou(contexto: string, error: { message: string } | null): void {
   if (error) throw new Error(`${contexto}: ${error.message}`);
 }
 
+/**
+ * Contexto SEM sessão para o preparo. O Playwright aplica a `browser.newContext()`
+ * chamado num hook as opções `use` do teste que o disparou — inclusive o
+ * `storageState: SESSAO_ADMIN` —, e o arquivo ainda não existe no `beforeAll`
+ * (ENOENT no e2e 36193635843). O estado vazio explícito vence essa herança.
+ */
+function contextoSemSessao(browser: Browser) {
+  return browser.newContext({ storageState: { cookies: [], origins: [] } });
+}
+
 async function salvarSessao(browser: Browser, arquivo: string, entrar: (page: Page) => Promise<unknown>) {
-  const contexto = await browser.newContext();
+  const contexto = await contextoSemSessao(browser);
   const page = await contexto.newPage();
   await entrar(page);
   await contexto.storageState({ path: arquivo });
@@ -121,7 +131,7 @@ test.beforeAll(async ({ browser }) => {
   await salvarSessao(browser, SESSAO_ADMIN, (page) => loginComoAdmin(page, creds));
   await salvarSessao(browser, SESSAO_AGENTE, (page) => entrarComoAgente(page, creds));
 
-  const contexto = await browser.newContext();
+  const contexto = await contextoSemSessao(browser);
   const page = await contexto.newPage();
   await loginComoDono(page, lerCreds());
   await page.goto("/admin/sistema");
@@ -329,11 +339,14 @@ test.describe("como admin da organização, em tela larga", () => {
   });
 
   // Ruling C11: o vocabulário do nicho não fica só no mapa do menu — ele
-  // alcança o título desenhado pelo `useT` do cliente e a busca ⌘K (desvio
-  // aceito "o vocabulário alcança a busca ⌘K e o sino", CONVEXY.md).
-  test("o vocabulário do nicho aparece num título do useT cliente e na busca ⌘K", async ({ page }) => {
+  // alcança o que o `useT` do cliente desenha (o nome acessível do sino, fora do
+  // menu) e a busca ⌘K (desvio aceito "o vocabulário alcança a busca ⌘K e o
+  // sino", CONVEXY.md). O <h1> de /app/kanban NÃO serve de prova: é desenhado
+  // no servidor com `traduzir()` e fica "Funis" (desvio "títulos desenhados no
+  // servidor").
+  test("o vocabulário do nicho aparece no sino (useT cliente) e na busca ⌘K", async ({ page }) => {
     await page.goto("/app/kanban");
-    await expect(page.getByRole("heading", { level: 1, name: "Funil de pacientes" })).toBeVisible();
+    await expect(page.getByTestId("alerts-bell")).toHaveAttribute("aria-label", /^Pedidos da IA(?: — \d+ em aberto)?$/);
     await page.getByRole("button", { name: /Buscar/ }).click();
     const paleta = page.getByRole("dialog");
     await expect(paleta.getByText("Funil de pacientes", { exact: true })).toBeVisible();

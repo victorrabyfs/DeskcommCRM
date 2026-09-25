@@ -2978,7 +2978,7 @@ do módulo, o nicho e a interface exatamente como os encontrou. Só roda contra 
 | JCVX1.14 | Em 900px a sub-sidebar só aparece por clique, por cima, sem rolagem horizontal; Esc fecha e devolve o foco |
 | JCVX1.15 | No celular, a gaveta troca pela lista da porta com "‹ Voltar" (≥ 44px) e fecha ao escolher |
 | JCVX1.16 | O agente não vê itens de gerente/admin |
-| JCVX1.17 | O vocabulário do nicho aparece no título "Funil de pacientes" desenhado pelo `useT` do cliente (`/app/kanban`) e no mesmo rótulo dentro da busca ⌘K |
+| JCVX1.17 | O vocabulário alcança o que o `useT` do cliente desenha — o nome acessível do sino vira "Pedidos da IA" — e a busca ⌘K mostra "Funil de pacientes". O `<h1>` de `/app/kanban` é desenhado no servidor com `traduzir()` e continua "Funis" (desvio aceito no CONVEXY.md) |
 
 **NÃO coberto por esta spec:** os blocos do Início com dados reais de fila, agenda e tarefas (o
 banco do e2e não tem conversa esperando) — cobertos pelos unitários `convexy-inicio-*` e
