@@ -71,10 +71,6 @@ export const TEXTOS = {
     assistentes: { pt: "Assistentes", es: "Asistentes" },
     anuncios: { pt: "Anúncios", es: "Anuncios" },
     atualizacao: "Atualização do sistema",
-    atualizacaoDescricao: {
-      pt: "A versão instalada no servidor e a atualização para a próxima, pelo botão.",
-      es: "La versión instalada en el servidor y la actualización a la siguiente, con el botón.",
-    },
   },
   menu: {
     fechar: "Fechar",
