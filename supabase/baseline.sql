@@ -37498,6 +37498,26 @@ alter table public.platform_branding add constraint platform_branding_logo_dark_
 comment on column public.platform_branding.logo_dark_path is
   'Logo opcional para fundo escuro, sem moldura branca. Caminho em brand-logos; null conserva o comportamento do logo padrão.';
 
+-- ---- símbolo da instalação (migration 9002) ----
+-- Convexy (fork victorrabyfs/DeskcommCRM) — registro: CONVEXY.md, "Símbolo da
+-- marca". A arte quadrada do menu recolhido; mesma forma de caminho do logo
+-- escuro, logo acima. Espelho de
+-- supabase/migrations/20260926120000_9002_simbolo_da_instalacao.sql.
+
+alter table public.platform_branding add column if not exists simbolo_path text;
+update public.platform_branding set simbolo_path = null
+ where simbolo_path is not null
+   and simbolo_path !~ '^platform/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$';
+alter table public.platform_branding drop constraint if exists platform_branding_simbolo_path;
+alter table public.platform_branding add constraint platform_branding_simbolo_path check (
+  simbolo_path is null or
+  simbolo_path ~ '^platform/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$'
+);
+comment on column public.platform_branding.simbolo_path is
+  'Convexy (migration 9002): o símbolo da marca, a arte quadrada do menu recolhido. Caminho em brand-logos; null mostra a inicial do nome.';
+
+notify pgrst, 'reload schema';
+
 -- ---- logo por tema: funções (migration 0406) ----
 create or replace function public.fn_definir_logo_por_tema_da_organizacao(
   p_org   uuid,

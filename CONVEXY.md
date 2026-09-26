@@ -45,6 +45,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Logo maior na barra lateral (40px de altura em vez de 28px) | `v1.47.0-cvx.3` |
 | Atualização para a base 1.48.0; logo escuro passa a ser o do original (0406) | `v1.48.0-cvx.1` |
 | Menu novo da Convexy: portas, sub-sidebar, Início, tipo de negócio por organização (módulo `menu_convexy`; migration 9001) | `v1.48.0-cvx.2` |
+| Refino do menu (dica do trilho, seções da sub-sidebar) e símbolo da marca no menu recolhido (migration 9002) | `v1.48.0-cvx.3` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -223,6 +224,41 @@ decidir, e a linha `[convexy-menu] posições por padrão` do log mostra as tela
 sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não servir) —,
 `convexy-menu-dono.test.ts` (página nova sem dono), `convexy-menu-modulo.test.tsx` e
 `convexy-inicio-fila-do-inbox.test.ts`.
+
+### Símbolo da marca e refino do menu (`v1.48.0-cvx.3`)
+
+O menu recolhido mostrava a inicial do nome em texto porque a marca do original só guarda o
+logo claro e o escuro. A instalação ganha o **símbolo** — a arte quadrada da marca, sem o nome —
+em `/admin/marca`, no cartão do logo. Coluna `platform_branding.simbolo_path` (migration
+`9002_simbolo_da_instalacao`), mesma forma de caminho e mesma CHECK do logo escuro; escrita só
+pela rota de logo do original com `tema=simbolo` e escopo da instalação (a organização recebe
+422 antes de qualquer efeito, e a função do banco da 0406 já recusa o tema). Não passa pela
+pilha de camadas de `lib/branding/resolve.ts`: só a instalação tem símbolo, e o layout raiz o
+lê da linha da marca que já busca. Organização com logo próprio continua com a inicial dela.
+
+No menu: a dica com o nome da porta recomeça fechada a cada troca entre trilho largo e só
+ícones (antes, um hover no trilho largo ficava guardado e todas as portas tocadas abriam
+juntas ao compactar); os itens da sub-sidebar não têm mais dica (e o `descricao` do item
+saiu de `montarMenu`); a dica tem cor neutra e anima entrada e saída em `menu.css`; os
+títulos de seção da sub-sidebar ganharam espaço acima.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `app/api/v1/marca/logo/route.ts` | `"simbolo"` em `temaSchema`; `campoDoLogo` com o ramo `simbolo_path`; `temaSoDaInstalacao` e a recusa 422 logo depois do `const tema` no `POST` e no `DELETE`; `if (tema === "simbolo") return null;` no ramo da organização de `caminhoGravado` (comentários `Convexy`) | reaplicar os quatro pontos; se o original ganhar tema novo, somar ao nosso enum |
+| `lib/branding/instalacao.ts` | `simbolo_path` em `COLUNAS` e no tipo `LinhaDaMarca` | reacrescentar |
+| `lib/branding.ts` | `simboloUrl?: string \| null` em `Branding` | reacrescentar |
+| `app/layout.tsx` | import de `logoDaCamada`; `const { linha, marca }` e `simboloUrl: logoDaCamada(linha?.simbolo_path, null)` em `MarcaDosClientComponents` | reaplicar |
+| `components/shell/Sidebar.tsx` | `const simbolo = …` depois de `marcaDoProduto`, e o ternário `simbolo ? <img …> : <span>` no bloco `collapsed && !marcaDoProduto`, dentro de `MarcaDaBarra` | reaplicar junto com "Reaplicar a `MarcaDaBarra`" |
+| `app/admin/(protected)/marca/page.tsx` | import de `logoDaCamada`; prop `simboloEmVigor` | reaplicar |
+| `app/admin/(protected)/marca/_form.tsx` | import de `CampoDoSimbolo`; `simboloEmVigor` nos `Props` e na desestruturação; `<CampoDoSimbolo>` depois do `<CampoDeLogo>`, no mesmo cartão | reaplicar |
+| `supabase/baseline.sql` | bloco `-- ---- símbolo da instalação (migration 9002) ----`, entre a coluna e as funções da 0406 | reaplicar no mesmo lugar |
+| `supabase/migrations/MANIFEST.md` | linha `9002_simbolo_da_instalacao` depois da 9001 | `merge=union`; conferir que ficou uma vez |
+| `CHANGELOG.md` | `## [1.48.0-cvx.3]` | ordem de "Base e versões" |
+
+Código só da Convexy: `components/convexy/marca/CampoDoSimbolo.tsx`, os textos `simbolo` em
+`lib/convexy/textos.ts`. Testes: `tests/unit/convexy-simbolo-{rota,na-barra,campo}.test.*`,
+`tests/invariants/convexy-simbolo.test.ts` e o bloco "a dica com o nome da porta" em
+`tests/unit/convexy-menu-desktop.test.tsx`.
 
 ## Desvios aceitos
 

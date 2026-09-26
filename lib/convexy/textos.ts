@@ -111,6 +111,18 @@ export const TEXTOS = {
     },
     erro: "Não deu para salvar. Tente de novo em instantes.",
   },
+  simbolo: {
+    rotulo: { pt: "Símbolo (menu recolhido)", es: "Símbolo (menú contraído)" },
+    ajuda: {
+      pt: "A arte quadrada da marca, sem o nome. Aparece no menu lateral recolhido; sem ela, aparece a inicial do nome. PNG ou JPG quadrado, até 512 KB.",
+      es: "El arte cuadrado de la marca, sin el nombre. Aparece en el menú lateral contraído; sin él, aparece la inicial del nombre. PNG o JPG cuadrado, hasta 512 KB.",
+    },
+    remover: { pt: "Remover símbolo", es: "Quitar símbolo" },
+    enviado: { pt: "Símbolo atualizado.", es: "Símbolo actualizado." },
+    removido: { pt: "Símbolo removido.", es: "Símbolo quitado." },
+    falhou: { pt: "Não consegui trocar o símbolo agora.", es: "No pude cambiar el símbolo ahora." },
+    previa: { pt: "Assim ele aparece no menu recolhido:", es: "Así aparece en el menú contraído:" },
+  },
 } as const;
 
 /** Porta Contatos e o item `/app/contacts` (spec 6.2). */

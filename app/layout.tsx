@@ -10,6 +10,7 @@ import {
   registrarEstadoDaMarca,
   type LinhaDaMarca,
 } from "@/lib/branding/instalacao";
+import { logoDaCamada } from "@/lib/branding/logo";
 import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
 import {
   camadaDaInstalacao,
@@ -263,8 +264,8 @@ async function MarcaNoNavegador() {
  * mesma resposta antes de o documento ser liberado.
  */
 async function MarcaDosClientComponents({ children }: { children: React.ReactNode }) {
-  const { marca } = await marcaResolvida();
-  // Só os três campos de `Branding`: `marca` carrega junto `cor`, `origens` e
+  const { linha, marca } = await marcaResolvida();
+  // Só os campos de `Branding`: `marca` carrega junto `cor`, `origens` e
   // `motivos`, que são diagnóstico do servidor e não têm leitor no navegador —
   // mandá-los engordaria o payload do RSC de TODA página com dado que ninguém lê.
   return (
@@ -273,6 +274,8 @@ async function MarcaDosClientComponents({ children }: { children: React.ReactNod
         name: marca.name,
         logoUrl: marca.logoUrl,
         logoDarkUrl: marca.logoDarkUrl,
+        // Convexy: o símbolo não passa pela pilha de camadas — só a instalação o tem.
+        simboloUrl: logoDaCamada(linha?.simbolo_path, null),
         initial: marca.initial,
       }}
     >
