@@ -10,10 +10,11 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 
 ## Base e versões
 
-- Base atual: `v1.48.0` do original (`refs/upstream-tags/v1.48.0` no clone), trazida em 2026-09-25
-  (1.47.0 → 1.48.0: 267 commits, 7 migrations; conflitos no logo por tema, que o original passou
-  a ter — ver "Logo escuro" — e no `CHANGELOG.md`). Bases anteriores: `v1.47.0`, `v1.44.0`.
-- Versões: `vX.Y.Z-cvx.N` sobre a base atual (hoje `v1.48.0-cvx.N`), tag anotada, criada só depois do merge, empurrada pelo nome.
+- Base atual: `v1.52.0` do original (`refs/upstream-tags/v1.52.0` no clone), trazida em 2026-09-26
+  (1.48.0 → 1.52.0: 365 commits, 16 migrations; conflitos só no `CHANGELOG.md` e nas fontes de
+  `app/layout.tsx`, que o original passou a versionar em `app/fonts/`). Bases anteriores:
+  `v1.48.0`, `v1.47.0`, `v1.44.0`.
+- Versões: `vX.Y.Z-cvx.N` sobre a base atual (hoje `v1.52.0-cvx.N`), tag anotada, criada só depois do merge, empurrada pelo nome.
   Nunca `--tags`/`--follow-tags`. Tag publicada nunca é refeita (corrigir = `N+1`).
 - **Toda tag `-cvx` ganha uma Release no GitHub, logo depois de o `publish-image` ficar verde**
   (desde a `v1.48.0-cvx.1`): `gh release create vX.Y.Z-cvx.N -R victorrabyfs/DeskcommCRM
@@ -45,7 +46,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Logo maior na barra lateral (40px de altura em vez de 28px) | `v1.47.0-cvx.3` |
 | Atualização para a base 1.48.0; logo escuro passa a ser o do original (0406) | `v1.48.0-cvx.1` |
 | Menu novo da Convexy: portas, sub-sidebar, Início, tipo de negócio por organização (módulo `menu_convexy`; migration 9001) | `v1.48.0-cvx.2` |
-| Refino do menu (dica do trilho, seções da sub-sidebar) e símbolo da marca no menu recolhido (migration 9002) | `v1.48.0-cvx.3` |
+| Atualização para a base 1.52.0 (fontes locais); refino do menu (dica do trilho, seções da sub-sidebar) e símbolo da marca no menu recolhido (migration 9002) | `v1.52.0-cvx.1` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -95,9 +96,9 @@ em qualquer ordem de carga.
 
 | Arquivo | Trecho | Reaplicar |
 |---|---|---|
-| `app/layout.tsx` | `import { IBM_Plex_Mono, Inter, Lexend_Deca } from "next/font/google";` | manter o nosso import |
 | `app/layout.tsx` | `import "./convexy/tema.css";` (com o comentário `// Convexy: …`) **logo depois** de `import "./globals.css";` | manter depois do `globals.css` |
-| `app/layout.tsx` | `const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--font-atkinson" })` e `const lexend = Lexend_Deca({ …, variable: "--font-lexend" })` no lugar de `const atkinson = Atkinson_Hyperlegible(…)` | manter o nome `--font-atkinson` (o `globals.css` o lê) |
+| `app/layout.tsx` | `const inter = localFont({ src: [{ path: "./fonts/inter-400-700-latin.woff2", weight: "400 700" … }], …, variable: "--font-atkinson" })` e `const lexend = localFont({ …lexend-deca-400-700-latin.woff2…, variable: "--font-lexend" })` no lugar de `const atkinson = localFont(…)`, com o comentário `Convexy:` (desde a `v1.52.0-cvx.1`; antes era `next/font/google`) | manter o nome `--font-atkinson` (o `globals.css` o lê); fonte nova da Convexy entra em `app/fonts/` pela receita do README de lá |
+| `app/fonts/` | `inter-400-700-latin.woff2` e `lexend-deca-400-700-latin.woff2`; duas linhas `(Convexy)` na tabela do `README.md` e duas linhas `Copyright` (Lexend, Inter) no `OFL.txt` | manter os arquivos; reacrescentar as linhas se o original reescrever o README ou o OFL |
 | `app/layout.tsx` | ``className={`${inter.variable} ${lexend.variable} ${plexMono.variable}`}`` no `<html>` | idem |
 | `app/layout.tsx` | `import { coresDaBarraConvexy } from "@/lib/convexy/barra-do-navegador";` (sai o import de `coresDaBarraDoNavegador`) e `themeColor: coresDaBarraConvexy(),` no `viewport`, com o comentário `Convexy:` acima | manter o nosso `viewport` |
 | `tests/e2e/aviso-de-caso-no-whatsapp.spec.ts:280`, `tests/e2e/conversa-do-caso.spec.ts:340`, `tests/e2e/passagem-com-contexto.spec.ts:261` | `toMatch(/Inter/i)` no lugar de `toMatch(/Atkinson/i)` | trocar de novo se o original mexer na linha |
@@ -225,7 +226,7 @@ sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não s
 `convexy-menu-dono.test.ts` (página nova sem dono), `convexy-menu-modulo.test.tsx` e
 `convexy-inicio-fila-do-inbox.test.ts`.
 
-### Símbolo da marca e refino do menu (`v1.48.0-cvx.3`)
+### Símbolo da marca e refino do menu (`v1.52.0-cvx.1`)
 
 O menu recolhido mostrava a inicial do nome em texto porque a marca do original só guarda o
 logo claro e o escuro. A instalação ganha o **símbolo** — a arte quadrada da marca, sem o nome —
@@ -253,7 +254,7 @@ títulos de seção da sub-sidebar ganharam espaço acima.
 | `app/admin/(protected)/marca/_form.tsx` | import de `CampoDoSimbolo`; `simboloEmVigor` nos `Props` e na desestruturação; `<CampoDoSimbolo>` depois do `<CampoDeLogo>`, no mesmo cartão | reaplicar |
 | `supabase/baseline.sql` | bloco `-- ---- símbolo da instalação (migration 9002) ----`, entre a coluna e as funções da 0406 | reaplicar no mesmo lugar |
 | `supabase/migrations/MANIFEST.md` | linha `9002_simbolo_da_instalacao` depois da 9001 | `merge=union`; conferir que ficou uma vez |
-| `CHANGELOG.md` | `## [1.48.0-cvx.3]` | ordem de "Base e versões" |
+| `CHANGELOG.md` | `## [1.52.0-cvx.1]` | ordem de "Base e versões" |
 
 Código só da Convexy: `components/convexy/marca/CampoDoSimbolo.tsx`, os textos `simbolo` em
 `lib/convexy/textos.ts`. Testes: `tests/unit/convexy-simbolo-{rota,na-barra,campo}.test.*`,

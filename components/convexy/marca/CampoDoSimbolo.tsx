@@ -5,6 +5,8 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ajustarLogo } from "@/lib/branding/ajuste-de-logo";
+import { lonaDoNavegador } from "@/lib/branding/lona-do-navegador";
 import { TEXTOS, texto } from "@/lib/convexy/textos";
 import { useIdioma } from "@/lib/i18n/IdiomaProvider";
 
@@ -14,7 +16,8 @@ import { useIdioma } from "@/lib/i18n/IdiomaProvider";
  *
  * Mesma rota do logo do original (`/api/v1/marca/logo`, `tema=simbolo`, escopo da
  * instalação) e o mesmo contrato de envio imediato do `CampoDeLogo`: o arquivo
- * não espera o "Salvar" do formulário. A prévia usa o tamanho do menu (32px) nas
+ * não espera o "Salvar" do formulário, e passa antes pelo mesmo `ajustarLogo`
+ * (recorte da margem transparente e redução, só quando passa do teto). A prévia usa o tamanho do menu (32px) nas
  * duas superfícies, clara e escura.
  */
 export function CampoDoSimbolo({ simboloUrl }: { simboloUrl: string | null }) {
@@ -44,7 +47,12 @@ export function CampoDoSimbolo({ simboloUrl }: { simboloUrl: string | null }) {
     }
   }
 
-  function enviar(arquivo: File) {
+  async function enviar(escolhido: File) {
+    const { arquivo, recusar } = await ajustarLogo(escolhido, lonaDoNavegador);
+    if (recusar) {
+      toast.error(texto(TEXTOS.simbolo.grande, idioma));
+      return;
+    }
     const corpo = new FormData();
     corpo.set("escopo", "instalacao");
     corpo.set("tema", "simbolo");
@@ -70,7 +78,7 @@ export function CampoDoSimbolo({ simboloUrl }: { simboloUrl: string | null }) {
           disabled={enviando}
           onChange={(evento) => {
             const arquivo = evento.target.files?.[0];
-            if (arquivo) enviar(arquivo);
+            if (arquivo) void enviar(arquivo);
             evento.target.value = "";
           }}
           className="max-w-xs text-sm file:mr-3 file:cursor-pointer file:rounded-sm file:border file:border-border file:bg-surface-elevated file:px-3 file:py-1.5 file:text-sm"

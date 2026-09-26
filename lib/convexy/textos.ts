@@ -121,6 +121,7 @@ export const TEXTOS = {
     enviado: { pt: "Símbolo atualizado.", es: "Símbolo actualizado." },
     removido: { pt: "Símbolo removido.", es: "Símbolo quitado." },
     falhou: { pt: "Não consegui trocar o símbolo agora.", es: "No pude cambiar el símbolo ahora." },
+    grande: "O logo precisa ter até 512 KB. Arquivo maior vai inteiro para o navegador em toda página.",
     previa: { pt: "Assim ele aparece no menu recolhido:", es: "Así aparece en el menú contraído:" },
   },
 } as const;
