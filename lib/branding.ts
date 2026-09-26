@@ -25,6 +25,8 @@ export type Branding = {
   logoUrl: string | null;
   /** Arte opcional preparada para o tema escuro; ausente preserva o logo padrão. */
   logoDarkUrl?: string | null;
+  /** Convexy: o símbolo da instalação, no menu recolhido (CONVEXY.md, "Símbolo da marca"). */
+  simboloUrl?: string | null;
   /** Primeira letra do nome — usada onde só cabe um caractere (sidebar recolhida). */
   initial: string;
 };

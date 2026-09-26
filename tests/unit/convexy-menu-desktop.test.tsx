@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
 import type { Nicho } from "@/lib/convexy/nicho";
@@ -319,6 +319,42 @@ describe("a alça no recolhido e no toque", () => {
     unmount();
     render(arvore(true));
     expect(screen.getByRole("button", { name: "Expandir sidebar" })).not.toHaveClass("[@media(pointer:coarse)]:hidden");
+  });
+});
+
+describe("a dica com o nome da porta", () => {
+  // O Radix abre a dica depois do atraso do `delayDuration` (150ms na porta).
+  const passarOMouse = (alvo: HTMLElement) => {
+    fireEvent.pointerMove(alvo);
+    act(() => vi.advanceTimersByTime(600));
+  };
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("só com ícones, passar o mouse numa porta mostra o nome dela", () => {
+    render(arvore());
+    passarOMouse(within(menu()).getByRole("button", { name: "Assistente de IA" }));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Assistente de IA");
+  });
+
+  it("hover com o trilho largo não fica guardado para quando ele compactar", () => {
+    estado.pathname = "/app/kanban";
+    render(arvore());
+    for (const nome of ["Assistente de IA", "Pacientes"]) {
+      const porta = within(menu()).getByRole("button", { name: nome });
+      passarOMouse(porta);
+      fireEvent.pointerLeave(porta);
+    }
+    fireEvent.click(within(menu()).getByRole("button", { name: "Pacientes" }));
+    act(() => vi.advanceTimersByTime(600));
+    expect(sub("Pacientes")).toBeInTheDocument();
+    expect(screen.queryAllByRole("tooltip")).toHaveLength(0);
+  });
+
+  it("os itens da sub-sidebar não têm dica", () => {
+    render(arvore());
+    passarOMouse(within(sub("Pacientes")).getAllByRole("link")[0]!);
+    expect(screen.queryAllByRole("tooltip")).toHaveLength(0);
   });
 });
 

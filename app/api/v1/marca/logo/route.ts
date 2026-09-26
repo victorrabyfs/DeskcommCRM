@@ -84,9 +84,18 @@ export const dynamic = "force-dynamic";
  */
 const escopoSchema = z.enum(["instalacao", "organizacao"]);
 type Escopo = z.infer<typeof escopoSchema>;
-const temaSchema = z.enum(["claro", "escuro"]).default("claro");
+// Convexy: o tema `simbolo` é a arte quadrada do menu recolhido, só da
+// instalação (CONVEXY.md, "Símbolo da marca"; coluna da migration 9002).
+const temaSchema = z.enum(["claro", "escuro", "simbolo"]).default("claro");
 type TemaDoLogo = z.infer<typeof temaSchema>;
-const campoDoLogo = (tema: TemaDoLogo) => (tema === "escuro" ? "logo_dark_path" : "logo_path");
+function campoDoLogo(tema: Exclude<TemaDoLogo, "simbolo">): "logo_path" | "logo_dark_path";
+function campoDoLogo(tema: TemaDoLogo): "logo_path" | "logo_dark_path" | "simbolo_path";
+function campoDoLogo(tema: TemaDoLogo) {
+  return tema === "simbolo" ? "simbolo_path" : tema === "escuro" ? "logo_dark_path" : "logo_path";
+}
+/** Convexy: a organização não tem símbolo próprio — a recusa vem antes de qualquer efeito. */
+const temaSoDaInstalacao = (escopo: Escopo, tema: TemaDoLogo) =>
+  escopo === "organizacao" && tema === "simbolo";
 
 /**
  * 10 trocas de logo por pessoa a cada 5 min.
@@ -197,12 +206,14 @@ async function caminhoGravado(ctx: Contexto, tema: TemaDoLogo): Promise<string |
     const { data } = await admin.from("platform_branding").select(campo).eq("id", 1).maybeSingle();
     return (data as Record<string, string | null> | null)?.[campo] ?? null;
   }
+  // Convexy: estreita o tipo; a organização com `simbolo` é recusada antes, no handler.
+  if (tema === "simbolo") return null;
   const { data } = await admin
     .from("organizations")
     .select("settings")
     .eq("id", ctx.orgId)
     .maybeSingle();
-  return marcaDaOrganizacaoDeSettings(data?.settings ?? null)?.[campo] ?? null;
+  return marcaDaOrganizacaoDeSettings(data?.settings ?? null)?.[campoDoLogo(tema)] ?? null;
 }
 
 /**
@@ -384,6 +395,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!temaLido.success)
     return fail("validation_failed", "Campo 'tema' inválido.", 422, { requestId });
   const tema = temaLido.data;
+  if (temaSoDaInstalacao(escopoLido.data, tema))
+    return fail("validation_failed", "O símbolo é só da marca da instalação.", 422, { requestId });
   const aberto = await abrirContexto(escopoLido.data);
   if ("recusa" in aberto) {
     return fail(aberto.recusa.codigo, aberto.recusa.mensagem, aberto.recusa.status, { requestId });
@@ -488,6 +501,8 @@ export async function DELETE(req: NextRequest): Promise<Response> {
   if (!temaLido.success)
     return fail("validation_failed", "Parâmetro 'tema' inválido.", 422, { requestId });
   const tema = temaLido.data;
+  if (temaSoDaInstalacao(escopoLido.data, tema))
+    return fail("validation_failed", "O símbolo é só da marca da instalação.", 422, { requestId });
   const aberto = await abrirContexto(escopoLido.data);
   if ("recusa" in aberto) {
     return fail(aberto.recusa.codigo, aberto.recusa.mensagem, aberto.recusa.status, { requestId });

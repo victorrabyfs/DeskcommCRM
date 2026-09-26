@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useT } from "@/hooks/i18n/useT";
 import { PORTA_DAS_ORIENTACOES } from "@/lib/convexy/menu/mapa";
 import type { ItemDoMenu, PortaDoMenu } from "@/lib/convexy/menu/montar";
@@ -22,14 +21,13 @@ function classeDoItem(ativo: boolean): string {
 }
 
 const ordem = (n: number) => ({ "--convexy-ordem": n }) as CSSProperties;
-const CLASSE_DO_ROTULO = "px-2.5 pt-0.5 pb-[3px] text-[11px] font-semibold tracking-wider text-text-muted uppercase";
+const CLASSE_DO_ROTULO = "px-2.5 pb-1.5 text-[11px] font-semibold tracking-wider text-text-muted uppercase";
 
 /**
  * Os grupos e itens de uma porta — o conteúdo da sub-sidebar (desktop) e da
  * gaveta (celular). Itens só com texto (ícone só nas orientações, que não têm
- * outro sinal de origem); nome longo quebra a linha; a descrição do catálogo é
- * a dica do item (500ms, e no foco). Na porta Contatos, o grupo "Orientações
- * instaladas" (spec 3.4).
+ * outro sinal de origem); nome longo quebra a linha; sem dica — o nome do item
+ * já está escrito. Na porta Contatos, o grupo "Orientações instaladas" (spec 3.4).
  */
 export function ListaDaPorta({
   porta,
@@ -49,7 +47,7 @@ export function ListaDaPorta({
   return (
     <>
       {porta.grupos.map((grupo, n) => (
-        <section key={grupo.id} aria-label={grupo.rotulo ?? undefined} className="convexy-grupo mt-3.5 first:mt-0" style={ordem(n)}>
+        <section key={grupo.id} aria-label={grupo.rotulo ?? undefined} className="convexy-grupo mt-6 first:mt-1" style={ordem(n)}>
           {grupo.rotulo ? <h3 className={CLASSE_DO_ROTULO}>{grupo.rotulo}</h3> : null}
           <ul className="space-y-0.5">
             {grupo.itens.map((item) => (
@@ -63,7 +61,7 @@ export function ListaDaPorta({
       {comOrientacoes ? (
         <section
           aria-label={texto(TEXTOS.grupos.orientacoes, idioma)}
-          className="convexy-grupo mt-3.5"
+          className="convexy-grupo mt-6"
           style={ordem(porta.grupos.length)}
         >
           <h3 className={CLASSE_DO_ROTULO}>{texto(TEXTOS.grupos.orientacoes, idioma)}</h3>
@@ -101,14 +99,9 @@ export function ListaDaPorta({
 
 function ItemDaLista({ item, ativo, aoEscolher }: { item: ItemDoMenu; ativo: boolean; aoEscolher: () => void }) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Link href={item.href} aria-current={ativo ? "page" : undefined} onClick={aoEscolher} className={classeDoItem(ativo)}>
-          <span className="min-w-0 flex-1 break-words">{item.rotulo}</span>
-          {item.healthDot ? <ConnectionHealthDot className="ml-auto" /> : null}
-        </Link>
-      </TooltipTrigger>
-      <TooltipContent side="right">{item.descricao}</TooltipContent>
-    </Tooltip>
+    <Link href={item.href} aria-current={ativo ? "page" : undefined} onClick={aoEscolher} className={classeDoItem(ativo)}>
+      <span className="min-w-0 flex-1 break-words">{item.rotulo}</span>
+      {item.healthDot ? <ConnectionHealthDot className="ml-auto" /> : null}
+    </Link>
   );
 }

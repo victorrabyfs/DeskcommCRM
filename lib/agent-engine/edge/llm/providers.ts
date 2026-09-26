@@ -9,6 +9,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModel } from 'ai';
 import { MockLanguageModelV3 } from 'ai/test';
 
+import { fetchParaDestinoDaOrganizacao } from '@/lib/automation/destinos-internos-autorizados';
+
 import { allowlistedFetch, buildAllowlist } from '../egress';
 
 /**
@@ -49,6 +51,15 @@ export const OPENROUTER_ENDPOINT = process.env.OPENROUTER_BASE_URL?.trim() || 'h
  * também aceita `/v1`); o `@ai-sdk/openai` acrescenta `/chat/completions`.
  */
 export const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com';
+
+/**
+ * A Requesty é um roteador OpenAI-compatível como a OpenRouter: uma chave dá
+ * acesso a modelos de vários fabricantes, e os ids vêm no formato
+ * `fabricante/modelo` (`openai/gpt-4o-mini`). Mesma fábrica, sem SDK novo.
+ * Quem precisa ficar na Europa aponta o endpoint próprio do painel para
+ * `https://router.eu.requesty.ai/v1`.
+ */
+export const REQUESTY_ENDPOINT = 'https://router.requesty.ai/v1';
 
 /**
  * Cabeçalhos OPCIONAIS de atribuição da OpenRouter.
@@ -281,6 +292,41 @@ export function createDefaultRegistry(opts?: {
       const fetchFinal =
         opts?.deepseekThinking === 'disabled' ? comRaciocinioDesligado(contido) : contido;
       return createOpenAI({ apiKey, baseURL: endpoint, fetch: fetchFinal })(modelId);
+    },
+    /**
+     * Requesty: roteador OpenAI-compatível, com `base_url` próprio pela mesma
+     * razão da OpenRouter (a allowlist do egress segue o endpoint escolhido).
+     * `.chat()` pela mesma razão também: Chat Completions é o formato que o
+     * roteador serve para qualquer família de modelo.
+     */
+    requesty: (apiKey, modelId, baseUrl) => {
+      const endpoint = baseUrl ?? REQUESTY_ENDPOINT;
+      return createOpenAI({ apiKey, baseURL: endpoint, fetch: contain(endpoint) }).chat(modelId);
+    },
+    /**
+     * Provedor personalizado (#1642): o endpoint É DO OPERADOR e vem na
+     * credencial (`ai_provider_credentials.base_url`), através de
+     * `decisao.baseUrl ?? config.baseUrl`. Não existe endpoint canônico aqui de
+     * propósito: sem endereço a chamada é RECUSADA, porque cair no endpoint da
+     * OpenAI seria mandar a chave de um gateway privado para a OpenAI — e
+     * silenciosamente, que é a forma pior de errar. Mesma fábrica e mesmo
+     * `.chat()` da OpenRouter: quem fala a API da OpenAI fala Chat Completions.
+     * A allowlist do egress é a do endpoint escolhido, como nos roteadores, e
+     * cada requisição passa ANTES pela régua de destino de organização: o
+     * endereço foi escolhido por uma empresa, então não aponta para a rede
+     * interna do servidor (decisão 22-d).
+     */
+    custom: (apiKey, modelId, baseUrl) => {
+      if (!baseUrl) {
+        throw new Error(
+          "custom_provider_sem_base_url: cadastre o endereço (base URL) na credencial do provedor personalizado",
+        );
+      }
+      return createOpenAI({
+        apiKey,
+        baseURL: baseUrl,
+        fetch: fetchParaDestinoDaOrganizacao(contain(baseUrl)),
+      }).chat(modelId);
     },
   };
 }

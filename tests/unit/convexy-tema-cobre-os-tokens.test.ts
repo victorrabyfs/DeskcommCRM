@@ -130,8 +130,9 @@ describe("fontes da Convexy (spec 7.2.2)", () => {
 
   it("o layout usa Inter com a variável do original e Lexend Deca em --font-lexend", () => {
     expect(layout).not.toMatch(/Atkinson_Hyperlegible/);
-    expect(layout).toMatch(/Inter\(\{[^}]*variable: "--font-atkinson"/);
-    expect(layout).toMatch(/Lexend_Deca\(\{[^}]*variable: "--font-lexend"/);
+    expect(layout).toMatch(/const inter = localFont\(\{[^}]*inter-400-700-latin\.woff2[\s\S]*?variable: "--font-atkinson"/);
+    expect(layout).toMatch(/const lexend = localFont\(\{[^}]*lexend-deca-400-700-latin\.woff2[\s\S]*?variable: "--font-lexend"/);
+    expect(layout).not.toMatch(/from "next\/font\/google"/);
     expect(layout).toContain("className={`${inter.variable} ${lexend.variable} ${plexMono.variable}`}");
   });
 });
