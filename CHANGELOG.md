@@ -10,15 +10,15 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [1.48.0-cvx.3] — 2026-09-26
 
-Menu recolhido com o símbolo da marca: em /admin/marca, no cartão do logo, o novo campo "Símbolo (menu recolhido)" recebe a arte quadrada da marca, que passa a aparecer no lugar da inicial do nome; sem ela, tudo como antes. No menu da Convexy, o nome da porta aparece num balão discreto, que entra e sai suavemente e não fica mais preso na tela; os itens dos submenus não têm balão; e os títulos de seção dos submenus ganharam espaço. O banco ganha a coluna do símbolo, aplicada pela atualização.
+Menu recolhido com o símbolo da marca: envie a arte quadrada em /admin/marca › "Símbolo (menu recolhido)". No menu da Convexy, o balão com o nome da porta ficou discreto e não prende mais; os submenus não têm balão e as seções ganharam espaço.
 
 ## [1.48.0-cvx.2] — 2026-09-25
 
-Menu novo da Convexy, desligado até ligar em /admin/sistema › Módulos opcionais ("Menu da Convexy"). Ligado: portas grandes (Início, Conversas, Agenda, Contatos, Funil, Tarefas, Assistente de IA, Resultados, Configurações), e o Início com conversas esperando, agenda e tarefas do dia. Cada empresa ganha "Tipo de negócio" em /admin/tenants (clínica: Contatos vira Pacientes). Desligado, tudo como antes; o banco ganha a coluna do tipo de negócio, aplicada pela atualização.
+Menu novo da Convexy, desligado até ligar em /admin/sistema › Módulos opcionais ("Menu da Convexy"): portas grandes e o Início com conversas esperando, agenda e tarefas do dia. Cada empresa ganha "Tipo de negócio" em /admin/tenants (clínica: Contatos vira Pacientes). O banco ganha a coluna do tipo de negócio, aplicada pela atualização.
 
 ## [1.48.0-cvx.1] — 2026-09-25
 
-Atualização para a 1.48.0 do DeskcommCRM (notas logo abaixo). O logo para o tema escuro passa a ser o do original, que faz o mesmo que o da `1.47.0-cvx.2` e vale também para a marca de cada organização: os logos já enviados continuam valendo, sem nada a refazer. Mantém a identidade da Convexy (paleta, fontes, barra do navegador, logo maior na barra lateral) e as imagens de `ghcr.io/victorrabyfs`.
+Atualização para a 1.48.0 do DeskcommCRM (notas logo abaixo). O logo para o tema escuro passa a ser o do original: os logos já enviados continuam valendo. Mantém a identidade da Convexy e as imagens de `ghcr.io/victorrabyfs`.
 
 ## [1.48.0] — 2026-09-24
 

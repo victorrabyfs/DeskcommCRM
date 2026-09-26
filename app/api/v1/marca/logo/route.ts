@@ -88,8 +88,11 @@ type Escopo = z.infer<typeof escopoSchema>;
 // instalação (CONVEXY.md, "Símbolo da marca"; coluna da migration 9002).
 const temaSchema = z.enum(["claro", "escuro", "simbolo"]).default("claro");
 type TemaDoLogo = z.infer<typeof temaSchema>;
-const campoDoLogo = (tema: TemaDoLogo) =>
-  tema === "simbolo" ? "simbolo_path" : tema === "escuro" ? "logo_dark_path" : "logo_path";
+function campoDoLogo(tema: Exclude<TemaDoLogo, "simbolo">): "logo_path" | "logo_dark_path";
+function campoDoLogo(tema: TemaDoLogo): "logo_path" | "logo_dark_path" | "simbolo_path";
+function campoDoLogo(tema: TemaDoLogo) {
+  return tema === "simbolo" ? "simbolo_path" : tema === "escuro" ? "logo_dark_path" : "logo_path";
+}
 /** Convexy: a organização não tem símbolo próprio — a recusa vem antes de qualquer efeito. */
 const temaSoDaInstalacao = (escopo: Escopo, tema: TemaDoLogo) =>
   escopo === "organizacao" && tema === "simbolo";
