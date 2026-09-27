@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Inter, Lexend_Deca } from "next/font/google";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
@@ -10,6 +10,7 @@ import {
   registrarEstadoDaMarca,
   type LinhaDaMarca,
 } from "@/lib/branding/instalacao";
+import { logoDaCamada } from "@/lib/branding/logo";
 import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
 import {
   camadaDaInstalacao,
@@ -28,27 +29,33 @@ import "./globals.css";
 // dele, de propósito. CONVEXY.md, "Paleta, fontes e barra do navegador".
 import "./convexy/tema.css";
 
+// Fontes versionadas em app/fonts/ (origem e licença no README de lá): o
+// next/font/google as baixava durante o build, e o build caía quando o Google
+// não respondia. A família passa a se chamar como a variável JS ("inter"),
+// então use sempre a custom property (--font-atkinson), nunca o nome da fonte.
+//
 // Convexy: Inter no lugar da Atkinson Hyperlegible, com o NOME de variável do
 // original de propósito — `--font-sans` (@theme inline) e o `body` do
 // globals.css leem `--font-atkinson`. Títulos h1–h3 em Lexend Deca pelo
-// app/convexy/tema.css. CONVEXY.md, "Paleta, fontes e barra do navegador".
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// app/convexy/tema.css. As duas são variáveis (um arquivo cobre 400–700).
+// CONVEXY.md, "Paleta, fontes e barra do navegador".
+const inter = localFont({
+  src: [{ path: "./fonts/inter-400-700-latin.woff2", weight: "400 700", style: "normal" }],
   display: "swap",
   variable: "--font-atkinson",
 });
 
-const lexend = Lexend_Deca({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const lexend = localFont({
+  src: [{ path: "./fonts/lexend-deca-400-700-latin.woff2", weight: "400 700", style: "normal" }],
   display: "swap",
   variable: "--font-lexend",
 });
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500"],
+const plexMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-400-latin-latin-ext.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-500-latin-latin-ext.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-mono",
 });
@@ -263,8 +270,8 @@ async function MarcaNoNavegador() {
  * mesma resposta antes de o documento ser liberado.
  */
 async function MarcaDosClientComponents({ children }: { children: React.ReactNode }) {
-  const { marca } = await marcaResolvida();
-  // Só os três campos de `Branding`: `marca` carrega junto `cor`, `origens` e
+  const { linha, marca } = await marcaResolvida();
+  // Só os campos de `Branding`: `marca` carrega junto `cor`, `origens` e
   // `motivos`, que são diagnóstico do servidor e não têm leitor no navegador —
   // mandá-los engordaria o payload do RSC de TODA página com dado que ninguém lê.
   return (
@@ -273,6 +280,8 @@ async function MarcaDosClientComponents({ children }: { children: React.ReactNod
         name: marca.name,
         logoUrl: marca.logoUrl,
         logoDarkUrl: marca.logoDarkUrl,
+        // Convexy: o símbolo não passa pela pilha de camadas — só a instalação o tem.
+        simboloUrl: logoDaCamada(linha?.simbolo_path, null),
         initial: marca.initial,
       }}
     >

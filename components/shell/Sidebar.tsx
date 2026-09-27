@@ -317,6 +317,9 @@ export function MarcaDaBarra({ collapsed }: { collapsed: boolean }) {
   // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
   // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
   const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
+  // Convexy: o símbolo da instalação no lugar da inicial, com a barra recolhida —
+  // só quando o logo em vigor é o da instalação (CONVEXY.md, "Símbolo da marca").
+  const simbolo = activeOrg?.marca?.logoUrl ? null : brand.simboloUrl;
 
   return (
       <div
@@ -372,7 +375,10 @@ export function MarcaDaBarra({ collapsed }: { collapsed: boolean }) {
         ) : (
           <span className={cn("font-semibold tracking-tight", collapsed && "sr-only")}>{nome}</span>
         )}
-        {collapsed && !marcaDoProduto && (
+        {collapsed && !marcaDoProduto && (simbolo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={simbolo} alt="" aria-hidden className="size-8 object-contain" />
+        ) : (
           <span aria-hidden className="text-lg font-bold text-primary">
             {/* Spread e não `[0]`: nome começando com emoji ou acento composto
                 quebraria no meio do code point. Mesma regra de `resolveBranding`
@@ -380,7 +386,7 @@ export function MarcaDaBarra({ collapsed }: { collapsed: boolean }) {
                 recolher o menu troca a marca. */}
             {[...nome][0]?.toUpperCase() ?? brand.initial}
           </span>
-        )}
+        ))}
       </div>
   );
 }

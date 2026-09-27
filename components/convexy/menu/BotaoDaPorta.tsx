@@ -32,6 +32,11 @@ interface BotaoDaPortaProps {
  * na borda do trilho. O Tooltip envolve SEMPRE, e é controlado: a árvore não
  * muda quando o trilho compacta, então o botão não é recriado e o foco não se
  * perde. `data-porta` é por onde o menu devolve o foco (Esc, ×, ‹ Voltar).
+ *
+ * A dica recomeça fechada a cada troca entre trilho largo e só ícones. Com o
+ * trilho largo o balão fica fechado e o conteúdo não é montado, e o Radix só
+ * avisa o fechamento quando o valor muda: um hover ali gravava `dica = true`
+ * que nada desfazia, e ao compactar todas as portas já tocadas abriam juntas.
  */
 export function BotaoDaPorta({
   porta,
@@ -46,6 +51,11 @@ export function BotaoDaPorta({
   aoNavegar,
 }: BotaoDaPortaProps) {
   const [dica, setDica] = useState(false);
+  const [mostravaNome, setMostravaNome] = useState(mostrarNome);
+  if (mostravaNome !== mostrarNome) {
+    setMostravaNome(mostrarNome);
+    setDica(false);
+  }
   const Icone = porta.Icone;
   const classe = cn(
     "group relative flex h-[38px] w-full items-center gap-3 rounded-md px-3 text-[14.5px] transition-[background-color,color,scale] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] active:scale-[.97] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden motion-reduce:transition-none motion-reduce:active:scale-100",
@@ -116,7 +126,9 @@ export function BotaoDaPorta({
   return (
     <Tooltip open={mostrarNome && dica} onOpenChange={setDica} delayDuration={150}>
       <TooltipTrigger asChild>{elemento}</TooltipTrigger>
-      <TooltipContent side="right">{porta.rotulo}</TooltipContent>
+      <TooltipContent side="right" sideOffset={8} className="convexy-dica border border-border bg-surface px-2.5 py-1 font-medium text-text shadow-md">
+        {porta.rotulo}
+      </TooltipContent>
     </Tooltip>
   );
 }

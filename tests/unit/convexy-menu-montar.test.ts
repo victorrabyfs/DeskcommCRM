@@ -98,12 +98,11 @@ describe("nomes", () => {
     expect(porta(portas, "configuracoes")?.itens.find((i) => i.href === "/app/settings/meta-ads")?.rotulo).toBe("Meta Ads");
   });
 
-  it("item sem rótulo próprio usa o do catálogo, traduzido; a descrição também", () => {
+  it("item sem rótulo próprio usa o do catálogo, traduzido", () => {
     const portas = montar(searchable(false, "admin", undefined, LIGADO), { idioma: "es" });
     const templates = porta(portas, "conversas")?.itens.find((i) => i.href === "/app/templates");
     expect(templates?.rotulo).toBe("Respuestas rápidas");
     expect(porta(portas, "contatos")?.rotulo).toBe("Contactos");
     expect(porta(portas, "funil")?.rotulo).toBe("Embudo");
-    expect(templates?.descricao.length).toBeGreaterThan(0);
   });
 });

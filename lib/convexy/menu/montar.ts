@@ -30,8 +30,6 @@ import {
 export interface ItemDoMenu {
   readonly href: string;
   readonly rotulo: string;
-  /** A descrição do catálogo: dica na sub-sidebar (spec 3.1). */
-  readonly descricao: string;
   readonly healthDot: boolean;
 }
 
@@ -73,13 +71,11 @@ export function montarMenu({ visiveis, atualizacao, nicho, idioma }: EntradaDoMe
   const item = (d: NavDestination): ItemDoMenu => ({
     href: d.href,
     rotulo: rotuloDoItem(d.href, d.label, nicho, idioma),
-    descricao: traduzir(d.description, idioma),
     healthDot: d.healthDot === true,
   });
   const itemDaAtualizacao: ItemDoMenu = {
     href: HREF_DA_ATUALIZACAO,
     rotulo: texto(TEXTOS.itens.atualizacao, idioma),
-    descricao: texto(TEXTOS.itens.atualizacaoDescricao, idioma),
     healthDot: false,
   };
 
