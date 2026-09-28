@@ -274,6 +274,20 @@ Código só da Convexy: `components/convexy/marca/` (`CartaoDosIcones.tsx`, `Cam
 `tests/invariants/convexy-marca-da-instalacao.test.ts` e o bloco "a dica com o nome da porta" em
 `tests/unit/convexy-menu-desktop.test.tsx`.
 
+### Conversa selecionada no modo escuro (`v1.59.0-cvx.1`)
+
+O item selecionado da lista de conversas usava `bg-accent-50`, e o bloco escuro do `globals.css`
+mantém a escala do acento igual à do claro: no escuro o item ficava quase branco sob o texto
+claro. Passa a usar `bg-accent-soft`, o token de fundo tingido que o tema escuro redefine (e que
+o CSS da marca gera por tema). Defeito também do original — candidato a PR lá.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `components/inbox/ConversationListItem.tsx` | `isSelected && "bg-accent-soft hover:bg-accent-soft"`, com comentário `Convexy` | reaplicar se o original não corrigir; se corrigir, aceitar o dele |
+
+Teste: `tests/unit/convexy-conversa-selecionada-no-escuro.test.ts` (o token do fundo tem de ser
+redefinido no tema escuro com outro valor).
+
 ## Desvios aceitos
 
 - **DoD 17** — sem fragmento em `.changes/`: o CHANGELOG das versões `-cvx` é escrito à mão
