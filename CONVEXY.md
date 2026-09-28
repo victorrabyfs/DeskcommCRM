@@ -288,6 +288,30 @@ o CSS da marca gera por tema). Defeito também do original — candidato a PR l�
 Teste: `tests/unit/convexy-conversa-selecionada-no-escuro.test.ts` (o token do fundo tem de ser
 redefinido no tema escuro com outro valor).
 
+### Excluir contato (`v1.59.0-cvx.1`)
+
+Defeito do original (1.59 e `main` em 2026-09-28): apagar um contato que já passou por retorno
+automático falhava com 42501. A guarda `fn_followup_generation_write` (gatilho `BEFORE` em
+`job_queue` e `followup_enrollment_events`) recusa escrita de quem está logado sobre os registros
+internos do follow-up, e o DELETE em cascata do contato caía nela. Pior: a rota apagava mensagens e
+conversas em comandos separados ANTES da ficha, então a recusa deixava o histórico já apagado.
+
+Migration `9004_excluir_contato`: `fn_excluir_contato(org, contato)` (`security invoker`, vale a
+RLS de quem chama) apaga mensagens, conversas e a ficha numa transação só; e a guarda ganha, na
+primeira linha, `if tg_op='DELETE' and pg_trigger_depth() > 1 then return old; end if;` — a
+cascata da chave estrangeira roda dentro do gatilho dela (profundidade 2); o DELETE direto de quem
+está logado (profundidade 1) segue recusado. O bloco fica no FIM do apêndice: a última definição
+da função é a que vale, e o invariante reprova se um bloco novo do original a redefinir depois.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `app/api/v1/contacts/_handler.ts` | em `deleteContactHandler`, o bloco dos três DELETE (`messages`, `conversations`, `contacts`) vira `supabase.rpc("fn_excluir_contato", …)` com a auditoria `falha_ao_apagar` de `apagados: []`; `return { id: deleted as string }` | reaplicar; se o original tornar a exclusão atômica, aceitar a dele e aposentar a função |
+| `tests/unit/contato-delete.test.ts` | o cliente falso responde `rpc("fn_excluir_contato")` no lugar dos DELETE; o caso "ficha recusada" passa a cobrar `apagados: []` | reaplicar junto com a rota |
+| `supabase/baseline.sql` | bloco `-- ---- excluir contato (migration 9004) ----` no FIM do apêndice | manter como o ÚLTIMO bloco a definir `fn_followup_generation_write`; se o original redefinir a função, reaplicar a linha da cascata na definição dele |
+| `supabase/migrations/MANIFEST.md` | linha `9004_excluir_contato` depois da 9003 | `merge=union`; conferir que ficou uma vez |
+
+Teste: `tests/invariants/convexy-excluir-contato.test.ts`. Candidato a PR no original.
+
 ## Desvios aceitos
 
 - **DoD 17** — sem fragmento em `.changes/`: o CHANGELOG das versões `-cvx` é escrito à mão

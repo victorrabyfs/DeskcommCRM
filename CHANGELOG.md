@@ -10,7 +10,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [1.59.0-cvx.1] — 2026-09-28
 
-Atualização para a 1.59.0 do DeskcommCRM (notas logo abaixo). Em /admin/marca, o novo cartão "Ícones da marca" junta o ícone da aba, a versão dele para o modo escuro do sistema e o símbolo do menu recolhido. No modo escuro, a conversa selecionada na Caixa de entrada deixa de ficar branca. O banco ganha a coluna do ícone escuro, aplicada pela atualização.
+Atualização para a 1.59.0 do DeskcommCRM (notas logo abaixo). Em /admin/marca, o novo cartão "Ícones da marca" junta o ícone da aba, a versão dele para o modo escuro do sistema e o símbolo do menu recolhido. No modo escuro, a conversa selecionada na Caixa de entrada deixa de ficar branca. Apagar um contato que já passou por retorno automático volta a funcionar, e uma exclusão recusada não apaga mais as mensagens e conversas dele. O banco ganha a coluna do ícone escuro, aplicada pela atualização.
 
 ## [1.59.0] — 2026-09-28
 
