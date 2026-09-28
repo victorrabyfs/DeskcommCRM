@@ -2,9 +2,9 @@
 -- Registro: CONVEXY.md, "Excluir contato".
 --
 -- O MESMO SQL está no apêndice de supabase/baseline.sql, no bloco
--- "excluir contato (migration 9004)", no FIM do apêndice: ele redefine
--- `fn_followup_generation_write` (bloco "follow-up: a geração é do sistema" do
--- original) e a definição que vale é a última do arquivo.
+-- "excluir contato (migration 9004)", logo antes da varredura de anon (0116): ele
+-- redefine `fn_followup_generation_write` e a definição que vale é a última do
+-- arquivo; a varredura tem de seguir sendo o último bloco a criar função.
 -- tests/invariants/convexy-excluir-contato.test.ts compara os dois e cobra que
 -- esta continue sendo a última definição.
 --

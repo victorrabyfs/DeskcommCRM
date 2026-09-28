@@ -123,7 +123,7 @@ describe("fn_excluir_contato", () => {
       insert into public.calendar_appointments
         (organization_id, contact_id, owner_user_id, title, starts_at, ends_at, status)
         values ('${GOV_ORG}', '${CONTATO}', '${GOV_ADMIN}', 'Consulta',
-                '2026-09-29 14:00:00+00', '2026-09-29 15:00:00+00', 'scheduled');
+                '2026-09-29 14:00:00+00', '2026-09-29 15:00:00+00', 'confirmed');
       ${COMO_ADMIN}
       do $$
       begin
@@ -172,7 +172,7 @@ describe("o bloco do baseline", () => {
 
   it("aplicado duas vezes seguidas, não erra (install e update)", () => {
     const inicio = BASELINE.indexOf(ROTULO);
-    const bloco = BASELINE.slice(inicio);
+    const bloco = BASELINE.slice(inicio, BASELINE.indexOf("\n-- ---- ", inicio + ROTULO.length));
     expect(erroDo(`begin; ${bloco} ${bloco} rollback;`)).toBeNull();
   });
 });
