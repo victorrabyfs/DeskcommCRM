@@ -104,8 +104,11 @@ export default async function Page() {
         nomeEmVigor={marca.name}
         logoEmVigor={marca.logoUrl}
         logoEscuroEmVigor={marca.logoDarkUrl}
-        // Convexy: CONVEXY.md, "Símbolo da marca".
-        simboloEmVigor={logoDaCamada(linha?.simbolo_path, null)}
+        // Mesma conversão caminho → URL do logo; `null` sem arquivo subido.
+        iconeDaAba={logoDaCamada(linha?.favicon_path, null)}
+        // Convexy: CONVEXY.md, "Símbolo e ícone da aba".
+        iconeEscuro={logoDaCamada(linha?.favicon_dark_path, null)}
+        simbolo={logoDaCamada(linha?.simbolo_path, null)}
         logoDoAmbiente={semOArquivo.logoUrl}
         origens={marca.origens}
         // `seeded_from_env` ligado significa que a linha é cópia do arquivo de

@@ -5,7 +5,7 @@
 -- "símbolo da instalação (migration 9002)", logo depois do bloco
 -- "logo por tema: coluna da instalação (migration 0406)". O kit self-host
 -- aplica só o baseline; este arquivo é para quem aplica a cadeia pelo
--- Supabase CLI. tests/invariants/convexy-simbolo.test.ts compara os dois, sem
+-- Supabase CLI. tests/invariants/convexy-marca-da-instalacao.test.ts compara os dois, sem
 -- comentários.
 --
 -- A arte quadrada que o menu recolhido mostra no lugar do logo inteiro. Mesma

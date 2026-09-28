@@ -19,6 +19,7 @@ import {
   type MarcaResolvida,
 } from "@/lib/branding/resolve";
 import { coresDaBarraConvexy } from "@/lib/convexy/barra-do-navegador";
+import { iconesDaAba } from "@/lib/convexy/icones-da-aba";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { ThemeProvider } from "@/lib/theme";
@@ -96,7 +97,7 @@ async function marcaResolvida(): Promise<{
  * motivo medido.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const { marca } = await marcaResolvida();
+  const { linha, marca } = await marcaResolvida();
   const { name } = marca;
   return {
     title: {
@@ -115,7 +116,10 @@ export async function generateMetadata(): Promise<Metadata> {
     // `/icon` faz o pedido ir para `app/icon.tsx`, que desenha a marca da
     // instalação em runtime — ver o cabeçalho daquele arquivo para por que ele
     // não pode ser um arquivo estático em `public/`.
-    icons: { icon: "/icon" },
+    // Com um ícone subido em `/admin/marca` (migration 0443), o link aponta para
+    // o arquivo no storage da instalação — ver `iconeDaAba`.
+    // Convexy: com o ícone escuro (migration 9003), um ícone por modo do sistema.
+    icons: iconesDaAba(linha),
   };
 }
 

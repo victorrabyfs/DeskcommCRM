@@ -74,6 +74,8 @@ import type { LinhaDaInstalacao } from "./resolve";
 export type LinhaDaMarca = LinhaDaInstalacao & {
   /** Convexy: a arte quadrada do menu recolhido (migration 9002). Só a instalação tem. */
   readonly simbolo_path?: string | null;
+  /** Convexy: o ícone da aba para o modo escuro do sistema (migration 9003). */
+  readonly favicon_dark_path?: string | null;
   readonly show_powered_by: boolean;
   readonly seeded_from_env: boolean;
   readonly fallback_at: string | null;
@@ -103,9 +105,10 @@ export type SementeDoAmbiente = {
  * imagem. Mesma exposição que `fallback_at`/`fallback_reason` já tinham desde a
  * 0155; tratá-la diferente agora criaria duas regras para o mesmo caso.
  */
-// Convexy: `simbolo_path` (migration 9002) — CONVEXY.md, "Símbolo da marca".
+// Convexy: `simbolo_path` (migration 9002) e `favicon_dark_path` (migration 9003) —
+// CONVEXY.md, "Símbolo e ícone da aba".
 const COLUNAS =
-  "app_name, logo_url, logo_path, logo_dark_path, simbolo_path, accent_hex, show_powered_by, seeded_from_env, fallback_at, fallback_reason";
+  "app_name, logo_url, logo_path, logo_dark_path, favicon_path, favicon_dark_path, simbolo_path, accent_hex, show_powered_by, seeded_from_env, fallback_at, fallback_reason";
 
 /**
  * Códigos de recusa — os que significam "a cor configurada NÃO pintou".
