@@ -129,6 +129,9 @@ export const TEXTOS = {
     removido: { pt: "Ícone escuro removido.", es: "Ícono oscuro quitado." },
     falhou: { pt: "Não consegui trocar o ícone escuro agora.", es: "No pude cambiar el ícono oscuro ahora." },
   },
+  prospeccao: {
+    baixarPlanilha: { pt: "Baixar planilha (CSV)", es: "Descargar planilla (CSV)" },
+  },
   simbolo: {
     rotulo: { pt: "Símbolo (menu recolhido)", es: "Símbolo (menú contraído)" },
     ajuda: {

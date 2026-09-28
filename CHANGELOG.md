@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0-cvx.2] — 2026-09-28
+
+Prospecção mais fácil de reaproveitar: os contatos criados por uma campanha ganham a etiqueta "Prospecção: <nome da campanha>", Contatos passa a filtrar pela origem "Prospecção", e os resultados de cada campanha podem ser baixados em planilha (Prospecção › Acompanhar resultados › Baixar planilha).
+
 ## [1.59.0-cvx.1] — 2026-09-28
 
 Atualização para a 1.59.0 do DeskcommCRM (notas logo abaixo). Em /admin/marca, o novo cartão "Ícones da marca" junta o ícone da aba, a versão dele para o modo escuro do sistema e o símbolo do menu recolhido. No modo escuro, a conversa selecionada na Caixa de entrada deixa de ficar branca. Apagar um contato que já passou por retorno automático volta a funcionar, e uma exclusão recusada não apaga mais as mensagens e conversas dele. O banco ganha a coluna do ícone escuro, aplicada pela atualização.
