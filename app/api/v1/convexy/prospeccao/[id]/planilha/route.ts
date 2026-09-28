@@ -27,21 +27,22 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const auth = await requireRole("admin", { requestId, resource: "prospecting" });
   if (!auth.ok) return auth.response;
 
-  const id = idSchema.safeParse((await ctx.params).id);
-  if (!id.success) return fail("validation_failed", "Campanha inválida.", 422, { requestId });
+  const lido = idSchema.safeParse((await ctx.params).id);
+  if (!lido.success) return fail("validation_failed", "Campanha inválida.", 422, { requestId });
+  const campanhaId = lido.data;
   const org = auth.org.orgId;
 
   const db = getRequestPool();
   const campanha = await db.query<{ name: string }>(
     "select name from prospecting_campaigns where organization_id=$1 and id=$2",
-    [org, id.data],
+    [org, campanhaId],
   );
   const nome = campanha.rows[0]?.name;
   if (!nome) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
 
   const candidatos = await db.query<{ data: Prospect; contact_id: string | null }>(
     "select data, contact_id from prospecting_candidates where organization_id=$1 and campaign_id=$2 order by created_at, id",
-    [org, id.data],
+    [org, campanhaId],
   );
 
   await audit({
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     actorUserId: auth.user.id,
     organizationId: org,
     resourceType: "prospecting_campaign",
-    resourceId: id.data,
+    resourceId: campanhaId,
     requestId,
     ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
     userAgent: req.headers.get("user-agent") ?? null,
