@@ -473,7 +473,7 @@ os dois modos, e a nova redação fica registrada no `CONVEXY.md`.
 ## 11. Doutrina (DoD)
 
 - **12:** a prova de tela é a spec e2e no CI, mais evidência visual em
-  `.superpowers/evidence/convexy-menu/`, capturada no CI ou na VPS e nunca na máquina local.
+  `evidence/convexy-menu/`, capturada no CI ou na VPS e nunca na máquina local.
 - **13:** o mapa `docs/architecture/convexy-menu.architecture.json` tem as peças menu, mapa,
   nicho, vocabulário, interface e Início, com pelo menos 2 arestas cada.
   - O laço de retorno: tela nova entra pelo padrão e aparece listada no CI; grupo novo reprova;

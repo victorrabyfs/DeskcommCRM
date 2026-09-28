@@ -156,6 +156,10 @@ const QUARENTENA = new Set([
   "docs/superpowers/plans/2026-07-28-atualizar-versao-na-ui.md",
   "docs/superpowers/plans/2026-08-03-gestao-funis.md",
   "docs/superpowers/plans/2026-08-03-navegacao-agrupada.md",
+  // Convexy: planos do fork, registro histórico pela mesma razão — CONVEXY.md.
+  "docs/superpowers/plans/2026-09-23-convexy-cvx3-paleta-fontes.md",
+  "docs/superpowers/plans/2026-09-24-convexy-logo-escuro.md",
+  "docs/superpowers/plans/2026-09-25-convexy-menu-novo.md",
   // ⚠️ As specs em `docs/superpowers/specs/` saíram daqui NESTE PR: as duas que
   // prescreviam o caminho foram migradas para `evidence/`, e o caso de
   // anti-apodrecimento abaixo cobrou a remoção. A família continua existindo —

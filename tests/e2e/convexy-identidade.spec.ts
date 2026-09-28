@@ -26,7 +26,7 @@ import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
  * Um login só no arquivo. Registro: CONVEXY.md.
  */
 
-const EVIDENCIA = path.join(process.cwd(), ".superpowers", "evidence", "convexy-cvx3");
+const EVIDENCIA = path.join(process.cwd(), "evidence", "convexy-cvx3");
 
 const TEMAS = [
   { tema: "claro", dataTheme: "light" },

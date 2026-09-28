@@ -266,6 +266,7 @@ da sub-sidebar ganharam espaço acima.
 | `supabase/baseline.sql` | bloco `-- ---- símbolo da instalação (migration 9002) ----`, entre a coluna e as funções da 0406; bloco `-- ---- ícone da aba escuro (migration 9003) ----`, logo depois do da coluna da 0443 | reaplicar nos mesmos lugares |
 | `supabase/migrations/MANIFEST.md` | linhas `9002_simbolo_da_instalacao` e `9003_icone_da_aba_escuro` depois da 9001 | `merge=union`; conferir que ficaram uma vez |
 | `CHANGELOG.md` | `## [1.52.0-cvx.1]`, `## [1.59.0-cvx.1]` | ordem de "Base e versões" |
+| `tests/unit/evidencia-no-caminho-versionado.test.ts` | três planos do fork (`2026-09-23-convexy-cvx3-…`, `2026-09-24-convexy-logo-escuro`, `2026-09-25-convexy-menu-novo`) na `QUARENTENA`, com comentário `Convexy` — registro histórico, como os do original | reacrescentar no fim do bloco de planos; as specs e2e da Convexy gravam em `evidence/` |
 
 Código só da Convexy: `components/convexy/marca/` (`CartaoDosIcones.tsx`, `CampoDeIconeDaMarca.tsx`),
 `lib/convexy/icones-da-aba.ts`, os textos `icones`, `iconeEscuro` e `simbolo` em
@@ -375,9 +376,9 @@ Código só da Convexy: `components/convexy/marca/` (`CartaoDosIcones.tsx`, `Cam
   typecheck/lint pelo `verify`; migration e RLS pelo `invariants` (install e update); a tela
   pelo `e2e` (`convexy-menu.spec.ts`, na parte escolhida pela sonda (a)) e pela conferência na
   VPS. A fase vermelha dos cinco guardas do "Review Focus" do plano foi vista no CI antes de cada
-  implementação. A evidência visual é a captura feita na VPS. As capturas que o e2e grava em
-  `.superpowers/evidence/convexy-menu/` não duram: a pasta é ignorada pelo git e o CI só sobe
-  artefatos quando o e2e falha.
+  implementação. A evidência visual é a captura feita na VPS. As capturas que o e2e grava vão para
+  `evidence/convexy-menu/` (versionado, regra do original desde a 1.59; até a `v1.52.0-cvx.1`
+  iam para uma pasta ignorada pelo git).
 
 ## Afirmações de docs do original que não valem no fork
 

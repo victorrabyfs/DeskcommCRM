@@ -37794,7 +37794,7 @@ comment on column public.platform_branding.logo_dark_path is
 -- Convexy (fork victorrabyfs/DeskcommCRM) — registro: CONVEXY.md, "Símbolo da
 -- marca". A arte quadrada do menu recolhido; mesma forma de caminho do logo
 -- escuro, logo acima. Espelho de
--- supabase/migrations/20260926120000_9002_simbolo_da_instalacao.sql.
+-- supabase/migrations/20260926120100_9002_simbolo_da_instalacao.sql.
 
 alter table public.platform_branding add column if not exists simbolo_path text;
 update public.platform_branding set simbolo_path = null
@@ -40579,7 +40579,7 @@ comment on column public.platform_branding.favicon_path is
 -- ---- ícone da aba escuro (migration 9003) ----
 -- Convexy (fork victorrabyfs/DeskcommCRM) — registro: CONVEXY.md, "Símbolo e
 -- ícone da aba". O ícone da aba acima, para o modo escuro do sistema. Espelho
--- de supabase/migrations/20260928120000_9003_icone_da_aba_escuro.sql.
+-- de supabase/migrations/20260928120100_9003_icone_da_aba_escuro.sql.
 
 alter table public.platform_branding add column if not exists favicon_dark_path text;
 update public.platform_branding set favicon_dark_path = null
