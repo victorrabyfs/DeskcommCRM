@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { updateBranding } from "@/app/actions/settings/updateBranding";
 import { CampoDeLogo } from "@/components/branding/CampoDeLogo";
-import { CampoDoSimbolo } from "@/components/convexy/marca/CampoDoSimbolo";
+import { CartaoDosIcones } from "@/components/convexy/marca/CartaoDosIcones";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,8 +48,11 @@ interface Props {
    */
   readonly logoEmVigor: string | null;
   readonly logoEscuroEmVigor?: string | null;
-  /** Convexy: o símbolo gravado (migration 9002) — CONVEXY.md, "Símbolo da marca". */
-  readonly simboloEmVigor: string | null;
+  /** O ícone da aba subido nesta tela (URL pública), ou `null` para o desenhado. */
+  readonly iconeDaAba?: string | null;
+  /** Convexy: o ícone escuro (9003) e o símbolo (9002) — CONVEXY.md, "Símbolo e ícone da aba". */
+  readonly iconeEscuro: string | null;
+  readonly simbolo: string | null;
   /** O que apareceria SEM o arquivo subido — a URL colada no `.env`, se houver. */
   readonly logoDoAmbiente: string | null;
   readonly origens: { readonly nome: string; readonly logoUrl: string; readonly cor: string };
@@ -73,7 +76,9 @@ export function FormularioDaMarca({
   nomeEmVigor,
   logoEmVigor,
   logoEscuroEmVigor,
-  simboloEmVigor,
+  iconeDaAba,
+  iconeEscuro,
+  simbolo,
   logoDoAmbiente,
   origens,
   definidoNestaTela,
@@ -353,9 +358,10 @@ export function FormularioDaMarca({
           origemDoHerdado="do arquivo de instalação do servidor"
           nomeEmVigor={nomeEmVigor}
         />
-        {/* Convexy: o símbolo do menu recolhido — CONVEXY.md, "Símbolo da marca". */}
-        <CampoDoSimbolo simboloUrl={simboloEmVigor} />
       </Card>
+
+      {/* Convexy: ícone da aba (original), ícone escuro e símbolo num cartão próprio. */}
+      <CartaoDosIcones iconeDaAba={iconeDaAba ?? null} iconeEscuro={iconeEscuro} simbolo={simbolo} />
 
       <EstadoDaMarca
         origens={origens}

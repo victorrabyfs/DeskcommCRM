@@ -111,18 +111,34 @@ export const TEXTOS = {
     },
     erro: "Não deu para salvar. Tente de novo em instantes.",
   },
+  icones: {
+    titulo: { pt: "Ícones da marca", es: "Íconos de la marca" },
+    descricao: {
+      pt: "As versões quadradas da marca: o ícone da aba do navegador, nos modos claro e escuro, e o símbolo do menu recolhido. Cada arquivo vale assim que é enviado.",
+      es: "Las versiones cuadradas de la marca: el ícono de la pestaña del navegador, en los modos claro y oscuro, y el símbolo del menú contraído. Cada archivo vale en cuanto se envía.",
+    },
+  },
+  iconeEscuro: {
+    rotulo: { pt: "Ícone da aba no modo escuro (opcional)", es: "Ícono de la pestaña en modo oscuro (opcional)" },
+    ajuda: {
+      pt: "Aparece na aba quando o sistema do usuário está no modo escuro. Sem ele, o ícone acima vale nos dois modos. Imagem quadrada, PNG ou JPG, até 512 KB.",
+      es: "Aparece en la pestaña cuando el sistema del usuario está en modo oscuro. Sin él, el ícono de arriba vale en los dos modos. Imagen cuadrada, PNG o JPG, hasta 512 KB.",
+    },
+    remover: { pt: "Remover ícone escuro", es: "Quitar ícono oscuro" },
+    enviado: { pt: "Ícone escuro atualizado.", es: "Ícono oscuro actualizado." },
+    removido: { pt: "Ícone escuro removido.", es: "Ícono oscuro quitado." },
+    falhou: { pt: "Não consegui trocar o ícone escuro agora.", es: "No pude cambiar el ícono oscuro ahora." },
+  },
   simbolo: {
     rotulo: { pt: "Símbolo (menu recolhido)", es: "Símbolo (menú contraído)" },
     ajuda: {
-      pt: "A arte quadrada da marca, sem o nome. Aparece no menu lateral recolhido; sem ela, aparece a inicial do nome. PNG ou JPG quadrado, até 512 KB.",
-      es: "El arte cuadrado de la marca, sin el nombre. Aparece en el menú lateral contraído; sin él, aparece la inicial del nombre. PNG o JPG cuadrado, hasta 512 KB.",
+      pt: "A arte quadrada da marca, sem o nome. Aparece no menu lateral recolhido; sem ela, aparece a inicial do nome. PNG ou JPG, até 512 KB.",
+      es: "El arte cuadrado de la marca, sin el nombre. Aparece en el menú lateral contraído; sin él, aparece la inicial del nombre. PNG o JPG, hasta 512 KB.",
     },
     remover: { pt: "Remover símbolo", es: "Quitar símbolo" },
     enviado: { pt: "Símbolo atualizado.", es: "Símbolo actualizado." },
     removido: { pt: "Símbolo removido.", es: "Símbolo quitado." },
     falhou: { pt: "Não consegui trocar o símbolo agora.", es: "No pude cambiar el símbolo ahora." },
-    grande: "O logo precisa ter até 512 KB. Arquivo maior vai inteiro para o navegador em toda página.",
-    previa: { pt: "Assim ele aparece no menu recolhido:", es: "Así aparece en el menú contraído:" },
   },
 } as const;
 

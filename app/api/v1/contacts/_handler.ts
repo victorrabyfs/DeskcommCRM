@@ -801,40 +801,15 @@ export async function deleteContactHandler(
     );
   }
 
-  // `apagados` é preenchido passo a passo de propósito: se um DELETE do meio
-  // falhar, a linha de auditoria do erro precisa dizer exatamente até onde o
-  // histórico foi, senão o incidente vira arqueologia.
-  const apagados: string[] = [];
-  let deleted: { id: string } | null = null;
-  try {
-    // Mensagens e conversas RESTRICT no contato: apagar primeiro, senão o
-    // DELETE da ficha falha para qualquer lead que já falou no canal.
-    const { error: msgErr } = await supabase
-      .from("messages")
-      .delete()
-      .eq("contact_id", contactId)
-      .eq("organization_id", ctx.organization_id);
-    throwOnDbError(msgErr, ctx.requestId, ctx.idioma);
-    apagados.push("messages");
-
-    const { error: convErr } = await supabase
-      .from("conversations")
-      .delete()
-      .eq("contact_id", contactId)
-      .eq("organization_id", ctx.organization_id);
-    throwOnDbError(convErr, ctx.requestId, ctx.idioma);
-    apagados.push("conversations");
-
-    const { data, error: delErr } = await supabase
-      .from("contacts")
-      .delete()
-      .eq("id", contactId)
-      .eq("organization_id", ctx.organization_id)
-      .select("id")
-      .maybeSingle();
-    throwOnDbError(delErr, ctx.requestId, ctx.idioma);
-    deleted = data;
-  } catch (err) {
+  // Convexy: histórico e ficha saem numa transação só, por `fn_excluir_contato`
+  // (migration 9004) — se a ficha não sai, nada sai. Antes eram três DELETE
+  // separados, e uma ficha recusada deixava o histórico já apagado. CONVEXY.md,
+  // "Excluir contato".
+  const { data: deleted, error: delErr } = await supabase.rpc("fn_excluir_contato", {
+    p_organization_id: ctx.organization_id,
+    p_contact_id: contactId,
+  });
+  if (delErr) {
     // `audit()` é best-effort por doutrina (engole a própria falha e reporta),
     // então registrar aqui não pode trocar o desfecho do erro real.
     await audit({
@@ -844,9 +819,9 @@ export async function deleteContactHandler(
       resourceType: "contact",
       resourceId: contactId,
       requestId: ctx.requestId,
-      metadata: { ...a.metadataActor, motivo: "falha_ao_apagar", vinculos: [], apagados },
+      metadata: { ...a.metadataActor, motivo: "falha_ao_apagar", vinculos: [], apagados: [] },
     });
-    throw err;
+    throwOnDbError(delErr, ctx.requestId, ctx.idioma);
   }
 
   if (!deleted) {
@@ -882,5 +857,5 @@ export async function deleteContactHandler(
     metadata: a.metadataActor,
   });
 
-  return { id: deleted.id as string };
+  return { id: deleted as string };
 }

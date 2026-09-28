@@ -31,7 +31,7 @@ test.skip(
 
 const db = createClient(credenciais.url, credenciais.serviceRole, { auth: { persistSession: false } });
 
-const EVIDENCIA = path.join(process.cwd(), ".superpowers", "evidence", "convexy-menu");
+const EVIDENCIA = path.join(process.cwd(), "evidence", "convexy-menu");
 const SESSOES = path.join(process.cwd(), ".superpowers", "e2e-sessoes", "convexy-menu");
 const SESSAO_ADMIN = path.join(SESSOES, "admin.json");
 const SESSAO_AGENTE = path.join(SESSOES, "agente.json");

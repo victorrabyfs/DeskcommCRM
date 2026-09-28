@@ -13,7 +13,8 @@ const ORG = "c05e7a00-0000-4000-8000-000000000001";
 const CONTATO = "c05e7a00-0000-4000-8000-0000000000c1";
 const USUARIO = "c05e7a00-0000-4000-8000-0000000000a1";
 
-const chamadas: Array<{ tabela: string; op: string }> = [];
+// Convexy: a exclusão é uma chamada só (`fn_excluir_contato`, migration 9004).
+const chamadas: Array<{ funcao: string; args: unknown }> = [];
 const contagens: Array<{ tabela: string; filtros: Array<[string, unknown]> }> = [];
 
 interface CadeiaContagem {
@@ -24,9 +25,7 @@ interface CadeiaContagem {
 
 interface OpcoesFake {
   missing?: boolean;
-  /** DELETE de messages/conversations falha com 23503 (comportamento de antes da #752). */
-  fk?: boolean;
-  /** Só o DELETE da ficha (contacts) falha com 23503. */
+  /** A exclusão (`fn_excluir_contato`) falha com 23503 — nada sai, é uma transação só. */
   fkNaFicha?: boolean;
   /** Quantos vínculos RESTRICT a pré-checagem encontra na agenda. */
   vinculos?: number;
@@ -37,22 +36,6 @@ interface OpcoesFake {
 function clienteFalso(opts?: OpcoesFake): unknown {
   return {
     from: (tabela: string) => {
-      const erroDoDelete =
-        (opts?.fk && tabela !== "contacts") || (opts?.fkNaFicha && tabela === "contacts")
-          ? { code: "23503", message: "fk" }
-          : null;
-      const del = {
-        eq: () => del,
-        select: () => del,
-        // O DELETE da ficha passa por `.select("id").maybeSingle()`: o erro do
-        // 23503 tem de sair por aqui, não só pelo `then` (que serve os DELETE
-        // de messages/conversations, aguardados direto).
-        maybeSingle: async () =>
-          opts?.missing
-            ? { data: null, error: erroDoDelete }
-            : { data: { id: CONTATO }, error: erroDoDelete },
-        then: (r: (v: unknown) => unknown) => r({ error: erroDoDelete }),
-      };
       return {
         // `select("id", {count, head})` é a pré-checagem de vínculo: só conta.
         select: (_colunas?: string, opcoes?: { count?: string; head?: boolean }) => {
@@ -86,13 +69,17 @@ function clienteFalso(opts?: OpcoesFake): unknown {
             }),
           };
         },
-        delete: () => {
-          chamadas.push({ tabela, op: "delete" });
-          return del;
-        },
       };
     },
-    rpc: () => ({ then: (r: (v: unknown) => unknown) => r({ error: null }) }),
+    rpc: (funcao: string, args: unknown) => {
+      if (funcao !== "fn_excluir_contato") {
+        return { then: (r: (v: unknown) => unknown) => r({ error: null }) };
+      }
+      chamadas.push({ funcao, args });
+      return Promise.resolve(
+        opts?.fkNaFicha ? { data: null, error: { code: "23503", message: "fk" } } : { data: CONTATO, error: null },
+      );
+    },
   };
 }
 
@@ -110,7 +97,7 @@ describe("deleteContactHandler", () => {
     chamadas.length = 0;
   });
 
-  it("apaga mensagens e conversas antes do contato e audita", async () => {
+  it("apaga histórico e ficha numa chamada só e audita", async () => {
     const { deleteContactHandler } = await import("@/app/api/v1/contacts/_handler");
     const out = await deleteContactHandler(
       clienteFalso() as never,
@@ -118,7 +105,9 @@ describe("deleteContactHandler", () => {
       CONTATO,
     );
     expect(out).toEqual({ id: CONTATO });
-    expect(chamadas.map((c) => c.tabela)).toEqual(["messages", "conversations", "contacts"]);
+    expect(chamadas).toEqual([
+      { funcao: "fn_excluir_contato", args: { p_organization_id: ORG, p_contact_id: CONTATO } },
+    ]);
     // A pré-checagem da #752 conta o vínculo com os DOIS filtros (contato +
     // organização): sem o de organização, contato de outra org bloquearia.
     expect(contagens).toEqual([
@@ -148,18 +137,18 @@ describe("deleteContactHandler", () => {
     });
   });
 
-  it("ficha falha depois do histórico apagado: audita o que saiu e propaga o 409", async () => {
+  it("ficha recusada: nada sai (transação só), audita e propaga o 409", async () => {
     const { deleteContactHandler } = await import("@/app/api/v1/contacts/_handler");
     await expect(
       deleteContactHandler(clienteFalso({ fkNaFicha: true }) as never, ctxFalso(), CONTATO),
     ).rejects.toMatchObject({ status: 409, code: "state_conflict" });
-    expect(chamadas.map((c) => c.tabela)).toEqual(["messages", "conversations", "contacts"]);
-    // Se o RESTRICT escapar da pré-checagem (corrida, RLS, tabela nova), o
-    // estrago fica registrado em vez de sumir.
+    expect(chamadas).toHaveLength(1);
+    // Se o RESTRICT escapar da pré-checagem (corrida, RLS, tabela nova), a
+    // recusa fica registrada — e, com a transação única, sem nada apagado.
     expect(ultimaAuditoria()).toMatchObject({
       action: "contact.delete_blocked",
       resourceId: CONTATO,
-      metadata: { motivo: "falha_ao_apagar", vinculos: [], apagados: ["messages", "conversations"] },
+      metadata: { motivo: "falha_ao_apagar", vinculos: [], apagados: [] },
     });
   });
 

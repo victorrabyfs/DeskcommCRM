@@ -10,11 +10,11 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 
 ## Base e versões
 
-- Base atual: `v1.52.0` do original (`refs/upstream-tags/v1.52.0` no clone), trazida em 2026-09-26
-  (1.48.0 → 1.52.0: 365 commits, 16 migrations; conflitos só no `CHANGELOG.md` e nas fontes de
-  `app/layout.tsx`, que o original passou a versionar em `app/fonts/`). Bases anteriores:
-  `v1.48.0`, `v1.47.0`, `v1.44.0`.
-- Versões: `vX.Y.Z-cvx.N` sobre a base atual (hoje `v1.52.0-cvx.N`), tag anotada, criada só depois do merge, empurrada pelo nome.
+- Base atual: `v1.59.0` do original (`refs/upstream-tags/v1.59.0` no clone), trazida em 2026-09-28
+  (1.52.0 → 1.59.0: 572 commits, 17 migrations; conflitos na rota de logo e em `/admin/marca`, que
+  ganharam o ícone da aba — ver "Símbolo e ícone da aba" —, no `CHANGELOG.md` e no mapa de
+  jornadas). Bases anteriores: `v1.52.0`, `v1.48.0`, `v1.47.0`, `v1.44.0`.
+- Versões: `vX.Y.Z-cvx.N` sobre a base atual (hoje `v1.59.0-cvx.N`), tag anotada, criada só depois do merge, empurrada pelo nome.
   Nunca `--tags`/`--follow-tags`. Tag publicada nunca é refeita (corrigir = `N+1`).
 - **Toda tag `-cvx` ganha uma Release no GitHub, logo depois de o `publish-image` ficar verde**
   (desde a `v1.48.0-cvx.1`): `gh release create vX.Y.Z-cvx.N -R victorrabyfs/DeskcommCRM
@@ -47,6 +47,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Atualização para a base 1.48.0; logo escuro passa a ser o do original (0406) | `v1.48.0-cvx.1` |
 | Menu novo da Convexy: portas, sub-sidebar, Início, tipo de negócio por organização (módulo `menu_convexy`; migration 9001) | `v1.48.0-cvx.2` |
 | Atualização para a base 1.52.0 (fontes locais); refino do menu (dica do trilho, seções da sub-sidebar) e símbolo da marca no menu recolhido (migration 9002) | `v1.52.0-cvx.1` |
+| Atualização para a base 1.59.0 (ícone da aba do original); ícone da aba para o modo escuro (migration 9003) e cartão "Ícones da marca" em `/admin/marca` | `v1.59.0-cvx.1` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -226,40 +227,91 @@ sozinhas (dar a elas posição explícita em `PORTAS`, se o lugar padrão não s
 `convexy-menu-dono.test.ts` (página nova sem dono), `convexy-menu-modulo.test.tsx` e
 `convexy-inicio-fila-do-inbox.test.ts`.
 
-### Símbolo da marca e refino do menu (`v1.52.0-cvx.1`)
+### Símbolo e ícone da aba (`v1.52.0-cvx.1`, reorganizado na `v1.59.0-cvx.1`)
 
 O menu recolhido mostrava a inicial do nome em texto porque a marca do original só guarda o
 logo claro e o escuro. A instalação ganha o **símbolo** — a arte quadrada da marca, sem o nome —
-em `/admin/marca`, no cartão do logo. Coluna `platform_branding.simbolo_path` (migration
-`9002_simbolo_da_instalacao`), mesma forma de caminho e mesma CHECK do logo escuro; escrita só
-pela rota de logo do original com `tema=simbolo` e escopo da instalação (a organização recebe
-422 antes de qualquer efeito, e a função do banco da 0406 já recusa o tema). Não passa pela
-pilha de camadas de `lib/branding/resolve.ts`: só a instalação tem símbolo, e o layout raiz o
-lê da linha da marca que já busca. Organização com logo próprio continua com a inicial dela.
+e, desde a `v1.59.0-cvx.1`, o **ícone da aba para o modo escuro**. Os dois moram na rota de logo
+do original, no modelo de peças que ela ganhou na 1.59 (`peca` + `tema`, `lerAlvo`):
 
-No menu: a dica com o nome da porta recomeça fechada a cada troca entre trilho largo e só
-ícones (antes, um hover no trilho largo ficava guardado e todas as portas tocadas abriam
-juntas ao compactar); os itens da sub-sidebar não têm mais dica (e o `descricao` do item
-saiu de `montarMenu`); a dica tem cor neutra e anima entrada e saída em `menu.css`; os
-títulos de seção da sub-sidebar ganharam espaço acima.
+- `peca=simbolo` → `platform_branding.simbolo_path` (migration `9002_simbolo_da_instalacao`); sem
+  versão por tema. Até a `v1.52.0-cvx.1` era `tema=simbolo`.
+- `peca=icone&tema=escuro` → `platform_branding.favicon_dark_path` (migration
+  `9003_icone_da_aba_escuro`). O claro é o `favicon_path` do original (0443).
+
+Só a instalação tem as duas: a organização recebe 422 em `lerAlvo`, antes de qualquer efeito. Em
+`/admin/marca`, o cartão da Convexy "Ícones da marca" (`CartaoDosIcones`), logo depois do cartão do
+logo, junta o campo do ícone da aba do original (`CampoDoIconeDaAba`, trazido do cartão do logo), o
+ícone escuro e o símbolo. Os campos da Convexy não passam pelo `ajustarLogo`, pelo motivo que o
+original documenta no `CampoDoIconeDaAba`. No `<head>`, `iconesDaAba` (`lib/convexy/icones-da-aba.ts`)
+devolve o do original quando não há ícone escuro e, com ele, os dois `<link rel="icon">` com
+`media="(prefers-color-scheme: …)"`. A barra recolhida mostra o símbolo no lugar da inicial;
+organização com logo próprio segue com a inicial dela.
+
+No menu (`v1.52.0-cvx.1`): a dica com o nome da porta recomeça fechada a cada troca entre trilho
+largo e só ícones; os itens da sub-sidebar não têm dica (e o `descricao` do item saiu de
+`montarMenu`); a dica tem cor neutra e anima entrada e saída em `menu.css`; os títulos de seção
+da sub-sidebar ganharam espaço acima.
 
 | Arquivo | Trecho | Reaplicar |
 |---|---|---|
-| `app/api/v1/marca/logo/route.ts` | `"simbolo"` em `temaSchema`; `campoDoLogo` com o ramo `simbolo_path`; `temaSoDaInstalacao` e a recusa 422 logo depois do `const tema` no `POST` e no `DELETE`; `if (tema === "simbolo") return null;` no ramo da organização de `caminhoGravado` (comentários `Convexy`) | reaplicar os quatro pontos; se o original ganhar tema novo, somar ao nosso enum |
-| `lib/branding/instalacao.ts` | `simbolo_path` em `COLUNAS` e no tipo `LinhaDaMarca` | reacrescentar |
+| `app/api/v1/marca/logo/route.ts` | `"simbolo"` em `pecaSchema`; `campoDoLogo` como `function` com os ramos `simbolo_path` e `favicon_dark_path`; em `lerAlvo`, as duas recusas do símbolo (fora da instalação; com `tema=escuro`); no ramo da organização de `caminhoGravado`, `if (campo !== "logo_path" && campo !== "logo_dark_path") return null;` no lugar do `campo === "favicon_path"` (comentários `Convexy`) | reaplicar os quatro pontos; peça nova do original entra no enum antes da nossa |
+| `lib/branding/instalacao.ts` | `favicon_dark_path, simbolo_path` em `COLUNAS`; os dois no tipo `LinhaDaMarca` | reacrescentar |
 | `lib/branding.ts` | `simboloUrl?: string \| null` em `Branding` | reacrescentar |
-| `app/layout.tsx` | import de `logoDaCamada`; `const { linha, marca }` e `simboloUrl: logoDaCamada(linha?.simbolo_path, null)` em `MarcaDosClientComponents` | reaplicar |
+| `app/layout.tsx` | import de `logoDaCamada`; `const { linha, marca }` e `simboloUrl: logoDaCamada(linha?.simbolo_path, null)` em `MarcaDosClientComponents`; `icons: iconesDaAba(linha)` no lugar de `icons: { icon: iconeDaAba(linha?.favicon_path) }` (sai o import de `iconeDaAba`) | reaplicar |
+| `tests/unit/branding-icone-da-aba.test.ts` | a asserção do layout passa a `/icons:\s*iconesDaAba\(/`, com comentário `Convexy` | reaplicar se o original mexer no caso |
 | `components/shell/Sidebar.tsx` | `const simbolo = …` depois de `marcaDoProduto`, e o ternário `simbolo ? <img …> : <span>` no bloco `collapsed && !marcaDoProduto`, dentro de `MarcaDaBarra` | reaplicar junto com "Reaplicar a `MarcaDaBarra`" |
-| `app/admin/(protected)/marca/page.tsx` | import de `logoDaCamada`; prop `simboloEmVigor` | reaplicar |
-| `app/admin/(protected)/marca/_form.tsx` | import de `CampoDoSimbolo`; `simboloEmVigor` nos `Props` e na desestruturação; `<CampoDoSimbolo>` depois do `<CampoDeLogo>`, no mesmo cartão | reaplicar |
-| `supabase/baseline.sql` | bloco `-- ---- símbolo da instalação (migration 9002) ----`, entre a coluna e as funções da 0406 | reaplicar no mesmo lugar |
-| `supabase/migrations/MANIFEST.md` | linha `9002_simbolo_da_instalacao` depois da 9001 | `merge=union`; conferir que ficou uma vez |
-| `CHANGELOG.md` | `## [1.52.0-cvx.1]` | ordem de "Base e versões" |
+| `app/admin/(protected)/marca/page.tsx` | `iconeEscuro` e `simbolo` (via `logoDaCamada`) depois de `iconeDaAba` | reaplicar |
+| `app/admin/(protected)/marca/_form.tsx` | import de `CartaoDosIcones` no lugar do de `CampoDoIconeDaAba`; `iconeEscuro` e `simbolo` nos `Props` e na desestruturação; o `<CampoDoIconeDaAba>` sai do cartão do logo e entra `<CartaoDosIcones>` depois dele | reaplicar; se o original mexer no `CampoDoIconeDaAba`, a mudança chega pelo componente dele |
+| `supabase/baseline.sql` | bloco `-- ---- símbolo da instalação (migration 9002) ----`, entre a coluna e as funções da 0406; bloco `-- ---- ícone da aba escuro (migration 9003) ----`, logo depois do da coluna da 0443 | reaplicar nos mesmos lugares |
+| `supabase/migrations/MANIFEST.md` | linhas `9002_simbolo_da_instalacao` e `9003_icone_da_aba_escuro` depois da 9001 | `merge=union`; conferir que ficaram uma vez |
+| `CHANGELOG.md` | `## [1.52.0-cvx.1]`, `## [1.59.0-cvx.1]` | ordem de "Base e versões" |
+| `tests/unit/evidencia-no-caminho-versionado.test.ts` | três planos do fork (`2026-09-23-convexy-cvx3-…`, `2026-09-24-convexy-logo-escuro`, `2026-09-25-convexy-menu-novo`) na `QUARENTENA`, com comentário `Convexy` — registro histórico, como os do original | reacrescentar no fim do bloco de planos; as specs e2e da Convexy gravam em `evidence/` |
 
-Código só da Convexy: `components/convexy/marca/CampoDoSimbolo.tsx`, os textos `simbolo` em
-`lib/convexy/textos.ts`. Testes: `tests/unit/convexy-simbolo-{rota,na-barra,campo}.test.*`,
-`tests/invariants/convexy-simbolo.test.ts` e o bloco "a dica com o nome da porta" em
+Código só da Convexy: `components/convexy/marca/` (`CartaoDosIcones.tsx`, `CampoDeIconeDaMarca.tsx`),
+`lib/convexy/icones-da-aba.ts`, os textos `icones`, `iconeEscuro` e `simbolo` em
+`lib/convexy/textos.ts`. Testes: `tests/unit/convexy-{icones-rota,cartao-dos-icones,icones-da-aba,simbolo-na-barra}.test.*`,
+`tests/invariants/convexy-marca-da-instalacao.test.ts` e o bloco "a dica com o nome da porta" em
 `tests/unit/convexy-menu-desktop.test.tsx`.
+
+### Conversa selecionada no modo escuro (`v1.59.0-cvx.1`)
+
+O item selecionado da lista de conversas usava `bg-accent-50`, e o bloco escuro do `globals.css`
+mantém a escala do acento igual à do claro: no escuro o item ficava quase branco sob o texto
+claro. Passa a usar `bg-accent-soft`, o token de fundo tingido que o tema escuro redefine (e que
+o CSS da marca gera por tema). Defeito também do original — candidato a PR lá.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `components/inbox/ConversationListItem.tsx` | `isSelected && "bg-accent-soft hover:bg-accent-soft"`, com comentário `Convexy` | reaplicar se o original não corrigir; se corrigir, aceitar o dele |
+
+Teste: `tests/unit/convexy-conversa-selecionada-no-escuro.test.ts` (o token do fundo tem de ser
+redefinido no tema escuro com outro valor).
+
+### Excluir contato (`v1.59.0-cvx.1`)
+
+Defeito do original (1.59 e `main` em 2026-09-28): apagar um contato que já passou por retorno
+automático falhava com 42501. A guarda `fn_followup_generation_write` (gatilho `BEFORE` em
+`job_queue` e `followup_enrollment_events`) recusa escrita de quem está logado sobre os registros
+internos do follow-up, e o DELETE em cascata do contato caía nela. Pior: a rota apagava mensagens e
+conversas em comandos separados ANTES da ficha, então a recusa deixava o histórico já apagado.
+
+Migration `9004_excluir_contato`: `fn_excluir_contato(org, contato)` (`security invoker`, vale a
+RLS de quem chama) apaga mensagens, conversas e a ficha numa transação só; e a guarda ganha, na
+primeira linha, `if tg_op='DELETE' and pg_trigger_depth() > 1 then return old; end if;` — a
+cascata da chave estrangeira roda dentro do gatilho dela (profundidade 2); o DELETE direto de quem
+está logado (profundidade 1) segue recusado. O bloco fica logo antes da varredura de anon (0116), que
+tem de ser o último bloco a criar função; a última definição da função é a que vale, e o invariante
+reprova se um bloco novo do original a redefinir depois.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `app/api/v1/contacts/_handler.ts` | em `deleteContactHandler`, o bloco dos três DELETE (`messages`, `conversations`, `contacts`) vira `supabase.rpc("fn_excluir_contato", …)` com a auditoria `falha_ao_apagar` de `apagados: []`; `return { id: deleted as string }` | reaplicar; se o original tornar a exclusão atômica, aceitar a dele e aposentar a função |
+| `tests/unit/contato-delete.test.ts` | o cliente falso responde `rpc("fn_excluir_contato")` no lugar dos DELETE; o caso "ficha recusada" passa a cobrar `apagados: []` | reaplicar junto com a rota |
+| `supabase/baseline.sql` | bloco `-- ---- excluir contato (migration 9004) ----` logo antes de `-- ---- VARREDURA anon:` | manter antes da varredura e como o ÚLTIMO bloco a definir `fn_followup_generation_write`; se o original redefinir a função, reaplicar a linha da cascata na definição dele |
+| `supabase/migrations/MANIFEST.md` | linha `9004_excluir_contato` depois da 9003 | `merge=union`; conferir que ficou uma vez |
+
+Teste: `tests/invariants/convexy-excluir-contato.test.ts`. Reportado no original: issue #1862.
 
 ## Desvios aceitos
 
@@ -363,9 +415,9 @@ Código só da Convexy: `components/convexy/marca/CampoDoSimbolo.tsx`, os textos
   typecheck/lint pelo `verify`; migration e RLS pelo `invariants` (install e update); a tela
   pelo `e2e` (`convexy-menu.spec.ts`, na parte escolhida pela sonda (a)) e pela conferência na
   VPS. A fase vermelha dos cinco guardas do "Review Focus" do plano foi vista no CI antes de cada
-  implementação. A evidência visual é a captura feita na VPS. As capturas que o e2e grava em
-  `.superpowers/evidence/convexy-menu/` não duram: a pasta é ignorada pelo git e o CI só sobe
-  artefatos quando o e2e falha.
+  implementação. A evidência visual é a captura feita na VPS. As capturas que o e2e grava vão para
+  `evidence/convexy-menu/` (versionado, regra do original desde a 1.59; até a `v1.52.0-cvx.1`
+  iam para uma pasta ignorada pelo git).
 
 ## Afirmações de docs do original que não valem no fork
 
