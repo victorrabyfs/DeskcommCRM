@@ -48,6 +48,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Menu novo da Convexy: portas, sub-sidebar, Início, tipo de negócio por organização (módulo `menu_convexy`; migration 9001) | `v1.48.0-cvx.2` |
 | Atualização para a base 1.52.0 (fontes locais); refino do menu (dica do trilho, seções da sub-sidebar) e símbolo da marca no menu recolhido (migration 9002) | `v1.52.0-cvx.1` |
 | Atualização para a base 1.59.0 (ícone da aba do original); ícone da aba para o modo escuro (migration 9003) e cartão "Ícones da marca" em `/admin/marca` | `v1.59.0-cvx.1` |
+| Prospecção: etiqueta com o nome da campanha nos contatos criados, "Prospecção" no filtro de origem de Contatos e planilha (CSV) dos resultados | `v1.59.0-cvx.2` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -312,6 +313,33 @@ reprova se um bloco novo do original a redefinir depois.
 | `supabase/migrations/MANIFEST.md` | linha `9004_excluir_contato` depois da 9003 | `merge=union`; conferir que ficou uma vez |
 
 Teste: `tests/invariants/convexy-excluir-contato.test.ts`. Reportado no original: issue #1862.
+
+### Prospecção: etiqueta, origem e planilha (`v1.59.0-cvx.2`)
+
+A prospecção guarda as empresas encontradas por campanha, mas não havia como achar nem reaproveitar
+esse público depois. Três ajustes, sem schema novo:
+
+- **Etiqueta:** o contato que a prospecção cria ganha `Prospecção: <nome da campanha>` (no teto de
+  `TAG_MAX`), que serve ao filtro de etiquetas de Contatos e ao público de Campanhas (que filtra por
+  `contacts.tags`).
+- **Origem:** `prospecting` (o `source` que a prospecção grava) entra no filtro de origem de Contatos.
+- **Planilha:** "Baixar planilha (CSV)" em Prospecção › 3. Acompanhar resultados, pela rota da
+  Convexy `GET /api/v1/convexy/prospeccao/[id]/planilha` — admin (a mesma porta da tela), filtrada pela
+  organização da sessão, auditada como `prospecting.exported`. `;` e BOM (Excel em português), célula
+  que começa com `= + - @` neutralizada com apóstrofo (o texto vem do Google Maps), telefone como
+  `(11) 99999-9999`.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `lib/prospecting/store.ts` | import de `etiquetaDaCampanha`; `tags: [etiquetaDaCampanha(c.name)]` no `createContactHandler` de `activateCampaign` | reaplicar |
+| `app/app/contacts/_client.tsx` | `{ value: "prospecting", label: "Prospecção" }` no fim de `SOURCE_OPTIONS` | reaplicar; se o original incluir, apagar a nossa |
+| `app/app/prospecting/_client.tsx` | import de `BotaoDaPlanilha`; o cabeçalho de "3. Acompanhar resultados" vira `flex` com o `<BotaoDaPlanilha>` ao lado | reaplicar |
+| `lib/audit/actions.ts` | `"prospecting.exported"` no fim de `AUDIT_ACTIONS` | manter no fim |
+| `CHANGELOG.md` | `## [1.59.0-cvx.2]` | ordem de "Base e versões" |
+
+Código só da Convexy: `lib/convexy/prospeccao/planilha.ts`, `components/convexy/prospeccao/BotaoDaPlanilha.tsx`,
+`app/api/v1/convexy/prospeccao/[id]/planilha/route.ts`, o texto `prospeccao` em `lib/convexy/textos.ts`.
+Testes: `tests/unit/convexy-prospeccao-planilha{,-rota}.test.ts`.
 
 ## Desvios aceitos
 

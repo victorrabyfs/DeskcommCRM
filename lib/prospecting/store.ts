@@ -24,6 +24,7 @@ import {
   readSearch,
   startSearch,
 } from "./provider";
+import { etiquetaDaCampanha } from "@/lib/convexy/prospeccao/planilha";
 
 export interface Campaign {
   id: string;
@@ -345,6 +346,9 @@ export async function activateCampaign(
           display_name: p.data.name,
           phone_number: p.phone,
           source: "prospecting",
+          // Convexy: etiqueta com o nome da campanha, para achar e reaproveitar o
+          // público (Contatos, Campanhas) — CONVEXY.md, "Prospecção: etiqueta, origem e planilha".
+          tags: [etiquetaDaCampanha(c.name)],
           source_metadata: { campaign_id: id, place_id: p.data.key, maps_url: p.data.maps_url },
           consent: { legitimate_interest: { ref: config.legal_basis_ref } },
         });

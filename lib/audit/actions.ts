@@ -920,6 +920,11 @@ export const AUDIT_ACTIONS = [
   // (PATCH /api/v1/admin/tenants/[id]/nicho), com o antes e o depois no
   // metadata. CONVEXY.md, "Menu novo".
   "tenant.nicho_changed",
+  // Convexy: o admin da organização baixa a planilha de uma campanha de
+  // prospecção (GET /api/v1/convexy/prospeccao/[id]/planilha), com a campanha e
+  // o número de empresas no metadata — dados de terceiros saindo do sistema.
+  // CONVEXY.md, "Prospecção: etiqueta, origem e planilha".
+  "prospecting.exported",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

@@ -40,6 +40,9 @@ const SOURCE_OPTIONS = [
   // porta — e ela estava incompleta desde que a atribuição passou a existir.
   { value: "meta_ads", label: "Anúncio da Meta" },
   { value: "google_ads", label: "Anúncio do Google" },
+  // Convexy: o valor que a prospecção grava (`lib/prospecting/store.ts`) — CONVEXY.md,
+  // "Prospecção: etiqueta, origem e planilha".
+  { value: "prospecting", label: "Prospecção" },
 ];
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;

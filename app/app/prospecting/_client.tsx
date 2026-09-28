@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/client";
+import { BotaoDaPlanilha } from "@/components/convexy/prospeccao/BotaoDaPlanilha";
 import { useT } from "@/hooks/i18n/useT";
 import { safePublicLink, type CampaignConfig, type Prospect } from "@/lib/prospecting/schema";
 import { ProspectingAgentBuilder, type CreatedProspectingAgent } from "./_create-agent";
@@ -766,13 +767,17 @@ export function ProspectingClient() {
                 )}
               {candidates.length > 0 && (
                 <Card className="overflow-hidden">
-                  <div className="border-b p-5">
-                    <h2 className="text-lg font-semibold">{t("3. Acompanhar resultados")}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {t(
-                        "Encontrado é diferente de qualificado. A qualificação depende do que for confirmado na conversa.",
-                      )}
-                    </p>
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b p-5">
+                    <div>
+                      <h2 className="text-lg font-semibold">{t("3. Acompanhar resultados")}</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {t(
+                          "Encontrado é diferente de qualificado. A qualificação depende do que for confirmado na conversa.",
+                        )}
+                      </p>
+                    </div>
+                    {/* Convexy: CONVEXY.md, "Prospecção: etiqueta, origem e planilha". */}
+                    {campaign ? <BotaoDaPlanilha campanhaId={campaign.id} /> : null}
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
