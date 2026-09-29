@@ -17798,6 +17798,28 @@ alter table public.organizations
 
 notify pgrst, 'reload schema';
 
+-- ---- teste da organização (migration 9006) ----
+--
+-- Convexy (fork victorrabyfs/DeskcommCRM) — registro em CONVEXY.md, "Trial
+-- (v1.59.0-cvx.6)". O mesmo SQL está em
+-- supabase/migrations/20260929220000_9006_teste_da_organizacao.sql.
+--
+-- O fim do período de teste da organização. Família da 9001 e da 9005 (coluna
+-- de organizations escrita só pela plataforma), por isso aqui e não no fim.
+-- Idempotente: coluna e índice com `if not exists`.
+
+alter table public.organizations
+  add column if not exists teste_termina_em timestamptz;
+
+comment on column public.organizations.teste_termina_em is
+  'Convexy (migration 9006): fim do período de teste. Nulo = sem teste (empresa contratada ou criada sem teste). O cron /api/v1/cron/convexy-teste suspende a organização quando passa (status suspended, nada é apagado); reativar pelo /admin limpa a coluna. Escrito só pelo admin da plataforma.';
+
+create index if not exists organizations_teste_termina_em_idx
+  on public.organizations (teste_termina_em)
+  where teste_termina_em is not null;
+
+notify pgrst, 'reload schema';
+
 -- ---- elegibilidade da IA por origem do lead (migration 0206) ----
 --
 -- Gate OPT-IN por canal (`channel_sessions.metadata.ai_gate = 'allowlist'`):

@@ -933,6 +933,11 @@ export const AUDIT_ACTIONS = [
   "platform.perfil_de_areas_updated",
   "platform.perfil_de_areas_deleted",
   "tenant.areas_changed",
+  // Convexy: o período de teste — o admin da plataforma define ou estende
+  // (/api/v1/admin/tenants/[id]/teste), e o cron conta quantas suspendeu
+  // (/api/v1/cron/convexy-teste). CONVEXY.md, "Trial".
+  "tenant.teste_alterado",
+  "cron.convexy_teste",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

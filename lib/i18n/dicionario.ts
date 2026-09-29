@@ -11078,6 +11078,11 @@ export const DICIONARIO: Traducoes = {
   "Extensões": { es: "Extensiones" },
   // Convexy: entrada do menu do admin. CONVEXY.md, "Perfis de áreas".
   "Perfis de áreas": { es: "Perfiles de áreas" },
+  // Convexy: porta de envio com a empresa suspensa. CONVEXY.md, "Trial".
+  "A empresa está suspensa: nenhuma mensagem é enviada.": { es: "La empresa está suspendida: no se envía ningún mensaje." },
+  "Se o seu período de teste terminou, seus dados continuam guardados: ao contratar, tudo volta como estava.": {
+    es: "Si su período de prueba terminó, sus datos siguen guardados: al contratar, todo vuelve como estaba.",
+  },
   "Instaladas": { es: "Instaladas" },
   "Orientações instaladas": { es: "Orientaciones instaladas" },
   "Guias adicionados depois da instalação, sem acesso aos dados do CRM.": { es: "Guías agregadas después de la instalación, sin acceso a los datos del CRM." },

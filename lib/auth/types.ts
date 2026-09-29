@@ -158,6 +158,12 @@ export interface ActiveOrg {
   interface_settings?: InterfaceSettings;
   /** Convexy: ver `UserOrgMembership.areas_liberadas`. CONVEXY.md, "Perfis de áreas". */
   areas_liberadas?: readonly string[];
+  /**
+   * Convexy: o período de teste, preenchido pelo layout de `/app` quando a
+   * organização está em teste. `dias` já vem calculado no servidor (a etiqueta do
+   * menu não lê relógio). CONVEXY.md, "Trial".
+   */
+  teste?: { terminaEm: string; terminaEmLegivel: string; dias: number };
   orgId: string;
   /** Fuso IANA da organização — ver `UserOrgMembership.timezone`. */
   timezone?: string | null;

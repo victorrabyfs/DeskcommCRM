@@ -3,6 +3,8 @@ import { TenantOverviewClient } from "./_client";
 import { CampoDoNicho } from "@/components/convexy/CampoDoNicho";
 // Convexy: o pacote de áreas da empresa. CONVEXY.md, "Perfis de áreas".
 import { CartaoDasAreas } from "@/components/convexy/areas/CartaoDasAreas";
+// Convexy: o período de teste. CONVEXY.md, "Trial".
+import { CartaoDoTeste } from "@/components/convexy/teste/CartaoDoTeste";
 import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
 import { moduloLigado } from "@/lib/instalacao/modulos";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -21,6 +23,7 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
       <TenantOverviewClient id={id} />
       {menuConvexy ? <CampoDoNicho organizationId={id} /> : null}
       <CartaoDasAreas organizationId={id} />
+      <CartaoDoTeste organizationId={id} />
     </>
   );
 }
