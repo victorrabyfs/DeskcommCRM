@@ -2,6 +2,7 @@ import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
 import { HREF_DO_INICIO } from "@/lib/convexy/menu/mapa";
 import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
 import { modulosLigados } from "@/lib/instalacao/modulos";
+import { nichoDaOrganizacao } from "@/lib/convexy/nicho-da-organizacao";
 import { searchable } from "@/lib/navigation/registry";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -15,7 +16,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function destinosDoInicio(user: AuthUser, org: ActiveOrg): Promise<readonly string[] | null> {
   const modulos = await modulosLigados(createAdminClient());
   if (!modulos.includes(MODULO_DO_MENU)) return null;
-  const hrefs = searchable(user.is_platform_admin && !user.support, org.role, org.interface_settings, modulos).map(
+  // O nicho esconde telas (e com elas os blocos). CONVEXY.md, "Telas escondidas do menu".
+  const nicho = await nichoDaOrganizacao(org.orgId);
+  const hrefs = searchable(user.is_platform_admin && !user.support, org.role, org.interface_settings, modulos, nicho).map(
     (d) => d.href,
   );
   return hrefs.includes(HREF_DO_INICIO) ? hrefs : null;

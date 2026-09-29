@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0-cvx.3] — 2026-09-29
+
+Menu mais enxuto: Comandas, Financeiro, Faturamento, Produtos, Nuvemshop, Dados externos e Extensões saem do menu, dos hubs e da busca em todas as organizações. Nas organizações do tipo clínica, Chamadas, Trunk SIP e Prospecção também saem. As telas continuam existindo: quem abrir o endereço direto ainda chega a elas. Não é preciso fazer nada na instalação.
+
 ## [1.59.0-cvx.2] — 2026-09-28
 
 Prospecção mais fácil de reaproveitar: os contatos criados por uma campanha ganham a etiqueta "Prospecção: <nome da campanha>", Contatos passa a filtrar pela origem "Prospecção", e os resultados de cada campanha podem ser baixados em planilha (Prospecção › Acompanhar resultados › Baixar planilha).

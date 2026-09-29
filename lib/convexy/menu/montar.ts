@@ -113,6 +113,8 @@ interface ContextoDoHub {
   readonly role: Role | null;
   readonly interfaceSettings?: InterfaceSettings;
   readonly modulosLigados: readonly ModuloOpcional[];
+  /** Telas escondidas pelo nicho. CONVEXY.md, "Telas escondidas do menu". */
+  readonly nicho?: Nicho | null;
 }
 
 /**
@@ -129,6 +131,7 @@ export function destinoDoHub(grupo: NavGroupId, contexto: ContextoDoHub): string
     contexto.role,
     contexto.interfaceSettings,
     contexto.modulosLigados,
+    contexto.nicho,
   );
   const porta = organizarPorPortas(visiveis).find((p) => p.porta.id === portaId);
   return porta?.grupos.flatMap((g) => g.itens)[0]?.href ?? null;

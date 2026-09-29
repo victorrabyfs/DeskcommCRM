@@ -26,7 +26,9 @@ describe("com o módulo ligado, o hub vai à porta dele", () => {
     ["analise", "admin", "/app/metrics"],
     ["organizacao", "admin", "/app/connections"],
     ["ia", "agent", "/app/ai/inbox"],
-    ["organizacao", "agent", "/app/extensions"],
+    // Extensões saiu do menu (CONVEXY.md, "Telas escondidas do menu"): a primeira
+    // tela visível ao agente em Configurações passa a ser Equipe.
+    ["organizacao", "agent", "/app/team"],
   ] as Array<[NavGroupId, Role, string]>)("hub %s, como %s, vai a %s", (group, role, destino) => {
     expect(() => NavHub({ ...BASE, group, role, modulosLigados: [MODULO_DO_MENU] })).toThrow(
       `NEXT_REDIRECT:${destino}`,
@@ -38,10 +40,10 @@ describe("com o módulo ligado, o hub vai à porta dele", () => {
       destinoDoHub("crm", {
         isPlatformAdmin: false,
         role: "admin",
-        interfaceSettings: { preset: "completa", destinos: ["/app/products"] },
+        interfaceSettings: { preset: "completa", destinos: ["/app/prospecting"] },
         modulosLigados: [MODULO_DO_MENU],
       }),
-    ).toBe("/app/products");
+    ).toBe("/app/prospecting");
   });
 
   it("porta sem tela visível não redireciona — o hub do original é desenhado", () => {

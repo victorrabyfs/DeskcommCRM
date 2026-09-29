@@ -53,6 +53,7 @@ import {
 import type { ModuloOpcional } from "@/lib/instalacao/modulos";
 
 import { destinosDaInterface, type InterfaceSettings } from "./interface";
+import type { Nicho } from "@/lib/convexy/nicho";
 export { NAV_GROUPS, GRUPO_NO_RODAPE } from "./catalogo";
 export type { NavGroup, NavGroupId } from "./catalogo";
 const ICONS = {
@@ -118,9 +119,11 @@ export function sidebarGroups(
   role: Role | null,
   settings?: InterfaceSettings,
   modulos?: readonly ModuloOpcional[],
+  // Convexy: o nicho decide telas escondidas. CONVEXY.md, "Telas escondidas do menu".
+  nicho?: Nicho | null,
 ): Array<{ group: NavGroup; items: NavDestination[] }> {
   const visible = new Set<string>(
-    destinosDaInterface(settings, isPlatformAdmin, role, modulos).map((d) => d.href),
+    destinosDaInterface(settings, isPlatformAdmin, role, modulos, nicho).map((d) => d.href),
   );
   return NAV_GROUPS.map((group) => ({
     group,
@@ -147,10 +150,12 @@ export function hubSections(
   role: Role | null,
   settings?: InterfaceSettings,
   modulos?: readonly ModuloOpcional[],
+  // Convexy: o nicho decide telas escondidas. CONVEXY.md, "Telas escondidas do menu".
+  nicho?: Nicho | null,
 ): Array<{ section: string; items: NavDestination[] }> {
   const porSecao = new Map<string, NavDestination[]>();
   const visible = new Set<string>(
-    destinosDaInterface(settings, isPlatformAdmin, role, modulos).map((d) => d.href),
+    destinosDaInterface(settings, isPlatformAdmin, role, modulos, nicho).map((d) => d.href),
   );
   for (const d of NAV_DESTINATIONS) {
     if (d.group !== group || !visible.has(d.href)) continue;
@@ -168,9 +173,11 @@ export function searchable(
   role: Role | null,
   settings?: InterfaceSettings,
   modulos?: readonly ModuloOpcional[],
+  // Convexy: o nicho decide telas escondidas. CONVEXY.md, "Telas escondidas do menu".
+  nicho?: Nicho | null,
 ): NavDestination[] {
   const visible = new Set<string>(
-    destinosDaInterface(settings, isPlatformAdmin, role, modulos).map((d) => d.href),
+    destinosDaInterface(settings, isPlatformAdmin, role, modulos, nicho).map((d) => d.href),
   );
   return NAV_DESTINATIONS.filter((d) => visible.has(d.href));
 }

@@ -1,4 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Convexy: este arquivo mede a navegação do ORIGINAL, com o catálogo inteiro. As
+// telas que a Convexy esconde são medidas em tests/unit/convexy-telas-escondidas.test.ts.
+// CONVEXY.md, "Telas escondidas do menu".
+vi.mock("@/lib/convexy/telas-escondidas", () => ({
+  ESCONDIDAS_PARA_TODOS: [],
+  ESCONDIDAS_NA_CLINICA: [],
+  escondidaPelaConvexy: () => false,
+}));
 
 import {
   NAV_DESTINATIONS,

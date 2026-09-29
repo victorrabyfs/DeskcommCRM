@@ -38,6 +38,14 @@ vi.mock("@/components/connections/ConnectionHealthDot", () => ({
 }));
 vi.mock("@/components/convexy/menu/useOrientacoes", () => ({ useOrientacoes: () => estado.orientacoes }));
 vi.mock("@/components/convexy/menu/useLarguraLarga", () => ({ useLarguraLarga: () => estado.larga }));
+// Convexy: estes casos medem a MECÂNICA do menu com o mapa inteiro. Quais telas a
+// Convexy esconde é medido em tests/unit/convexy-telas-escondidas.test.ts.
+// CONVEXY.md, "Telas escondidas do menu".
+vi.mock("@/lib/convexy/telas-escondidas", () => ({
+  ESCONDIDAS_PARA_TODOS: [],
+  ESCONDIDAS_NA_CLINICA: [],
+  escondidaPelaConvexy: () => false,
+}));
 
 import { MenuConvexy } from "@/components/convexy/menu/MenuConvexy";
 import { ConvexyProvider } from "@/lib/convexy/contexto";

@@ -26,7 +26,7 @@ export function useMenuConvexy(): readonly PortaDoMenu[] {
   return useMemo(
     () =>
       montarMenu({
-        visiveis: searchable(plataforma, role, interfaceSettings, modulos ?? []),
+        visiveis: searchable(plataforma, role, interfaceSettings, modulos ?? [], nicho),
         atualizacao: plataforma,
         nicho,
         idioma,

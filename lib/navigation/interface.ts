@@ -3,6 +3,9 @@ import { z } from "zod";
 import { ROLE_RANK, type Role } from "@/lib/auth/types";
 import type { ModuloOpcional } from "@/lib/instalacao/modulos";
 import { NAV_CATALOG, type NavMetadata, type NavDestinationId } from "./catalogo";
+// Convexy: telas escondidas do menu. CONVEXY.md, "Telas escondidas do menu".
+import type { Nicho } from "@/lib/convexy/nicho";
+import { escondidaPelaConvexy } from "@/lib/convexy/telas-escondidas";
 
 const ids = NAV_CATALOG.map((d) => d.href);
 export const interfaceSettingsSchema = z
@@ -76,9 +79,14 @@ export function permitidos(
   platform: boolean,
   role: Role | null,
   modulos?: readonly ModuloOpcional[],
+  nicho?: Nicho | null,
 ): NavMetadata[] {
   return (NAV_CATALOG as readonly NavMetadata[]).filter(
-    (d) => canSee(d, platform, role) && (!modulos || !d.modulo || modulos.includes(d.modulo)),
+    (d) =>
+      canSee(d, platform, role) &&
+      (!modulos || !d.modulo || modulos.includes(d.modulo)) &&
+      // Convexy: vale para o admin da plataforma também. CONVEXY.md, "Telas escondidas do menu".
+      !escondidaPelaConvexy(d.href, nicho),
   );
 }
 /** Leitura tolera versões antigas/removidas sem lançar no layout. */
@@ -107,9 +115,10 @@ export function destinosDaInterface(
   platform: boolean,
   role: Role | null,
   modulos?: readonly ModuloOpcional[],
+  nicho?: Nicho | null,
 ): NavMetadata[] {
   const { settings } = lerInterface(raw);
-  const allowed = permitidos(platform, role, modulos);
+  const allowed = permitidos(platform, role, modulos, nicho);
   const chosen =
     settings.destinos ?? (settings.preset === "simplificada" ? SIMPLIFICADA : undefined);
   return allowed.filter(

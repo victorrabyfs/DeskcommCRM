@@ -6,6 +6,8 @@ import { logger } from "@/lib/logger";
 import type { ExtensionGuideView } from "@/lib/extensions/view";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { modulosLigados } from "@/lib/instalacao/modulos";
+// Convexy: CONVEXY.md, "Telas escondidas do menu".
+import { nichoDaOrganizacao } from "@/lib/convexy/nicho-da-organizacao";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +59,7 @@ export default async function CrmHubPage() {
       role={activeOrg?.role ?? null}
       interfaceSettings={activeOrg?.interface_settings}
       modulosLigados={await modulosLigados(createAdminClient())}
+      nicho={await nichoDaOrganizacao(activeOrg?.orgId)}
       title={traduzir("CRM", idioma)}
       subtitle={traduzir(
         "Onde a venda acontece — e o que você define uma vez para ela funcionar.",

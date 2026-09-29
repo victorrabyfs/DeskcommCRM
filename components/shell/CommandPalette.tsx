@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/auth/AuthProvider";
+// Convexy: CONVEXY.md, "Telas escondidas do menu".
+import { useConvexy } from "@/lib/convexy/contexto";
 import { useT } from "@/hooks/i18n/useT";
 import { MagnifyingGlass } from "@/lib/ui/icons";
 import { NAV_GROUPS, searchable, type NavDestination, type NavGroupId } from "@/lib/navigation/registry";
@@ -52,6 +54,7 @@ function Resultados({ aoEscolher }: { aoEscolher: () => void }) {
   const t = useT();
   const router = useRouter();
   const { user, activeOrg } = useAuth();
+  const convexy = useConvexy();
   const [busca, setBusca] = useState("");
   const [destacado, setDestacado] = useState(0);
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>("todos");
@@ -63,8 +66,11 @@ function Resultados({ aoEscolher }: { aoEscolher: () => void }) {
         activeOrg?.role ?? null,
         activeOrg?.interface_settings,
         activeOrg?.modulos_ligados ?? [],
+        // Convexy: telas escondidas pelo nicho. CONVEXY.md, "Telas escondidas do menu".
+        convexy?.nicho,
       ),
     [
+      convexy?.nicho,
       user.is_platform_admin,
       user.support,
       activeOrg?.role,

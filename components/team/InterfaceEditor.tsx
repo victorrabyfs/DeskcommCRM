@@ -29,14 +29,15 @@ export function InterfaceEditor({
 }) {
   const t = useT();
   const id = useId();
-  const selected = new Set<string>(
-    value.destinos ?? destinosDaInterface(value, false, role).map((d) => d.href),
-  );
   const convexy = useConvexy(); // Convexy: CONVEXY.md, "Menu novo".
+  // Convexy: tela escondida pelo nicho não é opção. CONVEXY.md, "Telas escondidas do menu".
+  const selected = new Set<string>(
+    value.destinos ?? destinosDaInterface(value, false, role, undefined, convexy?.nicho).map((d) => d.href),
+  );
   // Convexy: com o módulo desligado o Início não é opção — só continua se já estava
   // escolhido. Como toda gravação passa por `options`, nem o `selected` padrão (que
   // o traz no preset) o injeta. CONVEXY.md, "Menu novo".
-  const options = permitidos(false, role).filter(
+  const options = permitidos(false, role, undefined, convexy?.nicho).filter(
     (d) =>
       !essencial(d, role) &&
       (convexy?.menuLigado || d.modulo !== MODULO_DO_MENU || value.destinos?.includes(d.href as NavDestinationId)),

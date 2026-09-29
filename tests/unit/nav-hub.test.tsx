@@ -5,7 +5,16 @@
  *
  * A permissão é do registro (`navegacao-registry.test.ts`); aqui é o desenho.
  */
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// Convexy: este arquivo mede a navegação do ORIGINAL, com o catálogo inteiro. As
+// telas que a Convexy esconde são medidas em tests/unit/convexy-telas-escondidas.test.ts.
+// CONVEXY.md, "Telas escondidas do menu".
+vi.mock("@/lib/convexy/telas-escondidas", () => ({
+  ESCONDIDAS_PARA_TODOS: [],
+  ESCONDIDAS_NA_CLINICA: [],
+  escondidaPelaConvexy: () => false,
+}));
 import { cleanup, render, screen, within } from "@testing-library/react";
 
 import { NavHub } from "@/components/shell/NavHub";

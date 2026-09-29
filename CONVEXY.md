@@ -49,6 +49,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Atualização para a base 1.52.0 (fontes locais); refino do menu (dica do trilho, seções da sub-sidebar) e símbolo da marca no menu recolhido (migration 9002) | `v1.52.0-cvx.1` |
 | Atualização para a base 1.59.0 (ícone da aba do original); ícone da aba para o modo escuro (migration 9003) e cartão "Ícones da marca" em `/admin/marca` | `v1.59.0-cvx.1` |
 | Prospecção: etiqueta com o nome da campanha nos contatos criados, "Prospecção" no filtro de origem de Contatos e planilha (CSV) dos resultados | `v1.59.0-cvx.2` |
+| Telas escondidas do menu: módulos que a Convexy não usa saem para todos; voz e prospecção saem na clínica | `v1.59.0-cvx.3` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -340,6 +341,47 @@ esse público depois. Três ajustes, sem schema novo:
 Código só da Convexy: `lib/convexy/prospeccao/planilha.ts`, `components/convexy/prospeccao/BotaoDaPlanilha.tsx`,
 `app/api/v1/convexy/prospeccao/[id]/planilha/route.ts`, o texto `prospeccao` em `lib/convexy/textos.ts`.
 Testes: `tests/unit/convexy-prospeccao-planilha{,-rota}.test.ts`.
+
+### Telas escondidas do menu (`v1.59.0-cvx.3`)
+
+Roteiro da plataforma nova, item 1 (decisão de 28/09/2026). A tela sai da barra lateral, do menu da
+Convexy, dos hubs, da busca ⌘K, do Início e do editor de interface — **para todo papel, admin da
+plataforma inclusive**, e com o menu da Convexy ligado ou não. A rota, a página e o código ficam
+intactos: quem digita o endereço abre a tela. Nada é apagado, para o merge com o original seguir simples.
+
+- **Para todas as organizações:** Comandas, Financeiro, Faturamento, Produtos, Nuvemshop, Dados
+  externos e Extensões. O canal Datafy não é tela do menu: é aba de Conexões e só existe com
+  `DATAFY_ENABLED=true`.
+- **As "Orientações instaladas" ficam como estão** (menu da Convexy e hub do CRM): só aparecem com
+  extensão instalada, e esconder o grupo quebraria `extensoes-declarativas` e
+  `extensoes-portas-novas` do original. O aviso de leitura falha ainda leva a `/app/extensions`,
+  que abre (a rota não foi tocada).
+- **Só no nicho `clinica`:** Chamadas, Trunk SIP e Prospecção. Decide o nicho, que só o admin da
+  plataforma altera (`/admin/tenants/[id]`), e não a interface da organização, que o admin da
+  clínica edita e poderia religar. Organização sem nicho vale como genérico e vê as três.
+- Na clínica, a porta Pacientes do menu da Convexy fica só com Contatos e vira link direto.
+
+A lista mora em `lib/convexy/telas-escondidas.ts`; quem aplica é `permitidos()`, de onde todas as
+projeções do menu partem. O nicho chega pelo `ConvexyProvider` (cliente) e por
+`lib/convexy/nicho-da-organizacao.ts` (hubs e Início, no servidor).
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `lib/navigation/interface.ts` | imports de `Nicho` e `escondidaPelaConvexy`; parâmetro `nicho` em `permitidos` (filtro `!escondidaPelaConvexy`) e em `destinosDaInterface` | reaplicar |
+| `lib/navigation/registry.ts` | import de `Nicho`; parâmetro `nicho` em `sidebarGroups`, `hubSections` e `searchable`, repassado a `destinosDaInterface` | reaplicar |
+| `components/shell/Sidebar.tsx`, `components/shell/CommandPalette.tsx` | `useConvexy()` e `convexy?.nicho` como último argumento | reaplicar |
+| `components/shell/NavHub.tsx` | prop `nicho` (repassada a `destinoDoHub` e `hubSections`) | reaplicar |
+| `app/app/{crm,ai,analise,settings}/page.tsx` | `nicho={await nichoDaOrganizacao(activeOrg?.orgId)}` no `NavHub` | reaplicar |
+| `components/team/InterfaceEditor.tsx` | `convexy?.nicho` em `destinosDaInterface` e `permitidos` | reaplicar |
+| `tests/unit/nav-hub.test.tsx`, `tests/unit/navegacao-registry.test.ts` | `vi.mock` de `telas-escondidas` que desliga o filtro (medem o catálogo do original) | reaplicar |
+| `tests/e2e/navegacao.spec.ts`, `tests/e2e/interface-por-vinculo.spec.ts` | Produtos trocado por Campanhas (outra tela de CRM só do hub) | reaplicar; se o original mudar o caso, refazer a troca |
+| `CHANGELOG.md` | `## [1.59.0-cvx.3]` | ordem de "Base e versões" |
+
+Código só da Convexy: `lib/convexy/telas-escondidas.ts`, `lib/convexy/nicho-da-organizacao.ts`, o
+nicho em `components/convexy/menu/useMenuConvexy.ts`,
+`lib/convexy/menu/montar.ts` e `app/app/_convexy/inicio/visibilidade.ts`. Testes:
+`tests/unit/convexy-telas-escondidas.test.ts`, os ajustes em `tests/unit/convexy-menu-{desktop,hubs}`
+e `tests/e2e/convexy-menu.spec.ts` (a mecânica da sub-sidebar passou da porta Pacientes para a Agenda).
 
 ## Desvios aceitos
 
