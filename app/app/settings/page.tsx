@@ -3,6 +3,8 @@ import { NavHub } from "@/components/shell/NavHub";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { modulosLigados } from "@/lib/instalacao/modulos";
+// Convexy: CONVEXY.md, "Telas escondidas do menu".
+import { nichoDaOrganizacao } from "@/lib/convexy/nicho-da-organizacao";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +40,7 @@ export default async function SettingsHubPage() {
       interfaceSettings={activeOrg?.interface_settings}
       // A porta do banco externo mora neste hub, e só existe com o módulo ligado.
       modulosLigados={await modulosLigados(createAdminClient())}
+      nicho={await nichoDaOrganizacao(activeOrg?.orgId)}
       title={traduzir("Configurações", idioma)}
       subtitle={traduzir("Sua conta, os dados da empresa e quem tem acesso ao quê.", idioma)}
       locale={idioma}

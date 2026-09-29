@@ -4,6 +4,7 @@ import Link from "next/link";
 // Convexy: com o menu da Convexy ligado, o hub vira a porta — CONVEXY.md, "Menu novo".
 import { redirect } from "next/navigation";
 import { destinoDoHub } from "@/lib/convexy/menu/montar";
+import type { Nicho } from "@/lib/convexy/nicho";
 
 import { Card } from "@/components/ui/card";
 import type { Role } from "@/lib/auth/types";
@@ -31,6 +32,8 @@ interface NavHubProps {
   subtitle: string;
   extensionGuides?: ExtensionGuideView[];
   extensionsUnavailable?: boolean;
+  /** Convexy: telas escondidas pelo nicho. CONVEXY.md, "Telas escondidas do menu". */
+  nicho?: Nicho | null;
   /**
    * Idioma da interface. `traduzir` é pura — roda em Server Component sem
    * provider. O default mantém os demais hubs (ex.: /app/ai) como estão até
@@ -83,13 +86,14 @@ export function NavHub({
   locale = IDIOMA_PADRAO,
   extensionGuides = [],
   extensionsUnavailable = false,
+  nicho,
 }: NavHubProps) {
   // Convexy: com o módulo menu_convexy ligado o hub não é tela — vai à primeira
   // tela visível da porta dele (link antigo e favorito continuam valendo).
   // CONVEXY.md, "Menu novo".
-  const destinoConvexy = destinoDoHub(group, { isPlatformAdmin, role, interfaceSettings, modulosLigados });
+  const destinoConvexy = destinoDoHub(group, { isPlatformAdmin, role, interfaceSettings, modulosLigados, nicho });
   if (destinoConvexy) redirect(destinoConvexy);
-  const secoes = hubSections(group, isPlatformAdmin, role, interfaceSettings, modulosLigados);
+  const secoes = hubSections(group, isPlatformAdmin, role, interfaceSettings, modulosLigados, nicho);
 
   return (
     <div className="flex h-full flex-col gap-8 p-6">

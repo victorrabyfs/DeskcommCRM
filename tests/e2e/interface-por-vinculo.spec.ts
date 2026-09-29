@@ -117,15 +117,17 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
     await member.goto("/app/radar");
     await expect(member.getByRole("heading", { name: /Radar/ }).first()).toBeVisible();
     await member.goto("/app/settings/profile");
-    await customize(page, emails[1]!, "Produtos");
+    // Convexy: era Produtos, que a Convexy tira do menu inteiro. Campanhas é outra
+    // tela de CRM só do hub. CONVEXY.md, "Telas escondidas do menu".
+    await customize(page, emails[1]!, "Campanhas");
     await expect(nav(member).getByRole("link", { name: "Inbox", exact: true })).toHaveCount(0);
     await member.goto("/app");
-    await member.waitForURL("**/app/products");
+    await member.waitForURL("**/app/campaigns");
     await nav(member).getByRole("link", { name: "Ver tudo em CRM" }).click();
-    await expect(member.getByRole("link", { name: /Produtos/ }).last()).toBeVisible();
+    await expect(member.getByRole("link", { name: /Campanhas/ }).last()).toBeVisible();
     await expect(member.getByRole("link", { name: /Contatos/ })).toHaveCount(0);
     await member.keyboard.press("ControlOrMeta+k");
-    await expect(member.getByRole("option").filter({ hasText: "Produtos" })).toBeVisible();
+    await expect(member.getByRole("option").filter({ hasText: "Campanhas" })).toBeVisible();
     await expect(member.getByRole("option").filter({ hasText: "Inbox" })).toHaveCount(0);
     await member.keyboard.press("Escape");
     mkdirSync(evidence, { recursive: true });
@@ -171,12 +173,12 @@ test("interface por membro atualiza ao vivo, preserva formulário e convite apli
       destinos: ["/app/tasks"],
     });
     await page.goto("/app/team");
-    await customize(page, emails[3]!, "Produtos");
+    await customize(page, emails[3]!, "Campanhas");
     await guest.goto(link);
     await guest.getByRole("button", { name: /aceitar/i }).click();
-    await guest.waitForURL("**/app/products");
+    await guest.waitForURL("**/app/campaigns");
     // A coluna também descreve a seleção para quem só pode consultar a equipe.
-    await customize(page, emails[2]!, "Produtos");
+    await customize(page, emails[2]!, "Campanhas");
     await page.getByRole("combobox", { name: `Papel de ${emails[2]}` }).click();
     await page.getByRole("option", { name: "manager", exact: true }).click();
     await expect(page.getByText("Papel atualizado.", { exact: true })).toBeVisible();

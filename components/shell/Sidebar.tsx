@@ -7,6 +7,8 @@ import { ArrowRight, CaretDoubleLeft, CaretDoubleRight, CaretDown, Gear } from "
 import { cn } from "@/lib/utils";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { useAuth } from "@/hooks/auth/AuthProvider";
+// Convexy: CONVEXY.md, "Telas escondidas do menu".
+import { useConvexy } from "@/lib/convexy/contexto";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
 import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
@@ -41,11 +43,14 @@ export function SidebarContent({
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const { user, activeOrg } = useAuth();
+  const convexy = useConvexy();
   const todos = sidebarGroups(
     user.is_platform_admin && !user.support,
     activeOrg?.role ?? null,
     activeOrg?.interface_settings,
     activeOrg?.modulos_ligados ?? [],
+    // Convexy: telas escondidas pelo nicho. CONVEXY.md, "Telas escondidas do menu".
+    convexy?.nicho,
   );
   // Configurações sai da área que rola e vai para o rodapé fixo: medido em
   // 1280x768, ele caía fora da dobra mesmo em telas de 1080px.

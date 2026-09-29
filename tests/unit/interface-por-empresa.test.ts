@@ -17,7 +17,16 @@
  * de MÓDULO (a projeção que o menu consome), não de tela: o instrumento de tela
  * é `tests/e2e/navegacao.spec.ts:222`, que segue intacto.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Convexy: este arquivo mede a navegação do ORIGINAL, com o catálogo inteiro. As
+// telas que a Convexy esconde são medidas em tests/unit/convexy-telas-escondidas.test.ts.
+// CONVEXY.md, "Telas escondidas do menu".
+vi.mock("@/lib/convexy/telas-escondidas", () => ({
+  ESCONDIDAS_PARA_TODOS: [],
+  ESCONDIDAS_NA_CLINICA: [],
+  escondidaPelaConvexy: () => false,
+}));
 
 import { NAV_CATALOG } from "@/lib/navigation/catalogo";
 import {

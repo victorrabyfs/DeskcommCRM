@@ -7,6 +7,7 @@ import { NAV_GROUPS, type NavDestinationId } from "@/lib/navigation/catalogo";
 import { InterfacePorPortas } from "@/components/convexy/InterfacePorPortas";
 import { useConvexy } from "@/lib/convexy/contexto";
 import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
+import { escondidaPelaConvexy } from "@/lib/convexy/telas-escondidas";
 import {
   destinosDaInterface,
   essencial,
@@ -33,10 +34,23 @@ export function InterfaceEditor({
     value.destinos ?? destinosDaInterface(value, false, role).map((d) => d.href),
   );
   const convexy = useConvexy(); // Convexy: CONVEXY.md, "Menu novo".
+  // Convexy: tela escondida pelo NICHO não é opção, mas a escolha já feita sobre ela
+  // segue gravada — trocar o nicho depois a traz de volta. Toda gravação parte de
+  // `options`, então sem isto salvar na clínica apagava Chamadas e Prospecção da
+  // interface. CONVEXY.md, "Telas escondidas do menu".
+  const guardadas = [...selected].filter(
+    (href) => escondidaPelaConvexy(href, convexy?.nicho) && !escondidaPelaConvexy(href),
+  ) as NavDestinationId[];
+  const mudar = (proximo: InterfaceSettings) =>
+    onChange(
+      proximo.destinos && guardadas.length > 0
+        ? { ...proximo, destinos: [...proximo.destinos, ...guardadas.filter((h) => !proximo.destinos!.includes(h))] }
+        : proximo,
+    );
   // Convexy: com o módulo desligado o Início não é opção — só continua se já estava
   // escolhido. Como toda gravação passa por `options`, nem o `selected` padrão (que
   // o traz no preset) o injeta. CONVEXY.md, "Menu novo".
-  const options = permitidos(false, role).filter(
+  const options = permitidos(false, role, undefined, convexy?.nicho).filter(
     (d) =>
       !essencial(d, role) &&
       (convexy?.menuLigado || d.modulo !== MODULO_DO_MENU || value.destinos?.includes(d.href as NavDestinationId)),
@@ -73,7 +87,7 @@ export function InterfaceEditor({
               opcoes={options}
               valor={value}
               selecionados={selected}
-              aoMudar={onChange}
+              aoMudar={mudar}
               nicho={convexy.nicho}
             />
           )}
@@ -98,7 +112,7 @@ export function InterfaceEditor({
                         );
                         if (e.target.checked) next.add(d.href);
                         else next.delete(d.href);
-                        onChange({
+                        mudar({
                           preset: value.preset,
                           destinos: [...next] as NavDestinationId[],
                         });

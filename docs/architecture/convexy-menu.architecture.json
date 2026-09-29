@@ -22,6 +22,7 @@
     { "id": "auditoria", "lane": "db", "col": 2, "type": "database", "label": "api_audit_log tenant.nicho_changed · platform.modulo_updated" },
     { "id": "provider", "lane": "app", "col": 2, "type": "service", "label": "app/app/layout → ConvexyProvider" },
     { "id": "catalogo", "lane": "app", "col": 3, "type": "service", "label": "NAV_CATALOG → searchable()" },
+    { "id": "escondidas", "lane": "app", "col": 3, "type": "service", "label": "telas-escondidas.ts → permitidos() (todos + nicho clinica)" },
     { "id": "mapa", "lane": "app", "col": 4, "type": "service", "label": "mapa.ts → dono.ts → montar.ts" },
     { "id": "menu", "lane": "humano", "col": 5, "type": "ui", "label": "Trilho, sub-sidebar e gaveta" },
     { "id": "vocabulario", "lane": "app", "col": 5, "type": "service", "label": "useT da Convexy (títulos por nicho)" },
@@ -29,7 +30,8 @@
     { "id": "hubs", "lane": "app", "col": 5, "type": "service", "label": "NavHub → primeira tela da porta" },
     { "id": "orientacoes", "lane": "app", "col": 6, "type": "service", "label": "GET convexy/orientacoes → loadCrmExtensions" },
     { "id": "inicio", "lane": "humano", "col": 6, "type": "ui", "label": "Início: fila, agenda e tarefas do dia" },
-    { "id": "gate", "lane": "ci", "col": 4, "type": "service", "label": "convexy-menu-mapa: group novo reprova, telas novas listadas" }
+    { "id": "gate", "lane": "ci", "col": 4, "type": "service", "label": "convexy-menu-mapa: group novo reprova, telas novas listadas" },
+    { "id": "gateescondidas", "lane": "ci", "col": 3, "type": "service", "label": "convexy-telas-escondidas: toda tela da lista existe no catálogo" }
   ],
   "edges": [
     { "id": "e1", "from": "admin", "to": "modulo", "label": "liga/desliga o menu" },
@@ -53,6 +55,9 @@
     { "id": "e19", "from": "catalogo", "to": "inicio", "label": "Início visível em searchable()" },
     { "id": "e20", "from": "mapa", "to": "inicio", "label": "porta Início" },
     { "id": "e21", "from": "gate", "to": "mapa", "label": "laço de retorno do merge do original" },
-    { "id": "e22", "from": "catalogo", "to": "gate", "label": "cobertura do catálogo" }
+    { "id": "e22", "from": "catalogo", "to": "gate", "label": "cobertura do catálogo" },
+    { "id": "e23", "from": "escondidas", "to": "catalogo", "label": "tira as telas antes de toda projeção" },
+    { "id": "e24", "from": "nicho", "to": "escondidas", "label": "clinica esconde voz e prospecção" },
+    { "id": "e25", "from": "gateescondidas", "to": "escondidas", "label": "href errado ou tela que volta reprova" }
   ]
 }

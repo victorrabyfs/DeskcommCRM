@@ -144,3 +144,26 @@ describe("o dado gravado é o mesmo nos dois modos", () => {
     expect(hrefs).not.toContain("/app/inbox");
   });
 });
+
+// Convexy: CONVEXY.md, "Telas escondidas do menu".
+describe("telas escondidas pelo nicho", () => {
+  it("na clínica, Chamadas e Prospecção não são opção — nem Produtos, em nicho nenhum", () => {
+    desenhar({ preset: "completa" }, { menuLigado: true, nicho: "clinica" });
+    for (const nome of ["Chamadas", "Prospecção", "Trunk SIP", "Produtos", "Extensões"]) {
+      expect(screen.queryByRole("checkbox", { name: nome })).toBeNull();
+    }
+    cleanup();
+    desenhar({ preset: "completa" }, { menuLigado: false, nicho: "servicos" });
+    expect(screen.getByRole("checkbox", { name: "Prospecção" })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Produtos" })).toBeNull();
+  });
+
+  it("salvar na clínica não apaga a escolha sobre elas — trocar o nicho depois as traz de volta", () => {
+    const onChange = desenhar({ preset: "completa" }, { menuLigado: true, nicho: "clinica" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Tags" }));
+    const destinos = ultimo(onChange).destinos ?? [];
+    expect(destinos).not.toContain("/app/settings/tags");
+    expect(destinos).toEqual(expect.arrayContaining(["/app/prospecting", "/app/calls", "/app/settings/voip-trunk"]));
+    expect(destinos).not.toContain("/app/products");
+  });
+});

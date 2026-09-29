@@ -133,18 +133,20 @@ test.describe("navegação agrupada", () => {
     await expect(page.getByRole("heading", { name: "Etapas do funil", level: 1 })).toBeVisible();
   });
 
-  test("e Produtos, que saiu do menu, continua alcançável pelo mesmo hub", async ({ page }) => {
+  // Convexy: era Produtos, que a Convexy tira do menu inteiro (CONVEXY.md, "Telas
+  // escondidas do menu"). Campanhas é outra tela de CRM que mora só no hub.
+  test("e Campanhas, que não está no menu, é alcançável pelo mesmo hub", async ({ page }) => {
     // Tirar do sidebar não pode virar tela órfã: DoD 14 cobra porta, e a porta
     // passou a ser o hub. Sem este caso, o item "some do menu" ficaria provado
     // e o "continua alcançável" ficaria só escrito no comentário.
     await loginAdmin(page);
 
-    await expect(sidebar(page).getByRole("link", { name: "Produtos" })).toHaveCount(0);
+    await expect(sidebar(page).getByRole("link", { name: "Campanhas" })).toHaveCount(0);
 
     await sidebar(page).getByRole("link", { name: "Ver tudo em CRM" }).click();
     await page.waitForURL(/\/app\/crm$/);
-    await page.getByRole("link", { name: /Produtos/ }).click();
-    await page.waitForURL(/\/app\/products/);
+    await page.getByRole("link", { name: /Campanhas/ }).click();
+    await page.waitForURL(/\/app\/campaigns/);
   });
 
   test("e a lista de funis é o item vizinho, com nome próprio", async ({ page }) => {
