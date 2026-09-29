@@ -27,6 +27,8 @@ import { decidirPreGoLiveDoCanalViaSupabase } from "@/lib/ai/elegibilidade/consu
 import type { Actor, HandlerCtx } from "@/lib/api/handlers/types";
 import { audit } from "@/lib/audit";
 import { traduzir } from "@/lib/i18n/dicionario";
+// Convexy: CONVEXY.md, "Trial".
+import { organizacaoSuspensaNoSupabase } from "@/lib/convexy/suspensao";
 import {
   CHANNEL_SESSION_REF_COLUMNS,
   DEFAULT_CHANNEL_PROVIDER,
@@ -469,6 +471,19 @@ export async function sendMessageHandler(
       undefined,
       ctx.requestId,
       traduzir("Contato bloqueou o atendimento.", ctx.idioma ?? "pt-BR"),
+    );
+  }
+
+  // Convexy: organização suspensa (trial vencido ou suspensão manual) não envia —
+  // prospecção, lembretes, automações e retornos passam todos por esta porta.
+  // CONVEXY.md, "Trial".
+  if (await organizacaoSuspensaNoSupabase(supabase as unknown as { from: (t: string) => unknown }, ctx.organization_id)) {
+    throw new ApiError(
+      403,
+      "forbidden",
+      undefined,
+      ctx.requestId,
+      traduzir("A empresa está suspensa: nenhuma mensagem é enviada.", ctx.idioma ?? "pt-BR"),
     );
   }
 

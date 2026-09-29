@@ -55,6 +55,13 @@ export default async function AccountSuspendedPage() {
             )}
           </p>
         )}
+        {/* Convexy: a suspensão pelo fim do teste não apaga nada. CONVEXY.md, "Trial". */}
+        <p className="text-sm text-muted-foreground">
+          {traduzir(
+            "Se o seu período de teste terminou, seus dados continuam guardados: ao contratar, tudo volta como estava.",
+            idioma,
+          )}
+        </p>
         <div className="pt-2">
           <Button asChild variant="outline">
             <Link href="/login">{traduzir("Sair", idioma)}</Link>

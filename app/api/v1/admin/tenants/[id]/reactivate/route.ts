@@ -80,6 +80,9 @@ export async function POST(
       suspended_at: null,
       suspended_reason: null,
       suspended_by: null,
+      // Convexy: reativar é contratar — o período de teste acaba aqui, e o cron
+      // não volta a suspender. CONVEXY.md, "Trial".
+      teste_termina_em: null,
       updated_at: now,
     })
     .eq("id", tenantId);

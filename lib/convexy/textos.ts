@@ -193,6 +193,29 @@ export const TEXTOS = {
     liberaTudo: { pt: "Libera todas as áreas, inclusive as que o sistema ganhar depois.", es: "Habilita todas las áreas, incluso las que el sistema gane después." },
     criar: { pt: "Criar perfil", es: "Crear perfil" },
   },
+  // Período de teste. CONVEXY.md, "Trial".
+  teste: {
+    diasTranquilo: { pt: "Teste grátis · {n} dias", es: "Prueba gratis · {n} días" },
+    faltamDias: { pt: "Faltam {n} dias do seu teste", es: "Faltan {n} días de su prueba" },
+    faltaUmDia: { pt: "Falta 1 dia do seu teste", es: "Falta 1 día de su prueba" },
+    acabaHoje: { pt: "Seu teste acaba hoje!", es: "¡Su prueba termina hoy!" },
+    termina: { pt: "O teste termina em {data}.", es: "La prueba termina el {data}." },
+    titulo: { pt: "Período de teste", es: "Período de prueba" },
+    semTeste: { pt: "Sem teste", es: "Sin prueba" },
+    nDias: { pt: "{n} dias", es: "{n} días" },
+    ajuda: {
+      pt: "Ao terminar, a empresa é suspensa: ninguém entra, a IA para de responder e nada é apagado. Reativar pelo botão do original devolve tudo e encerra o teste.",
+      es: "Al terminar, la empresa queda suspendida: nadie entra, la IA deja de responder y nada se borra. Reactivar con el botón del original devuelve todo y termina la prueba.",
+    },
+    semTesteAgora: { pt: "Esta empresa não está em teste.", es: "Esta empresa no está en prueba." },
+    terminaEm: { pt: "Termina em {data} ({n} dias).", es: "Termina el {data} ({n} días)." },
+    estender: { pt: "+{n} dias", es: "+{n} días" },
+    iniciar: { pt: "Iniciar teste de {n} dias", es: "Iniciar prueba de {n} días" },
+    encerrar: { pt: "Encerrar o teste (contratou)", es: "Terminar la prueba (contrató)" },
+    salvo: { pt: "Teste atualizado.", es: "Prueba actualizada." },
+    erro: { pt: "Não deu para salvar. Recarregue a página e tente de novo.", es: "No se pudo guardar. Recargue la página e intente de nuevo." },
+    suspensa: { pt: "Empresa suspensa — estender o teste não reativa; use Reativar.", es: "Empresa suspendida — extender la prueba no la reactiva; use Reactivar." },
+  },
   // Perfis de áreas (fase 1). CONVEXY.md, "Perfis de áreas".
   pacote: {
     titulo: { pt: "Esta área não faz parte do pacote da sua empresa.", es: "Esta área no forma parte del paquete de su empresa." },

@@ -52,6 +52,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Telas escondidas do menu: módulos que a Convexy não usa saem para todos; voz e prospecção saem na clínica | `v1.59.0-cvx.3` |
 | Menu da clínica: portas Início (painel), Conversas, CRM, Agenda, Pacientes, Agentes, Fluxos, Minha clínica; telas de análise saem do menu | `v1.59.0-cvx.4` |
 | Perfis de áreas, fase 1: pacotes de áreas por empresa no /admin, limite no menu, na busca e no Início, aviso na área fora do pacote (migration 9005) | `v1.59.0-cvx.5` |
+| Trial: período de teste por empresa, suspensão ao vencer, etiqueta no menu, e organização suspensa sem IA nem envios (migration 9006) | `v1.59.0-cvx.6` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -468,6 +469,51 @@ Código só da Convexy: `lib/convexy/areas/*`, `components/convexy/areas/*`,
 `app/admin/(protected)/perfis-de-areas/page.tsx`, a migration 9005 e o mapa
 `docs/architecture/convexy-areas.architecture.json`. Testes: `tests/invariants/convexy-perfis-de-areas.test.ts`,
 `tests/unit/convexy-areas{,-rotas,-cartao}.test.*`.
+
+### Trial (`v1.59.0-cvx.6`)
+
+Decisão de 29/09/2026: teste de 7, 14 ou 30 dias por empresa; ao vencer, **suspende o acesso sem apagar
+nada**, e a empresa volta inteira se contratar.
+
+- **Onde mora:** `organizations.teste_termina_em` (migration 9006; nulo = sem teste). Escolhido na
+  criação (`/admin/tenants/new`, 14 dias por padrão) e no cartão "Período de teste" da página da empresa
+  (iniciar, +7/+14/+30 dias, encerrar), pela rota `/api/v1/admin/tenants/[id]/teste` (versão lida, 409,
+  auditoria `tenant.teste_alterado`).
+- **Ao vencer:** o cron `/api/v1/cron/convexy-teste` (de hora em hora) suspende com a mesma forma da
+  suspensão manual — `status suspended`, `suspended_reason` "Período de teste encerrado.",
+  `suspended_by` nulo, auditoria `tenant.suspended` e evento `tenant.suspended` — com gravação
+  condicional (ainda ativa, ainda vencida). Reativar pelo botão do original limpa o teste.
+- **Organização suspensa não é atendida** (defeito do original: a suspensão só bloqueava o login e as
+  campanhas; a IA e os envios continuavam): a mensagem que chega continua gravada, mas
+  `processEvent` do drain não cria turno, o `runJob` do worker cancela qualquer job dela (inclusive os
+  já na fila) e a porta de envio (`sendMessageHandler`) recusa com 403 — prospecção, lembretes,
+  automações e retornos passam por ela. Leitura em `lib/convexy/suspensao.ts`, com falha aberta.
+- **Etiqueta no menu** (`EtiquetaDoTeste`, abaixo da marca no `MarcaDaBarra`, para todo mundo da
+  empresa): "Teste grátis · N dias"; com 7 dias ou menos vira aviso ("Faltam N dias do seu teste",
+  "Falta 1 dia", "Seu teste acaba hoje!"). Dias de calendário no fuso da organização, calculados no
+  servidor. Menu recolhido: não aparece.
+- `/account-suspended` ganha a linha "Se o seu período de teste terminou, seus dados continuam guardados".
+- E-mails de aviso de fim de teste ficam para o item 4 do roteiro.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `supabase/baseline.sql` | bloco "teste da organização (migration 9006)" logo depois do da 9005 | reaplicar no mesmo lugar |
+| `lib/agent-engine/edge/crm/drain.ts` | `status` no select do `ai_dispatch_mode` e saída `'processado'` para suspensa | reaplicar |
+| `workers/agent-worker/main.ts` | `organizacaoSuspensa` antes do `withServiceJob` → `cancelJob` | reaplicar |
+| `app/api/v1/messages/_handler.ts` | `organizacaoSuspensaNoSupabase` depois da recusa de contato bloqueado | reaplicar |
+| `app/api/v1/admin/tenants/[id]/reactivate/route.ts` | `teste_termina_em: null` no update | reaplicar |
+| `app/api/v1/admin/tenants/route.ts`, `hooks/useCreateTenant.ts`, `app/admin/(protected)/tenants/new/_form.tsx` | `teste_dias` na criação (fora do schema do original) | reaplicar |
+| `app/admin/(protected)/tenants/[id]/page.tsx` | `<CartaoDoTeste>` | reaplicar |
+| `app/app/layout.tsx`, `lib/auth/types.ts` | `teste_termina_em` na consulta própria do nicho; `activeOrg.teste` | reaplicar |
+| `components/shell/Sidebar.tsx` | fragmento com `<EtiquetaDoTeste>` depois do cabeçalho do `MarcaDaBarra` | reaplicar |
+| `app/account-suspended/page.tsx`, `lib/i18n/dicionario.ts` | a linha do teste e as traduções | reaplicar |
+| `docker/scheduler/entrypoint.sh` | `23 * * * *\|60\|api/v1/cron/convexy-teste` | reaplicar |
+| `lib/audit/actions.ts` | `tenant.teste_alterado`, `cron.convexy_teste` no fim | manter no fim |
+| `CHANGELOG.md` | `## [1.59.0-cvx.6]` | ordem de "Base e versões" |
+
+Código só da Convexy: `lib/convexy/{teste,teste-calculo,teste-na-sessao,suspensao}.ts`,
+`components/convexy/teste/*`, as rotas `admin/tenants/[id]/teste` e `cron/convexy-teste`, a migration
+9006. Testes: `tests/invariants/convexy-teste-da-organizacao.test.ts`, `tests/unit/convexy-teste.test.tsx`.
 
 ## Desvios aceitos
 

@@ -7377,6 +7377,7 @@ export type Database = {
           nicho: string | null
           onboarded_at: string | null
           perfil_de_areas_id: string | null
+          teste_termina_em: string | null
           onboarding_state: Json
           privacy_policy_url: string | null
           rate_limit_rps: number
@@ -7408,6 +7409,7 @@ export type Database = {
           nicho?: string | null
           onboarded_at?: string | null
           perfil_de_areas_id?: string | null
+          teste_termina_em?: string | null
           onboarding_state?: Json
           privacy_policy_url?: string | null
           rate_limit_rps?: number
@@ -7439,6 +7441,7 @@ export type Database = {
           nicho?: string | null
           onboarded_at?: string | null
           perfil_de_areas_id?: string | null
+          teste_termina_em?: string | null
           onboarding_state?: Json
           privacy_policy_url?: string | null
           rate_limit_rps?: number

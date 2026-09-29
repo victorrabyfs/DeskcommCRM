@@ -93,6 +93,9 @@ CRONS="
 7 * * * *|60|api/v1/cron/case-stale-watcher
 */30 * * * *|60|api/v1/cron/contact-phones
 17 * * * *|60|api/v1/cron/contact-proposals-watcher
+# Convexy: o TESTE. De hora em hora: o fim do teste é um instante, e a hora de
+# folga é o preço de uma varredura barata. CONVEXY.md, "Trial".
+23 * * * *|60|api/v1/cron/convexy-teste
 23 * * * *|60|api/v1/cron/followup-sem-agente
 # O ANIVERSÁRIO. De hora em hora, e não uma vez ao dia, porque quem decide o
 # momento é o relógio de parede de CADA organização: a rodada só age naquela

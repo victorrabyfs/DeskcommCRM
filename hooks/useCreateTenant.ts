@@ -13,6 +13,8 @@ import { apiClient } from "@/lib/api/client";
 export interface CreateTenantPayload {
   /** Convexy: perfil de áreas escolhido na criação. CONVEXY.md, "Perfis de áreas". */
   perfil_de_areas_id?: string | null;
+  /** Convexy: dias de teste (7, 14 ou 30; nulo = sem teste). CONVEXY.md, "Trial". */
+  teste_dias?: 7 | 14 | 30 | null;
   display_name: string;
   slug: string;
   legal_name?: string;
@@ -51,6 +53,7 @@ export function useCreateTenant() {
       const normalized = {
         ...createTenantSchema.parse(payload),
         ...(payload.perfil_de_areas_id ? { perfil_de_areas_id: payload.perfil_de_areas_id } : {}),
+        ...(payload.teste_dias ? { teste_dias: payload.teste_dias } : {}),
       };
       normalized.owner_email = normalized.owner_email.toLowerCase();
       const fingerprint = JSON.stringify(normalized);

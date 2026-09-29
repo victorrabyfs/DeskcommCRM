@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { type CreateTenantResponse, useCreateTenant } from "@/hooks/useCreateTenant";
 import { CampoDoPerfilNaCriacao } from "@/components/convexy/areas/CampoDoPerfilNaCriacao";
+import { CampoDoTesteNaCriacao } from "@/components/convexy/teste/CampoDoTesteNaCriacao";
 import { ApiError } from "@/lib/api/types";
 import { useT } from "@/hooks/i18n/useT";
 import { useIdioma } from "@/lib/i18n/IdiomaProvider";
@@ -78,6 +79,8 @@ export function NewTenantForm() {
   const [ownerInterface, setOwnerInterface] = useState(INTERFACE_COMPLETA);
   // Convexy: perfil de áreas da empresa nova. CONVEXY.md, "Perfis de áreas".
   const [perfilDeAreas, setPerfilDeAreas] = useState<string | null>(null);
+  // Convexy: período de teste, 14 dias por padrão. CONVEXY.md, "Trial".
+  const [testeDias, setTesteDias] = useState<7 | 14 | 30 | null>(14);
   const [slugLocked, setSlugLocked] = useState(false);
   const [created, setCreated] = useState<CreateTenantResponse["data"] | null>(null);
 
@@ -129,6 +132,7 @@ export function NewTenantForm() {
         owner_email: values.owner_email,
         owner_interface_settings: ownerInterface,
         perfil_de_areas_id: perfilDeAreas,
+        teste_dias: testeDias,
       });
 
       toast.success(t("Tenant criado com sucesso!"));
@@ -305,6 +309,7 @@ export function NewTenantForm() {
 
             {/* Convexy: perfil de áreas. CONVEXY.md, "Perfis de áreas". */}
             <CampoDoPerfilNaCriacao valor={perfilDeAreas} aoMudar={setPerfilDeAreas} />
+            <CampoDoTesteNaCriacao valor={testeDias} aoMudar={setTesteDias} />
 
             {/* owner_email */}
             <div className="space-y-1.5">

@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0-cvx.6] — 2026-09-29
+
+Período de teste: ao criar uma empresa em /admin, escolha um teste de 7, 14 ou 30 dias (14 por padrão); na página da empresa dá para estender ou encerrar. O menu mostra "Teste grátis" com os dias que faltam, e a partir de 7 dias vira aviso ("Faltam N dias do seu teste", "Seu teste acaba hoje!"). Ao terminar, a empresa é suspensa sem apagar nada e volta inteira ao ser reativada. Empresa suspensa — pelo teste ou à mão — deixa de ser atendida pela IA e não envia mensagens, mas continua recebendo e guardando o que chega. A atualização cria a coluna do teste no banco e agenda a conferência de hora em hora, sozinha.
+
 ## [1.59.0-cvx.5] — 2026-09-29
 
 Perfis de áreas: em /admin › Perfis de áreas, a plataforma define pacotes de áreas (Completa, Essencial, Clínicas ou outros) e escolhe o pacote de cada empresa na criação e na página dela. A empresa só vê no menu, na busca e no Início as áreas do pacote; quem abrir o endereço de uma área de fora vê um aviso. Empresas existentes seguem com tudo liberado. A atualização cria a tabela de perfis e as colunas do pacote no banco, sozinha.

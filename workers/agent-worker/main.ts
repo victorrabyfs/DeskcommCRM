@@ -90,6 +90,8 @@ import {
   pisoDoComportamentoDoMotor,
 } from "@/lib/instalacao/comportamento-sql";
 import { runDrainLoop } from "@/lib/agent-engine/edge/crm/drain";
+// Convexy: organização suspensa não é atendida. CONVEXY.md, "Trial".
+import { organizacaoSuspensa } from "@/lib/convexy/suspensao";
 import { runEventLogDrainLoop, prontidaoDoLacoDeEventLog } from "@/lib/event-log/drain-loop";
 import { crmEdgeConfigFromEnv } from "@/lib/agent-engine/edge/crm/mcp-client";
 import { enforceHolds, sessionHealthMetrics } from "@/lib/agent-engine/edge/crm/session-watchdog";
@@ -471,6 +473,14 @@ export async function startWorker(
           job_id: job.id,
           kind: job.kind,
         });
+        return;
+      }
+      // Convexy: organização suspensa (trial vencido ou suspensão manual) não é
+      // atendida — turno, retorno e resposta a caso param aqui, inclusive os que já
+      // estavam na fila. Veto de negócio: cancela, sem retry. CONVEXY.md, "Trial".
+      if (await organizacaoSuspensa(pool, job.organization_id)) {
+        await cancelJob(pool, job.id, workerId, "organizacao_suspensa", claimOfJob(job)?.acquired_at);
+        log.info("job cancelado: organização suspensa", { job_id: job.id, kind: job.kind });
         return;
       }
       await withServiceJob(pool, job, () => handler(job, pool, { workerId }));

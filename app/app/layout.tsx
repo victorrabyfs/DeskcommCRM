@@ -29,6 +29,7 @@ import { ConvexyProvider } from "@/lib/convexy/contexto";
 import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
 import { NICHO_PADRAO, lerNicho, type Nicho } from "@/lib/convexy/nicho";
 import { GuardaDoPacote } from "@/components/convexy/areas/GuardaDoPacote";
+import { testeDaOrganizacao } from "@/lib/convexy/teste-na-sessao";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await loadAuthUser();
@@ -114,7 +115,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       // Convexy: o nicho numa consulta PRÓPRIA — coluna ausente ou leitura recusada
       // viram o nicho genérico e nunca alcançam os gates de onboarding e
       // suspensão, que leem a consulta de cima. CONVEXY.md, "Menu novo".
-      admin.from("organizations").select("nicho").eq("id", activeOrg.orgId).maybeSingle(),
+      // Convexy: o fim do teste vem na mesma consulta própria. CONVEXY.md, "Trial".
+      admin.from("organizations").select("nicho, teste_termina_em").eq("id", activeOrg.orgId).maybeSingle(),
     ]);
 
     const orgRow = orgRes.data;
@@ -122,6 +124,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     enrolled = isEnrolled;
     needsMfaGate = mfaRequired;
     nicho = lerNicho(nichoRes.data?.nicho);
+    const testeTerminaEm = (nichoRes.data as { teste_termina_em?: string | null } | null)?.teste_termina_em ?? null;
 
     if (orgRow && !orgRow.onboarded_at && !user.support) redirect("/onboarding");
     if (orgRow?.status === "suspended") redirect("/account-suspended");
@@ -135,6 +138,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       // Mesma linha de `settings` já lida acima — nenhuma consulta a mais.
       cliente_pela_agenda: clientePelaAgendaLigado(orgRow?.settings),
       modulos_ligados: modulos,
+      // Convexy: a etiqueta do período de teste. CONVEXY.md, "Trial".
+      ...(testeTerminaEm ? { teste: testeDaOrganizacao(testeTerminaEm, activeOrg.timezone, user.idioma) } : {}),
     };
 
     // `marcaDaInstalacao()` é memoizada por TTL no PROCESSO (`lib/branding/

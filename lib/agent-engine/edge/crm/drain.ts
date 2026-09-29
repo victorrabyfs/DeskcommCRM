@@ -216,10 +216,16 @@ async function processEvent(
 
   // Spec 14: org em modo 'external' tem agente EXTERNO como dono da conversa —
   // o engine não responde por cima. Evento é consumido (done) sem job.
-  const { rows: modeRows } = await pool.query<{ mode: string | null }>(
-    `select settings->>'ai_dispatch_mode' as mode from organizations where id = $1`,
+  // Convexy: `status` na mesma consulta — organização suspensa (trial vencido ou
+  // suspensão manual) guarda a mensagem, mas a IA não responde. CONVEXY.md, "Trial".
+  const { rows: modeRows } = await pool.query<{ mode: string | null; status?: string | null }>(
+    `select settings->>'ai_dispatch_mode' as mode, status from organizations where id = $1`,
     [event.organization_id],
   );
+  if (modeRows[0]?.status === 'suspended') {
+    log.info('drain: organização suspensa — mensagem guardada, sem turno', { event_id: event.id });
+    return 'processado';
+  }
   if (modeRows[0]?.mode === 'external') {
     log.info('drain: org em modo external (spec 14) — evento pulado', { event_id: event.id });
     return 'processado';

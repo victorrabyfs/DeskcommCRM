@@ -9,6 +9,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, fail } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { createHash, randomUUID } from "node:crypto";
+// Convexy: CONVEXY.md, "Trial".
+import { fimDoTeste } from "@/lib/convexy/teste-calculo";
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -210,6 +212,22 @@ export async function POST(req: NextRequest) {
   // de criação recebe (e do hash de idempotência dela). Grava só se a empresa
   // ainda está no padrão — a repetição com a mesma chave não sobrescreve uma
   // edição posterior. CONVEXY.md, "Perfis de áreas".
+  // Convexy: o período de teste escolhido na criação, pelo mesmo caminho (fora do
+  // corpo da função e do hash; só se a empresa ainda não tem teste). CONVEXY.md, "Trial".
+  const diasDeTeste = diasDeTesteDaCriacao(body);
+  if (diasDeTeste) {
+    const { error: erroDoTeste } = await admin
+      .from("organizations")
+      .update({ teste_termina_em: fimDoTeste(diasDeTeste, new Date()) })
+      .eq("id", org.id)
+      .is("teste_termina_em", null)
+      .eq("status", "active");
+    if (erroDoTeste) {
+      return fail("internal_error", "A organização foi criada, mas o período de teste não foi gravado. Repita com a mesma chave.", 500, {
+        requestId,
+      });
+    }
+  }
   const perfilDaCriacao = perfilDeAreasDaCriacao(body);
   if (perfilDaCriacao) {
     const aplicado = await aplicarPerfilNaCriacao(admin, org.id, perfilDaCriacao);
@@ -281,6 +299,12 @@ export async function POST(req: NextRequest) {
 
 // ── Convexy: perfil de áreas na criação (CONVEXY.md, "Perfis de áreas") ──────
 const perfilDaCriacaoSchema = z.object({ perfil_de_areas_id: z.string().uuid().nullable().optional() });
+const testeDaCriacaoSchema = z.object({ teste_dias: z.union([z.literal(7), z.literal(14), z.literal(30)]).nullable().optional() });
+
+function diasDeTesteDaCriacao(body: unknown): number | null {
+  const lido = testeDaCriacaoSchema.safeParse(body);
+  return lido.success ? (lido.data.teste_dias ?? null) : null;
+}
 
 function perfilDeAreasDaCriacao(body: unknown): string | null {
   const lido = perfilDaCriacaoSchema.safeParse(body);
