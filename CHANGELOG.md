@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0-cvx.5] — 2026-09-29
+
+Perfis de áreas: em /admin › Perfis de áreas, a plataforma define pacotes de áreas (Completa, Essencial, Clínicas ou outros) e escolhe o pacote de cada empresa na criação e na página dela. A empresa só vê no menu, na busca e no Início as áreas do pacote; quem abrir o endereço de uma área de fora vê um aviso. Empresas existentes seguem com tudo liberado. A atualização cria a tabela de perfis e as colunas do pacote no banco, sozinha.
+
 ## [1.59.0-cvx.4] — 2026-09-29
 
 Menu novo da Convexy reorganizado para a clínica: Início, Conversas, CRM (funil e tarefas), Agenda, Pacientes, Agentes, Fluxos (retornos automáticos, roteadores e fluxos de atendimento), Minha clínica (tratamentos e dados da clínica) e Configurações. O Início vira um painel com os números do mês (conversas, pacientes novos, agendamentos, comparecimentos e faltas) e o funil principal. Métricas, Anúncios, Atividades e Audit Log saem do menu, mas continuam abrindo pelo Início e pela busca. Não é preciso fazer nada na instalação.

@@ -492,3 +492,46 @@ test.describe("como agente", () => {
     await page.screenshot({ path: evidencia("09-agente.png"), fullPage: true });
   });
 });
+
+// Perfis de áreas, fase 1 (spec docs/superpowers/specs/2026-09-25-convexy-perfis-de-areas-design.md,
+// rev. 5). O dono da plataforma troca o pacote pela tela do /admin; a empresa passa a ver só
+// o pacote, e a área de fora mostra o aviso. CONVEXY.md, "Perfis de áreas".
+test.describe("perfis de áreas", () => {
+  test.use({ storageState: SESSAO_ADMIN, viewport: { width: 1440, height: 900 } });
+
+  test("o pacote Essencial limita o menu da empresa, e a área de fora mostra o aviso", async ({ page, browser }) => {
+    const contexto = await contextoSemSessao(browser);
+    try {
+      const dono = await contexto.newPage();
+      await loginComoDono(dono, lerCreds());
+      await dono.goto(`/admin/tenants/${orgId}`);
+      const perfil = dono.getByLabel("Perfil", { exact: true });
+      await expect(perfil).toBeVisible({ timeout: 15_000 });
+      await perfil.selectOption({ label: "Essencial" });
+      await expect(dono.getByText(/continua ativo/)).toBeVisible();
+      await dono.getByRole("button", { name: "Salvar" }).click();
+      await expect(dono.getByText("Áreas salvas.")).toBeVisible();
+      await dono.screenshot({ path: evidencia("11-admin-areas-da-empresa.png"), fullPage: true });
+
+      await page.goto("/app/inbox");
+      await expect(menu(page).getByRole("link", { name: "Pacientes", exact: true })).toBeVisible();
+      for (const porta of ["Agentes", "Fluxos"]) {
+        await expect(menu(page).getByRole("button", { name: porta, exact: true })).toHaveCount(0);
+        await expect(menu(page).getByRole("link", { name: porta, exact: true })).toHaveCount(0);
+      }
+      await page.screenshot({ path: evidencia("12-menu-essencial.png"), fullPage: true });
+
+      await page.goto("/app/campaigns");
+      await expect(page.getByRole("heading", { name: "Esta área não faz parte do pacote da sua empresa." })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Voltar ao Início" })).toHaveAttribute("href", "/app");
+      await page.screenshot({ path: evidencia("13-area-fora-do-pacote.png"), fullPage: true });
+    } finally {
+      await contexto.close();
+      const { error } = await db
+        .from("organizations")
+        .update({ perfil_de_areas_id: null, areas_a_mais: [], areas_a_menos: [], areas_atualizadas_em: null })
+        .eq("id", orgId);
+      falhou("restaurar o pacote da organização do e2e", error);
+    }
+  });
+});

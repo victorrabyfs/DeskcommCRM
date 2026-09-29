@@ -11076,6 +11076,8 @@ export const DICIONARIO: Traducoes = {
 
   // Extensões declarativas — interface e mensagens literais da API.
   "Extensões": { es: "Extensiones" },
+  // Convexy: entrada do menu do admin. CONVEXY.md, "Perfis de áreas".
+  "Perfis de áreas": { es: "Perfiles de áreas" },
   "Instaladas": { es: "Instaladas" },
   "Orientações instaladas": { es: "Orientaciones instaladas" },
   "Guias adicionados depois da instalação, sem acesso aos dados do CRM.": { es: "Guías agregadas después de la instalación, sin acceso a los datos del CRM." },

@@ -1,5 +1,14 @@
 import { cache } from "react";
 import { combinarInterfaces } from "@/lib/navigation/interface";
+// Convexy: perfis de áreas. CONVEXY.md, "Perfis de áreas".
+import {
+  areasLiberadas,
+  limitarInterface,
+  semAjustes,
+  type AreasDaEmpresa,
+  type PerfilDeAreas,
+} from "@/lib/convexy/areas/calculo";
+import { perfisDeAreas } from "@/lib/convexy/areas/perfis";
 /**
  * Server-side auth helpers — load AuthUser, resolve active org, gate routes.
  *
@@ -46,6 +55,50 @@ interface OrgJoin {
 /** O mesmo `organizations`, alcançado por outro embed: só as portas da EMPRESA. */
 interface OrgJoinEmpresa {
   interface_settings?: unknown;
+  // Convexy: o pacote de áreas (migration 9005). CONVEXY.md, "Perfis de áreas".
+  perfil_de_areas_id?: string | null;
+  areas_a_mais?: string[] | null;
+  areas_a_menos?: string[] | null;
+}
+
+// ── Convexy: perfis de áreas (CONVEXY.md, "Perfis de áreas") ─────────────────
+function empresaDaLinha(row: RawMembershipRow): OrgJoinEmpresa | null {
+  const empresas = row.interface_da_empresa;
+  return Array.isArray(empresas) ? (empresas[0] ?? null) : empresas;
+}
+
+function ajustesDa(empresa: OrgJoinEmpresa | null): AreasDaEmpresa {
+  return {
+    perfilId: empresa?.perfil_de_areas_id ?? null,
+    aMais: empresa?.areas_a_mais ?? [],
+    aMenos: empresa?.areas_a_menos ?? [],
+  };
+}
+
+async function perfisSeAlgumaTemPacote(
+  empresas: ReadonlyArray<OrgJoinEmpresa | null>,
+): Promise<ReadonlyMap<string, PerfilDeAreas> | null> {
+  const algumaTemPacote = empresas.some((e) => {
+    const ajustes = ajustesDa(e);
+    return ajustes.perfilId !== null || !semAjustes(ajustes);
+  });
+  if (!algumaTemPacote) return null;
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  return perfisDeAreas(createAdminClient());
+}
+
+/**
+ * Perfil apontado mas desconhecido (leitura falhou sem nenhum valor bom): sem
+ * limite. Na fase 1 o pacote é apresentação — errar para o lado de mostrar.
+ */
+function areasDaLinha(
+  empresa: OrgJoinEmpresa | null,
+  perfis: ReadonlyMap<string, PerfilDeAreas> | null,
+): ReadonlySet<string> | null {
+  const ajustes = ajustesDa(empresa);
+  const perfil = ajustes.perfilId && perfis ? (perfis.get(ajustes.perfilId) ?? null) : null;
+  if (ajustes.perfilId && !perfil) return null;
+  return areasLiberadas(perfil, ajustes);
 }
 
 /**
@@ -187,7 +240,7 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
           // issue #1341 acabou de engordar), e o alias traz só as portas da EMPRESA.
           // `timezone` veio do main (fuso da organização nas listas, #1290) e convive
           // com o alias: um embed por relação, sem renomear o que já existia.
-          "organization_id, role, interface_settings, accepted_at, organizations(display_name, locale, timezone), interface_da_empresa:organizations(interface_settings)",
+          "organization_id, role, interface_settings, accepted_at, organizations(display_name, locale, timezone), interface_da_empresa:organizations(interface_settings, perfil_de_areas_id, areas_a_mais, areas_a_menos)",
         )
         .eq("user_id", user.id)
         .is("revoked_at", null)
@@ -228,11 +281,14 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
   }
 
   const rows = (rawMemberships ?? []) as RawMembershipRow[];
+  // Convexy: os perfis só são lidos quando alguma organização tem pacote.
+  // CONVEXY.md, "Perfis de áreas".
+  const perfis = await perfisSeAlgumaTemPacote(rows.map((row) => empresaDaLinha(row)));
   const memberships: UserOrgMembership[] = rows.map((row) => {
     const orgs = row.organizations;
     const org = Array.isArray(orgs) ? (orgs[0] ?? null) : orgs;
-    const empresas = row.interface_da_empresa;
-    const empresa = Array.isArray(empresas) ? (empresas[0] ?? null) : empresas;
+    const empresa = empresaDaLinha(row);
+    const liberadas = areasDaLinha(empresa, perfis);
     return {
       organization_id: row.organization_id,
       organization_name: org?.display_name ?? "—",
@@ -240,9 +296,13 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
       // EMPRESA ∩ VÍNCULO (migration 0367): a empresa escolhe o universo de
       // portas da instalação, o vínculo escolhe menos dentro dele. Até aqui o
       // vínculo decidia sozinho, então a escolha da empresa não existia.
-      interface_settings: combinarInterfaces(empresa?.interface_settings, row.interface_settings),
+      interface_settings: limitarInterface(
+        combinarInterfaces(empresa?.interface_settings, row.interface_settings),
+        liberadas,
+      ),
       locale: org?.locale ?? null,
       timezone: org?.timezone ?? null,
+      ...(liberadas ? { areas_liberadas: [...liberadas] } : {}),
     };
   });
 
@@ -299,6 +359,7 @@ export const resolveActiveOrg = cache(async (authUser: AuthUser): Promise<Active
     role: ativo.role,
     interface_settings: ativo.interface_settings,
     timezone: ativo.timezone ?? null,
+    ...(ativo.areas_liberadas ? { areas_liberadas: ativo.areas_liberadas } : {}),
   };
 });
 

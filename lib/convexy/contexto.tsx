@@ -18,12 +18,14 @@ import type { Nicho } from "@/lib/convexy/nicho";
 export interface ValorDaConvexy {
   readonly menuLigado: boolean;
   readonly nicho: Nicho;
+  /** Perfis de áreas: ausente = sem limite. CONVEXY.md, "Perfis de áreas". */
+  readonly areasLiberadas?: readonly string[];
 }
 
 const Contexto = createContext<ValorDaConvexy | null>(null);
 
-export function ConvexyProvider({ menuLigado, nicho, children }: ValorDaConvexy & { children: ReactNode }) {
-  const valor = useMemo(() => ({ menuLigado, nicho }), [menuLigado, nicho]);
+export function ConvexyProvider({ menuLigado, nicho, areasLiberadas, children }: ValorDaConvexy & { children: ReactNode }) {
+  const valor = useMemo(() => ({ menuLigado, nicho, areasLiberadas }), [menuLigado, nicho, areasLiberadas]);
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
 

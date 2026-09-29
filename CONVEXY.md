@@ -51,6 +51,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Prospecção: etiqueta com o nome da campanha nos contatos criados, "Prospecção" no filtro de origem de Contatos e planilha (CSV) dos resultados | `v1.59.0-cvx.2` |
 | Telas escondidas do menu: módulos que a Convexy não usa saem para todos; voz e prospecção saem na clínica | `v1.59.0-cvx.3` |
 | Menu da clínica: portas Início (painel), Conversas, CRM, Agenda, Pacientes, Agentes, Fluxos, Minha clínica; telas de análise saem do menu | `v1.59.0-cvx.4` |
+| Perfis de áreas, fase 1: pacotes de áreas por empresa no /admin, limite no menu, na busca e no Início, aviso na área fora do pacote (migration 9005) | `v1.59.0-cvx.5` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -417,6 +418,56 @@ Testes: `tests/unit/convexy-menu-{mapa,montar,dono,desktop,gaveta,hubs,interface
 `tests/unit/convexy-inicio-{tela,dia}`, `tests/unit/convexy-telas-escondidas.test.ts` e
 `tests/e2e/convexy-menu.spec.ts` (a mecânica da sub-sidebar passou para a porta Minha clínica; a
 página de porta direta, para Pacientes).
+
+### Perfis de áreas (`v1.59.0-cvx.5`)
+
+Spec: `docs/superpowers/specs/2026-09-25-convexy-perfis-de-areas-design.md` (revisão 5, fase 1).
+A Convexy decide, por empresa, quais **áreas** (hrefs do catálogo de navegação) ela tem — um pacote.
+
+- **Perfis** (`perfis_de_areas`, migration 9005, só service role): Completa (libera tudo, protegida
+  no banco), Essencial (o preset Simplificada) e Clínicas, semeados só quando a tabela nasce. Editados
+  em `/admin/perfis-de-areas`; excluir só perfil sem empresas.
+- **Empresa:** `organizations.perfil_de_areas_id` (nulo = Completa) + `areas_a_mais`/`areas_a_menos`,
+  escolhidos na criação (`/admin/tenants/new`) e no cartão "Áreas liberadas" da página da empresa.
+  Gravação condicional pela versão lida (409) e auditoria `tenant.areas_changed`.
+- **Cálculo** (`lib/convexy/areas/calculo.ts`): perfil ∪ a mais − a menos ∪ obrigatórias (portas
+  essenciais, Início, LGPD, Conexões), com fecho de dependências (Roteadores, Retornos, Fluxos de
+  atendimento e Prospecção precisam de Assistentes; Assistentes precisa de Pedidos da IA e Casos).
+  Completa sem ajustes = sem limite: nada muda.
+- **Onde vale:** `loadAuthUser` limita a interface de cada vínculo às áreas liberadas
+  (`limitarInterface`), então menu clássico, menu da Convexy, busca ⌘K, hubs e Início obedecem sem
+  mudar; o editor de interface da clínica não oferece área de fora (e preserva a escolha salva sobre
+  ela); `GuardaDoPacote` troca a tela por "Esta área não faz parte do pacote da sua empresa" quando
+  alguém abre o endereço. O suporte da Convexy não é limitado.
+- **Fase 2 (não feita):** pausar o que estiver ativo numa área retirada, aviso de impacto, filtro das
+  ferramentas da IA e do MCP, reativação, mover empresas ao excluir perfil e "fora do pacote" no
+  suporte. Até lá, retirar uma área de uma empresa que a usa deixa o que já está ativo funcionando —
+  o cartão avisa ao salvar.
+- **Desvio:** a doc do original diz que a interface "nunca é autorização"; aqui o pacote também é
+  apresentação na fase 1 (a tela do servidor ainda roda e a API REST não é bloqueada), mas a tela de
+  aviso é uma decisão por empresa que o original não tem.
+
+| Arquivo | Trecho | Reaplicar |
+|---|---|---|
+| `supabase/baseline.sql` | bloco "perfis de áreas (migration 9005)" logo depois do da 9001 | reaplicar no mesmo lugar |
+| `lib/auth/server.ts` | colunas do pacote no embed `interface_da_empresa`; `perfisSeAlgumaTemPacote`, `areasDaLinha`, `limitarInterface` na membership; `areas_liberadas` no `activeOrg` | reaplicar |
+| `lib/auth/types.ts` | `areas_liberadas?` em `UserOrgMembership` e `ActiveOrg` | reaplicar |
+| `app/app/layout.tsx` | `<GuardaDoPacote>` em volta dos children do `AppShell`; `areasLiberadas` no `ConvexyProvider` | reaplicar |
+| `components/team/InterfaceEditor.tsx` | `foraDoPacote` nas opções e nas `guardadas` | reaplicar |
+| `app/api/v1/admin/tenants/route.ts` | `perfilDeAreasDaCriacao` + `aplicarPerfilNaCriacao` depois do `rpc` | reaplicar |
+| `hooks/useCreateTenant.ts` | `perfil_de_areas_id` fora do schema, na impressão digital | reaplicar |
+| `app/admin/(protected)/tenants/new/_form.tsx` | estado e `<CampoDoPerfilNaCriacao>` depois do Plano | reaplicar |
+| `app/admin/(protected)/tenants/[id]/page.tsx` | `<CartaoDasAreas>` | reaplicar |
+| `components/admin/AdminSidebar.tsx`, `lib/i18n/dicionario.ts` | entrada "Perfis de áreas" | manter no fim |
+| `lib/audit/actions.ts` | `platform.perfil_de_areas_*` e `tenant.areas_changed` no fim | manter no fim |
+| `lib/database.types.ts` | colunas novas de `organizations` | regenerar/reaplicar |
+| `CHANGELOG.md` | `## [1.59.0-cvx.5]` | ordem de "Base e versões" |
+
+Código só da Convexy: `lib/convexy/areas/*`, `components/convexy/areas/*`,
+`app/api/v1/admin/perfis-de-areas/*`, `app/api/v1/admin/tenants/[id]/areas/route.ts`,
+`app/admin/(protected)/perfis-de-areas/page.tsx`, a migration 9005 e o mapa
+`docs/architecture/convexy-areas.architecture.json`. Testes: `tests/invariants/convexy-perfis-de-areas.test.ts`,
+`tests/unit/convexy-areas{,-rotas,-cartao}.test.*`.
 
 ## Desvios aceitos
 

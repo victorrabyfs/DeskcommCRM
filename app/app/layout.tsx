@@ -28,6 +28,7 @@ import { acessoFoiRevogado } from "@/lib/auth/vinculo-revogado";
 import { ConvexyProvider } from "@/lib/convexy/contexto";
 import { MODULO_DO_MENU } from "@/lib/convexy/modulo";
 import { NICHO_PADRAO, lerNicho, type Nicho } from "@/lib/convexy/nicho";
+import { GuardaDoPacote } from "@/components/convexy/areas/GuardaDoPacote";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await loadAuthUser();
@@ -217,7 +218,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           sidebarCollapsed={collapsed}
           podeAtender={Boolean(activeOrg && roleAtLeast(activeOrg.role, "agent"))}
         >
-          {children}
+          {/* Convexy: área fora do pacote vira aviso. CONVEXY.md, "Perfis de áreas". */}
+          <GuardaDoPacote>{children}</GuardaDoPacote>
         </AppShell>
       </VoiceCallProvider>
     </ProvedorDaOcupacaoDoRodape>
@@ -229,7 +231,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // acoplamento com a autenticação que derrubou 32 casos.
     <IdiomaProvider locale={user.idioma}>
     {/* Convexy: o contexto do menu da Convexy, por pedido. CONVEXY.md, "Menu novo". */}
-    <ConvexyProvider menuLigado={activeOrg?.modulos_ligados?.includes(MODULO_DO_MENU) === true} nicho={nicho}>
+    <ConvexyProvider
+      menuLigado={activeOrg?.modulos_ligados?.includes(MODULO_DO_MENU) === true}
+      nicho={nicho}
+      areasLiberadas={activeOrg?.areas_liberadas}
+    >
     <AuthProvider user={user} activeOrg={activeOrg}>
       {/*
         A COR DA ETIQUETA, uma leitura por tela.

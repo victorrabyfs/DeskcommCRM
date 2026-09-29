@@ -925,6 +925,14 @@ export const AUDIT_ACTIONS = [
   // o número de empresas no metadata — dados de terceiros saindo do sistema.
   // CONVEXY.md, "Prospecção: etiqueta, origem e planilha".
   "prospecting.exported",
+  // Convexy: perfis de áreas — o admin da plataforma cria, edita e exclui um
+  // perfil (/api/v1/admin/perfis-de-areas), e troca o pacote de uma organização
+  // (/api/v1/admin/tenants/[id]/areas), com o antes e o depois no metadata.
+  // CONVEXY.md, "Perfis de áreas".
+  "platform.perfil_de_areas_created",
+  "platform.perfil_de_areas_updated",
+  "platform.perfil_de_areas_deleted",
+  "tenant.areas_changed",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

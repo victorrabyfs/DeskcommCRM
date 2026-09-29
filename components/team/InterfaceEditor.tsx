@@ -38,8 +38,11 @@ export function InterfaceEditor({
   // segue gravada — trocar o nicho depois a traz de volta. Toda gravação parte de
   // `options`, então sem isto salvar na clínica apagava Chamadas e Prospecção da
   // interface. CONVEXY.md, "Telas escondidas do menu".
+  // Perfis de áreas: área fora do pacote também não é opção, e a escolha sobre ela
+  // também segue gravada (liberar de novo a devolve). CONVEXY.md, "Perfis de áreas".
+  const foraDoPacote = (href: string) => !!convexy?.areasLiberadas && !convexy.areasLiberadas.includes(href);
   const guardadas = [...selected].filter(
-    (href) => escondidaPelaConvexy(href, convexy?.nicho) && !escondidaPelaConvexy(href),
+    (href) => (escondidaPelaConvexy(href, convexy?.nicho) && !escondidaPelaConvexy(href)) || foraDoPacote(href),
   ) as NavDestinationId[];
   const mudar = (proximo: InterfaceSettings) =>
     onChange(
@@ -53,6 +56,7 @@ export function InterfaceEditor({
   const options = permitidos(false, role, undefined, convexy?.nicho).filter(
     (d) =>
       !essencial(d, role) &&
+      !foraDoPacote(d.href) &&
       (convexy?.menuLigado || d.modulo !== MODULO_DO_MENU || value.destinos?.includes(d.href as NavDestinationId)),
   );
   return (

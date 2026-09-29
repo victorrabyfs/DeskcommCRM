@@ -11,6 +11,8 @@ import { apiClient } from "@/lib/api/client";
 // ---------------------------------------------------------------------------
 
 export interface CreateTenantPayload {
+  /** Convexy: perfil de áreas escolhido na criação. CONVEXY.md, "Perfis de áreas". */
+  perfil_de_areas_id?: string | null;
   display_name: string;
   slug: string;
   legal_name?: string;
@@ -44,7 +46,12 @@ export function useCreateTenant() {
 
   return useMutation({
     mutationFn: (payload: CreateTenantPayload) => {
-      const normalized = createTenantSchema.parse(payload);
+      // Convexy: o perfil viaja fora do schema do original (que descarta campo
+      // desconhecido) e entra na impressão digital da intenção. CONVEXY.md, "Perfis de áreas".
+      const normalized = {
+        ...createTenantSchema.parse(payload),
+        ...(payload.perfil_de_areas_id ? { perfil_de_areas_id: payload.perfil_de_areas_id } : {}),
+      };
       normalized.owner_email = normalized.owner_email.toLowerCase();
       const fingerprint = JSON.stringify(normalized);
       if (!intent.current || intent.current.fingerprint !== fingerprint) {

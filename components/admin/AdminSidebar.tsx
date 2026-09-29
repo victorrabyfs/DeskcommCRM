@@ -97,6 +97,8 @@ const NAV_ITEMS: NavItem[] = [
   // (`lib/navigation/catalogo.ts`), de propósito: são duas vistas do mesmo
   // assunto, e ícones diferentes fariam parecer dois assuntos.
   { href: "/admin/extensoes", label: "Extensões", icon: PuzzlePiece },
+  // Convexy: os pacotes de áreas das empresas. CONVEXY.md, "Perfis de áreas".
+  { href: "/admin/perfis-de-areas", label: "Perfis de áreas", icon: Buildings },
 ];
 
 interface AdminSidebarProps {
