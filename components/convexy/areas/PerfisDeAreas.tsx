@@ -154,7 +154,7 @@ export function PerfisDeAreas() {
         {emEdicao ? (
           <section className="space-y-4 rounded-lg border bg-card p-5" aria-label={emEdicao.nome || texto(TEXTOS.areas.novo, idioma)}>
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="space-y-1 text-sm">
+              <label className="block space-y-1 text-sm">
                 <span className="font-medium">{texto(TEXTOS.areas.nome, idioma)}</span>
                 <input
                   id={`${id}-nome`}
@@ -164,7 +164,7 @@ export function PerfisDeAreas() {
                   className="h-10 w-full rounded-md border bg-background px-3"
                 />
               </label>
-              <label className="space-y-1 text-sm">
+              <label className="block space-y-1 text-sm">
                 <span className="font-medium">{texto(TEXTOS.areas.descricao, idioma)}</span>
                 <input
                   id={`${id}-descricao`}
