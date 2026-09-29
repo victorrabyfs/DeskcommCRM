@@ -44,7 +44,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const supabase = await createClient();
   const { data: rows, error } = await supabase
     .from("user_organizations")
-    .select("user_id, role, interface_settings, invited_at, accepted_at, revoked_at, created_at")
+    .select("user_id, role, interface_settings, invited_at, accepted_at, revoked_at, created_at, especialista")
     .eq("organization_id", activeOrg.orgId)
     // Revogado CONTINUA na lista, com `revoked_at` preenchido — a tela o
     // distingue. Filtrá-lo aqui fazia a revogação sumir com a pessoa, e sem a
@@ -58,7 +58,11 @@ export async function GET(_req: NextRequest): Promise<Response> {
 
   if (error) return fail("internal_error", error.message, 500, { requestId });
 
-  const members: MembershipRow[] = (rows ?? []) as MembershipRow[];
+  // Convexy: o especialista sem acesso não é da Equipe — ele é cadastrado e
+  // mantido em Minha clínica › Especialistas. CONVEXY.md, "Minha clínica".
+  const members: MembershipRow[] = ((rows ?? []) as Array<MembershipRow & { especialista?: unknown }>)
+    .filter((m) => m.especialista === null || m.especialista === undefined)
+    .map(({ especialista: _especialista, ...m }) => m);
 
   if (!isServiceRoleConfigured() || members.length === 0) {
     const degraded: MemberDto[] = members.map((m) => ({

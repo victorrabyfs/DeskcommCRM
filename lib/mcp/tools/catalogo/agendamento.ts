@@ -175,6 +175,27 @@ export const TOOLS_AGENDAMENTO = declararTools([
     risco: "seguro",
     pacotes: ["vender"],
   },
+  // Convexy: dados da clínica e especialistas. CONVEXY.md, "Minha clínica".
+  {
+    name: "crm_get_clinic_info",
+    category: "read",
+    rotulo: "Ver os dados da clínica",
+    explicacao:
+      "Mostra endereço, horário de funcionamento, convênios, formas de pagamento e políticas que a clínica cadastrou, para o atendente de IA responder sem inventar.",
+    oQueToca: "Dados da clínica",
+    risco: "seguro",
+    pacotes: ["vender"],
+  },
+  {
+    name: "crm_list_specialists",
+    category: "read",
+    rotulo: "Ver os profissionais da clínica",
+    explicacao:
+      "Mostra os profissionais que atendem, a especialidade e os tratamentos de cada um, para o atendente de IA dizer quem faz e marcar com a pessoa certa.",
+    oQueToca: "Agenda da equipe",
+    risco: "seguro",
+    pacotes: ["vender"],
+  },
   {
     name: "crm_find_free_slots",
     category: "read",

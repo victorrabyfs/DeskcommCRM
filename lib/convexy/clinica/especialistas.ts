@@ -17,27 +17,13 @@ import { lerEspecialista, type DadosDoEspecialista } from "./schema";
  * (`ehEspecialistaSemAcesso`) caso o ban seja retirado por engano.
  */
 
-/** `.invalid` é reservado (RFC 2606): nenhum servidor de e-mail responde por ele. */
-export const DOMINIO_DO_ESPECIALISTA = "especialistas.invalid";
-
-/** ~100 anos. O Auth guarda `banned_until`; o especialista nunca abre sessão. */
-export const BAN_DO_ESPECIALISTA = "876000h";
-
-export function emailDoEspecialista(chave: string): string {
-  return `especialista+${chave}@${DOMINIO_DO_ESPECIALISTA}`;
-}
-
-export function ehEmailDeEspecialista(email: string | null | undefined): boolean {
-  return typeof email === "string" && email.toLowerCase().endsWith(`@${DOMINIO_DO_ESPECIALISTA}`);
-}
-
-/** O cinto de `loadAuthUser`: a conta do especialista não abre sessão nem com o ban retirado. */
-export function ehEspecialistaSemAcesso(user: {
-  email?: string | null;
-  user_metadata?: Record<string, unknown> | null;
-}): boolean {
-  return user.user_metadata?.especialista === true || ehEmailDeEspecialista(user.email);
-}
+export {
+  BAN_DO_ESPECIALISTA,
+  DOMINIO_DO_ESPECIALISTA,
+  ehEmailDeEspecialista,
+  ehEspecialistaSemAcesso,
+  emailDoEspecialista,
+} from "./conta";
 
 export interface TratamentoResumido {
   id: string;

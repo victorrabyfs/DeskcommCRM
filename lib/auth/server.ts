@@ -9,6 +9,7 @@ import {
   type PerfilDeAreas,
 } from "@/lib/convexy/areas/calculo";
 import { perfisDeAreas } from "@/lib/convexy/areas/perfis";
+import { ehEspecialistaSemAcesso } from "@/lib/convexy/clinica/conta";
 /**
  * Server-side auth helpers — load AuthUser, resolve active org, gate routes.
  *
@@ -216,6 +217,9 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
     });
   }
   if (!user) return null;
+  // Convexy: a conta do especialista sem acesso nunca abre sessão, nem com o ban
+  // retirado por engano. CONVEXY.md, "Minha clínica".
+  if (ehEspecialistaSemAcesso(user)) return null;
 
   // Platform admin e Org memberships consultados em paralelo no Supabase:
   // elimina round-trip sequencial a cada requisição.

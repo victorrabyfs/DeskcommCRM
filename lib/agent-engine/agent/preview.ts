@@ -134,6 +134,10 @@ export const SCENARIO_READS = new Set([
   'crm_list_stages',
   'crm_list_event_types',
   'crm_find_free_slots',
+  // Convexy: dados da clínica e especialistas são material da organização,
+  // como o catálogo. CONVEXY.md, "Minha clínica".
+  'crm_get_clinic_info',
+  'crm_list_specialists',
   'crm_describe_external_data',
   'crm_query_external_data',
   // Catálogo e acervo são material da ORGANIZAÇÃO, não de um contato: sem eles o

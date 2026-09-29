@@ -81,6 +81,8 @@ import {
   crmRescheduleAppointment,
   crmSetAppointmentOutcome,
 } from "./agendamento";
+// Convexy: dados da clínica e especialistas. CONVEXY.md, "Minha clínica".
+import { crmGetClinicInfo, crmListSpecialists } from "./clinica";
 import {
   crmScheduleFollowup,
   crmEnrollFollowupFlow,
@@ -101,6 +103,9 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmListEventTypes,
   crmFindFreeSlots,
   crmListAppointments,
+  // Convexy: dados da clínica e especialistas. CONVEXY.md, "Minha clínica".
+  crmGetClinicInfo,
+  crmListSpecialists,
   crmSearchContacts,
   crmGetContact,
   crmProposeContactField,

@@ -938,6 +938,13 @@ export const AUDIT_ACTIONS = [
   // (/api/v1/cron/convexy-teste). CONVEXY.md, "Trial".
   "tenant.teste_alterado",
   "cron.convexy_teste",
+  // Convexy: Minha clínica — o gerente grava os dados da clínica
+  // (/api/v1/convexy/clinica/dados), cadastra e edita um especialista sem acesso
+  // (/api/v1/convexy/clinica/especialistas), com o antes e o depois no metadata.
+  // CONVEXY.md, "Minha clínica".
+  "clinica.dados_atualizados",
+  "clinica.especialista_criado",
+  "clinica.especialista_atualizado",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

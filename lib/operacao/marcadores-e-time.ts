@@ -118,13 +118,18 @@ export interface PessoaDoTime {
 export async function listarTime(deps: DepsDaOperacao): Promise<PessoaDoTime[]> {
   const { data, error } = await deps.supabase
     .from("user_organizations")
-    .select("user_id, role, accepted_at, created_at")
+    .select("user_id, role, accepted_at, created_at, especialista")
     .eq("organization_id", deps.organizationId)
     .is("revoked_at", null)
     .order("created_at", { ascending: true });
   if (error) throw new ApiError(500, "internal_error", undefined, deps.requestId, error.message);
 
-  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map((m) => ({
+  // Convexy: o especialista sem acesso não recebe conversa — quem o oferece é
+  // `crm_list_specialists`. CONVEXY.md, "Minha clínica".
+  const semEspecialistas = ((data ?? []) as unknown as Array<Record<string, unknown>>).filter(
+    (m) => m.especialista === null || m.especialista === undefined,
+  );
+  return semEspecialistas.map((m) => ({
     user_id: m.user_id as string,
     papel: m.role as string,
     convite_pendente: m.accepted_at === null,
