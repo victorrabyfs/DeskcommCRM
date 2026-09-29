@@ -35,6 +35,9 @@ const EVIDENCIA = path.join(process.cwd(), "evidence", "convexy-menu");
 const SESSOES = path.join(process.cwd(), ".superpowers", "e2e-sessoes", "convexy-menu");
 const SESSAO_ADMIN = path.join(SESSOES, "admin.json");
 const SESSAO_AGENTE = path.join(SESSOES, "agente.json");
+// O dono da plataforma entra UMA vez (no preparo): um segundo login no mesmo
+// arquivo repetiria o código do MFA na mesma janela de 30 s, e ele é recusado.
+const SESSAO_DONO = path.join(SESSOES, "dono.json");
 const CHAVE_DO_MODULO = "MODULO_MENU_CONVEXY";
 
 interface EstadoAntes {
@@ -150,6 +153,7 @@ test.beforeAll(async ({ browser }) => {
     })
     .toBe("clinica");
   await page.screenshot({ path: evidencia("00-admin-tipo-de-negocio.png"), fullPage: true });
+  await contexto.storageState({ path: SESSAO_DONO });
   await contexto.close();
 });
 
@@ -500,10 +504,9 @@ test.describe("perfis de áreas", () => {
   test.use({ storageState: SESSAO_ADMIN, viewport: { width: 1440, height: 900 } });
 
   test("o pacote Essencial limita o menu da empresa, e a área de fora mostra o aviso", async ({ page, browser }) => {
-    const contexto = await contextoSemSessao(browser);
+    const contexto = await browser.newContext({ storageState: SESSAO_DONO });
     try {
       const dono = await contexto.newPage();
-      await loginComoDono(dono, lerCreds());
       await dono.goto(`/admin/tenants/${orgId}`);
       const perfil = dono.getByLabel("Perfil", { exact: true });
       await expect(perfil).toBeVisible({ timeout: 15_000 });

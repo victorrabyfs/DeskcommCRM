@@ -379,7 +379,7 @@ projeções do menu partem. O nicho chega pelo `ConvexyProvider` (cliente) e por
 | `app/app/{crm,ai,analise,settings}/page.tsx` | `nicho={await nichoDaOrganizacao(activeOrg?.orgId)}` no `NavHub` | reaplicar |
 | `components/team/InterfaceEditor.tsx` | `convexy?.nicho` em `permitidos` (opções); `guardadas` + `mudar()` no lugar de `onChange` nas duas gravações — a escolha sobre tela escondida pelo nicho segue gravada, para trocar o nicho depois não perder Chamadas/Prospecção | reaplicar |
 | `tests/unit/{nav-hub,navegacao-registry,interface-por-vinculo,interface-por-empresa}.test.*` | `vi.mock` de `telas-escondidas` que desliga o filtro (medem o catálogo do original) | reaplicar |
-| `tests/e2e/navegacao.spec.ts`, `tests/e2e/interface-por-vinculo.spec.ts` | Produtos trocado por Campanhas (outra tela de CRM só do hub) | reaplicar; se o original mudar o caso, refazer a troca |
+| `tests/e2e/navegacao.spec.ts`, `tests/e2e/interface-por-vinculo.spec.ts` | Produtos trocado por Campanhas (navegação, admin) e por Tarefas (interface por membro: o membro é agente, e Campanhas aparece para todo papel mas as APIs dela exigem gerente — inconsistência do original) | reaplicar; se o original mudar o caso, refazer a troca |
 | `CHANGELOG.md` | `## [1.59.0-cvx.3]` | ordem de "Base e versões" |
 
 Código só da Convexy: `lib/convexy/telas-escondidas.ts`, `lib/convexy/nicho-da-organizacao.ts`, o

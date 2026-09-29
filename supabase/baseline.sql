@@ -17693,7 +17693,9 @@ begin
       constraint perfis_de_areas_descricao_tamanho check (char_length(descricao) <= 200),
       constraint perfis_de_areas_areas_validas check (public.fn_hrefs_validos(areas)),
       constraint perfis_de_areas_completa_sem_lista check (not libera_tudo or areas = '{}')
-    );
+-- O fechamento na coluna zero é de propósito: as varreduras de schema leem o
+-- corpo da tabela até um ");" no começo da linha.
+);
 
     insert into public.perfis_de_areas (id, nome, descricao, libera_tudo, areas) values
       ('c0a1e7a0-9005-4000-8000-000000000001', 'Completa',
