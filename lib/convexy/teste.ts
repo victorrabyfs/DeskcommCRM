@@ -1,7 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
 import { logger } from "@/lib/logger";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 import { MOTIVO_DO_TESTE_ENCERRADO } from "./teste-calculo";
 
@@ -32,7 +32,11 @@ interface Vencida {
  * condicional ao estado lido (ainda ativa, teste ainda vencido): uma reativação
  * ou extensão no meio do caminho vence. Devolve quem foi suspensa.
  */
-export async function encerrarTestesVencidos(admin: SupabaseClient, agora: Date): Promise<Vencida[]> {
+/** O cliente de SERVIÇO: `organizations` só é gravada por ele (a RLS só deixa o admin da plataforma). */
+export async function encerrarTestesVencidos(
+  admin: ReturnType<typeof createAdminClient>,
+  agora: Date,
+): Promise<Vencida[]> {
   const limite = agora.toISOString();
   const { data, error } = await admin
     .from("organizations")
