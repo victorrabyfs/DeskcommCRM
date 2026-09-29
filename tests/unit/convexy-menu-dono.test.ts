@@ -71,6 +71,10 @@ describe("os pares que a spec nomeia resolvem certo", () => {
     ["/app/team/invite", "/app/team"],
     ["/app/ai/followups/enrollments/exemplo", "/app/ai/followups"],
     ["/app/settings/atualizacao", "/app/settings/atualizacao"],
+    // Telas de análise fora do menu (29/09): o painel do Início é o dono.
+    ["/app/metrics", "/app"],
+    ["/app/ads/meta", "/app"],
+    ["/app/audit", "/app"],
   ])("%s é de %s", (caminho, dono) => {
     expect(donoDoCaminho(caminho, HREFS)).toBe(dono);
   });
@@ -90,10 +94,10 @@ describe("ativoNoCaminho", () => {
     expect(ativoNoCaminho("/app/contacts/exemplo", portas)).toEqual({ porta: "contatos", href: "/app/contacts" });
   });
 
-  it("uma orientação carregada é o item mais específico, e é de Contatos", () => {
+  it("uma orientação carregada é o item mais específico, e é do CRM (29/09)", () => {
     expect(ativoNoCaminho("/app/extensions/abc", portas)).toEqual({ porta: "configuracoes", href: "/app/extensions" });
     expect(ativoNoCaminho("/app/extensions/abc", portas, ["/app/extensions/abc"])).toEqual({
-      porta: "contatos",
+      porta: "crm",
       href: "/app/extensions/abc",
     });
   });

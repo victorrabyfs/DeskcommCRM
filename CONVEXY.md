@@ -50,6 +50,7 @@ com o trecho exato e como reaplicar num conflito de merge. Destino de toda mudan
 | Atualização para a base 1.59.0 (ícone da aba do original); ícone da aba para o modo escuro (migration 9003) e cartão "Ícones da marca" em `/admin/marca` | `v1.59.0-cvx.1` |
 | Prospecção: etiqueta com o nome da campanha nos contatos criados, "Prospecção" no filtro de origem de Contatos e planilha (CSV) dos resultados | `v1.59.0-cvx.2` |
 | Telas escondidas do menu: módulos que a Convexy não usa saem para todos; voz e prospecção saem na clínica | `v1.59.0-cvx.3` |
+| Menu da clínica: portas Início (painel), Conversas, CRM, Agenda, Pacientes, Agentes, Fluxos, Minha clínica; telas de análise saem do menu | `v1.59.0-cvx.4` |
 
 Versão revertida não é reaproveitada: a correção sai na `-cvx.N` seguinte e o conteúdo que
 vinha depois (marca das clínicas desligada, spec 7.4) desloca uma casa.
@@ -385,6 +386,37 @@ nicho em `components/convexy/menu/useMenuConvexy.ts`,
 `lib/convexy/menu/montar.ts` e `app/app/_convexy/inicio/visibilidade.ts`. Testes:
 `tests/unit/convexy-telas-escondidas.test.ts`, os ajustes em `tests/unit/convexy-menu-{desktop,hubs}`
 e `tests/e2e/convexy-menu.spec.ts` (a mecânica da sub-sidebar passou da porta Pacientes para a Agenda).
+
+### Menu da clínica (`v1.59.0-cvx.4`)
+
+Decisão de 29/09/2026 (roteiro da plataforma nova, replanejamento). Só o menu da Convexy (módulo
+`menu_convexy`) muda; o menu clássico do original fica como está.
+
+- **Portas, nesta ordem:** Início · Conversas (Inbox, Sem resposta, Modelos; Envios) · **CRM** (Funil,
+  Tarefas, Prospecção) · Agenda · Pacientes/Contatos · **Agentes** (Assistentes, Base de conhecimento;
+  "Acompanhar" e "Avançado" como grupos secundários) · **Fluxos** (Retornos automáticos, Roteadores,
+  Fluxos de atendimento) · **Minha clínica**/Minha empresa (Tratamentos/Tipos de agendamento e Dados da
+  clínica/empresa) · Configurações no rodapé. As portas Funil, Tarefas e Resultados deixaram de existir.
+- **Fora do menu** (`FORA_DO_MENU` em `lib/convexy/menu/mapa.ts`): Métricas, Anúncios, Atividades,
+  Faturamento, Evolução da IA e Audit Log. Continuam na busca ⌘K e abrem pelo painel do Início; nessas
+  telas quem acende no menu é o Início (`DONOS_EXTRAS`). Tela de análise nova do original também fica
+  fora (`PADRAO_POR_GRUPO.analise.porta = null`), listada no relatório do teste do mapa.
+- **Hubs:** `/app/crm` abre o Funil e `/app/analise` abre o Início. As orientações das extensões passam
+  para a porta CRM.
+- **Início é o painel:** bloco "Resultados do mês" (conversas novas, pacientes/contatos novos,
+  agendamentos sem os cancelados, compareceram, faltaram — mês no fuso da organização) com "Ver as
+  métricas", e bloco do funil principal (etapas em aberto, cards abertos) com "Abrir o funil", antes
+  dos três blocos do dia. Cada bloco só aparece com o destino dele visível (Métricas, Funil) e falha
+  isolado. Consultas com o client de sessão em `app/app/_convexy/inicio/blocos.ts`
+  (`numerosDoMes`, `funilDoCrm`).
+- Especialistas e os dados completos da clínica entram em Minha clínica numa versão seguinte.
+
+Código só da Convexy (sem trecho novo em arquivo do original): `lib/convexy/menu/mapa.ts`,
+`lib/convexy/textos.ts`, `app/app/_convexy/inicio/{blocos.ts,dia.ts,Inicio.tsx,CartaoDeNumeros.tsx}`.
+Testes: `tests/unit/convexy-menu-{mapa,montar,dono,desktop,gaveta,hubs,interface}`,
+`tests/unit/convexy-inicio-{tela,dia}`, `tests/unit/convexy-telas-escondidas.test.ts` e
+`tests/e2e/convexy-menu.spec.ts` (a mecânica da sub-sidebar passou para a porta Minha clínica; a
+página de porta direta, para Pacientes).
 
 ## Desvios aceitos
 

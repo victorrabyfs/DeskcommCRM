@@ -76,7 +76,7 @@ describe("com o módulo desligado, é o editor do original", () => {
 describe("com o módulo ligado, agrupa pelas portas do mapa", () => {
   it("mostra as portas com os nomes do nicho, e o Início pode ser escondido", () => {
     desenhar({ preset: "completa" }, { menuLigado: true, nicho: "clinica" });
-    for (const porta of ["Início", "Conversas", "Pacientes", "Funil de pacientes", "Configurações"]) {
+    for (const porta of ["Início", "Conversas", "CRM", "Pacientes", "Agentes", "Fluxos", "Minha clínica", "Configurações"]) {
       expect(screen.getByRole("group", { name: porta })).toBeInTheDocument();
     }
     expect(screen.queryByRole("group", { name: "Atendimento" })).toBeNull();

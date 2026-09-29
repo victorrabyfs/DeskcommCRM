@@ -25,9 +25,11 @@ import {
   agendaDeHoje,
   carregarBloco,
   conversasEsperando,
+  funilDoCrm,
   minhasTarefas,
+  numerosDoMes,
 } from "@/app/app/_convexy/inicio/blocos";
-import { limitesDoDia } from "@/app/app/_convexy/inicio/dia";
+import { limitesDoDia, limitesDoMes } from "@/app/app/_convexy/inicio/dia";
 
 type Chamada = [metodo: string, ...args: unknown[]];
 
@@ -179,3 +181,100 @@ describe("falha isolada por bloco", () => {
     expect(await carregarBloco("tarefas", "org-1", async () => ({ total: 1 }))).toEqual({ ok: true, dados: { total: 1 } });
   });
 });
+
+// Painel do Início (29/09). CONVEXY.md, "Menu da clínica".
+/** Um supabase falso com UMA cadeia por `from`, resolvida por `responder(tabela, cadeia)`. */
+function varias(responder: (tabela: string, cadeia: Chamada[]) => unknown) {
+  const cadeias: Array<{ tabela: string; cadeia: Chamada[] }> = [];
+  const supabase = {
+    from: (tabela: string) => {
+      const cadeia: Chamada[] = [];
+      cadeias.push({ tabela, cadeia });
+      const builder: Record<string, unknown> = {};
+      for (const metodo of ["select", "eq", "neq", "in", "gte", "lt", "order", "limit"]) {
+        builder[metodo] = (...args: unknown[]) => {
+          cadeia.push([metodo, ...args]);
+          return builder;
+        };
+      }
+      builder.then = (resolver: (valor: unknown) => unknown) =>
+        Promise.resolve(responder(tabela, cadeia)).then(resolver);
+      return builder;
+    },
+  } as unknown as SupabaseClient;
+  return { supabase, cadeias };
+}
+
+const tem = (cadeia: Chamada[], ...chamada: unknown[]) =>
+  cadeia.some((c) => JSON.stringify(c) === JSON.stringify(chamada));
+
+describe("números do mês", () => {
+  const MES = limitesDoMes(new Date("2026-09-29T15:00:00Z"), "America/Sao_Paulo");
+
+  it("conta no mês da organização: criados no mês; agendamentos pelo início, sem cancelados; compareceu e faltou", async () => {
+    const { supabase, cadeias } = varias((tabela, cadeia) => {
+      if (tabela === "conversations") return { count: 40, error: null };
+      if (tabela === "contacts") return { count: 12, error: null };
+      if (tem(cadeia, "neq", "status", "cancelled")) return { count: 9, error: null };
+      if (tem(cadeia, "eq", "status", "completed")) return { count: 6, error: null };
+      return { count: 2, error: null };
+    });
+    expect(await numerosDoMes(supabase, "org-1", MES)).toEqual({
+      conversas: 40,
+      contatos: 12,
+      agendamentos: 9,
+      compareceram: 6,
+      faltaram: 2,
+    });
+    for (const { tabela, cadeia } of cadeias) {
+      expect(tem(cadeia, "eq", "organization_id", "org-1"), tabela).toBe(true);
+      const coluna = tabela === "calendar_appointments" ? "starts_at" : "created_at";
+      expect(tem(cadeia, "gte", coluna, "2026-09-01T03:00:00.000Z"), tabela).toBe(true);
+      expect(tem(cadeia, "lt", coluna, "2026-10-01T03:00:00.000Z"), tabela).toBe(true);
+    }
+    expect(cadeias.filter((c) => c.tabela === "calendar_appointments")).toHaveLength(3);
+  });
+
+  it("uma contagem recusada vira falha do bloco", async () => {
+    const { supabase } = varias((tabela) =>
+      tabela === "contacts" ? { count: null, error: { message: "negado" } } : { count: 1, error: null },
+    );
+    await expect(numerosDoMes(supabase, "org-1", MES)).rejects.toThrow("negado");
+  });
+});
+
+describe("funil do CRM", () => {
+  it("o funil padrão, só as etapas em andamento, com os cards abertos de cada uma", async () => {
+    const { supabase, cadeias } = varias((tabela, cadeia) => {
+      if (tabela === "crm_pipelines") return { data: [{ id: "p1", name: "Funil de pacientes" }], error: null };
+      if (tabela === "crm_stages")
+        return { data: [{ id: "e1", name: "Novo" }, { id: "e2", name: "Agendou" }], error: null };
+      return { count: tem(cadeia, "eq", "stage_id", "e1") ? 3 : 2, error: null };
+    });
+    expect(await funilDoCrm(supabase, "org-1")).toEqual({
+      total: 5,
+      nome: "Funil de pacientes",
+      linhas: [
+        { id: "e1", nome: "Novo", abertos: 3 },
+        { id: "e2", nome: "Agendou", abertos: 2 },
+      ],
+    });
+    const funis = cadeias.find((c) => c.tabela === "crm_pipelines")!.cadeia;
+    expect(tem(funis, "order", "is_default", { ascending: false })).toBe(true);
+    expect(tem(funis, "eq", "is_archived", false)).toBe(true);
+    const etapas = cadeias.find((c) => c.tabela === "crm_stages")!.cadeia;
+    for (const filtro of [["eq", "is_won", false], ["eq", "is_lost", false], ["eq", "pipeline_id", "p1"]]) {
+      expect(tem(etapas, ...filtro), JSON.stringify(filtro)).toBe(true);
+    }
+    for (const { cadeia } of cadeias.filter((c) => c.tabela === "crm_leads")) {
+      expect(tem(cadeia, "eq", "status", "open")).toBe(true);
+      expect(tem(cadeia, "eq", "organization_id", "org-1")).toBe(true);
+    }
+  });
+
+  it("sem funil, bloco vazio", async () => {
+    const { supabase } = varias(() => ({ data: [], error: null }));
+    expect(await funilDoCrm(supabase, "org-1")).toEqual({ total: 0, nome: null, linhas: [] });
+  });
+});
+

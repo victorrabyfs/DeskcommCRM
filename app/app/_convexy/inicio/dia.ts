@@ -31,6 +31,19 @@ export function limitesDoDia(agora: Date, fuso: string): LimitesDoDia {
 }
 
 /**
+ * O MÊS corrente da organização (painel do Início, 29/09): do primeiro instante do
+ * dia 1 ao primeiro instante do mês seguinte, no fuso dela. `ate` é exclusivo.
+ */
+export function limitesDoMes(agora: Date, fuso: string): LimitesDoDia {
+  const hoje = partesNoFuso(agora, fuso);
+  const seguinte = new Date(Date.UTC(hoje.ano, hoje.mes, 1));
+  return {
+    de: instanteDe({ ano: hoje.ano, mes: hoje.mes, dia: 1 }, fuso),
+    ate: instanteDe({ ano: seguinte.getUTCFullYear(), mes: seguinte.getUTCMonth() + 1, dia: 1 }, fuso),
+  };
+}
+
+/**
  * Um instante como o Início o mostra: a hora, se é de hoje; o dia/mês, se é
  * anterior — a conversa esperando desde ontem não pode parecer de hoje (spec 7).
  */

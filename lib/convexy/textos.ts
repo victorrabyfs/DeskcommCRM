@@ -53,6 +53,12 @@ export const TEXTOS = {
     ia: { pt: "Assistente de IA", es: "Asistente de IA" },
     resultados: { pt: "Resultados", es: "Resultados" },
     configuracoes: "Configurações",
+    // Menu da clínica (roteiro da plataforma nova, 29/09). CONVEXY.md, "Menu da clínica".
+    crm: "CRM",
+    agentes: { pt: "Agentes", es: "Agentes" },
+    fluxos: { pt: "Fluxos", es: "Flujos" },
+    minhaEmpresa: { pt: "Minha empresa", es: "Mi empresa" },
+    minhaClinica: { pt: "Minha clínica", es: "Mi clínica" },
   },
   grupos: {
     envios: { pt: "Envios", es: "Envíos" },
@@ -71,6 +77,9 @@ export const TEXTOS = {
     assistentes: { pt: "Assistentes", es: "Asistentes" },
     anuncios: { pt: "Anúncios", es: "Anuncios" },
     atualizacao: "Atualização do sistema",
+    tratamentos: { pt: "Tratamentos", es: "Tratamientos" },
+    dadosDaEmpresa: { pt: "Dados da empresa", es: "Datos de la empresa" },
+    dadosDaClinica: { pt: "Dados da clínica", es: "Datos de la clínica" },
   },
   menu: {
     fechar: "Fechar",
@@ -94,6 +103,20 @@ export const TEXTOS = {
       titulo: { pt: "Agenda de hoje", es: "Agenda de hoy" },
       vazio: { pt: "Nada marcado para hoje.", es: "Nada agendado para hoy." },
       atalho: { pt: "Abrir a agenda", es: "Abrir la agenda" },
+    },
+    mes: {
+      titulo: { pt: "Resultados do mês", es: "Resultados del mes" },
+      conversas: { pt: "Conversas novas", es: "Conversaciones nuevas" },
+      contatos: { pt: "Contatos novos", es: "Contactos nuevos" },
+      pacientes: { pt: "Pacientes novos", es: "Pacientes nuevos" },
+      agendamentos: { pt: "Agendamentos", es: "Citas" },
+      compareceram: { pt: "Compareceram", es: "Asistieron" },
+      faltaram: { pt: "Faltaram", es: "Faltaron" },
+      atalho: { pt: "Ver as métricas", es: "Ver las métricas" },
+    },
+    funil: {
+      vazio: { pt: "Nenhum card aberto no funil.", es: "Ninguna tarjeta abierta en el embudo." },
+      atalho: { pt: "Abrir o funil", es: "Abrir el embudo" },
     },
     tarefas: {
       titulo: { pt: "Minhas tarefas", es: "Mis tareas" },
@@ -157,4 +180,24 @@ export const ROTULO_DO_FUNIL: RotuloPorNicho = {
     clinica: TEXTOS.portas.funilDePacientes,
     servicos: TEXTOS.portas.funilDeVendas,
   },
+};
+
+/** Porta Minha clínica (29/09). CONVEXY.md, "Menu da clínica". */
+export const ROTULO_DA_MINHA_EMPRESA: RotuloPorNicho = {
+  porNicho: { generico: TEXTOS.portas.minhaEmpresa, clinica: TEXTOS.portas.minhaClinica },
+};
+
+/** Os tipos de agendamento viram "Tratamentos" na clínica. */
+export const ROTULO_DOS_TRATAMENTOS: RotuloPorNicho = {
+  porNicho: { generico: "Tipos de agendamento", clinica: TEXTOS.itens.tratamentos },
+};
+
+/** `/app/settings/tenant` dentro de Minha clínica. */
+export const ROTULO_DOS_DADOS_DA_EMPRESA: RotuloPorNicho = {
+  porNicho: { generico: TEXTOS.itens.dadosDaEmpresa, clinica: TEXTOS.itens.dadosDaClinica },
+};
+
+/** "Pacientes novos" na clínica, "Contatos novos" nos demais. */
+export const ROTULO_DOS_CONTATOS_NOVOS: RotuloPorNicho = {
+  porNicho: { generico: TEXTOS.inicio.mes.contatos, clinica: TEXTOS.inicio.mes.pacientes },
 };

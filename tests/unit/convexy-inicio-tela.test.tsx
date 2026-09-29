@@ -13,6 +13,9 @@ const deps = vi.hoisted(() => ({
   conversas: vi.fn(),
   agenda: vi.fn(),
   tarefas: vi.fn(),
+  mes: vi.fn(),
+  funil: vi.fn(),
+  nicho: "clinica",
   refresh: vi.fn(),
 }));
 
@@ -27,7 +30,10 @@ vi.mock("@/app/app/_convexy/inicio/blocos", async (original) => ({
   conversasEsperando: deps.conversas,
   agendaDeHoje: deps.agenda,
   minhasTarefas: deps.tarefas,
+  numerosDoMes: deps.mes,
+  funilDoCrm: deps.funil,
 }));
+vi.mock("@/lib/convexy/nicho-da-organizacao", () => ({ nichoDaOrganizacao: async () => deps.nicho }));
 
 import { Inicio } from "@/app/app/_convexy/inicio/Inicio";
 import { RecarregarAoVoltar } from "@/app/app/_convexy/inicio/RecarregarAoVoltar";
@@ -51,6 +57,16 @@ beforeEach(() => {
   });
   deps.agenda.mockResolvedValue({ total: 1, linhas: [{ id: "a1", titulo: "Avaliação", inicio: "2026-09-25T17:00:00Z" }] });
   deps.tarefas.mockResolvedValue({ total: 1, linhas: [{ id: "t1", titulo: "Ligar para a Ana", atrasada: true }] });
+  deps.mes.mockResolvedValue({ conversas: 40, contatos: 12, agendamentos: 9, compareceram: 6, faltaram: 2 });
+  deps.funil.mockResolvedValue({
+    total: 5,
+    nome: "Funil de pacientes",
+    linhas: [
+      { id: "e1", nome: "Novo", abertos: 3 },
+      { id: "e2", nome: "Agendou", abertos: 2 },
+    ],
+  });
+  deps.nicho = "clinica";
 });
 afterEach(() => vi.useRealTimers());
 
@@ -101,3 +117,47 @@ describe("frescor", () => {
     expect(deps.refresh).toHaveBeenCalledTimes(1);
   });
 });
+
+// Painel do Início (29/09). CONVEXY.md, "Menu da clínica".
+describe("o painel", () => {
+  const PAINEL = [...TUDO, "/app/metrics", "/app/kanban"];
+
+  it("números do mês e funil só com Métricas e Funil visíveis", async () => {
+    render(await Inicio({ user: USER, org: ORG, visiveis: TUDO }));
+    expect(screen.queryByRole("region", { name: "Resultados do mês" })).toBeNull();
+    expect(deps.mes).not.toHaveBeenCalled();
+    expect(deps.funil).not.toHaveBeenCalled();
+  });
+
+  it("mostra os números do mês com o nome do nicho e leva às métricas", async () => {
+    render(await Inicio({ user: USER, org: ORG, visiveis: PAINEL }));
+    const mes = bloco("Resultados do mês");
+    expect(within(mes).getByText("Pacientes novos")).toBeInTheDocument();
+    expect(within(mes).getByText("12")).toBeInTheDocument();
+    expect(within(mes).getByText("Faltaram")).toBeInTheDocument();
+    expect(within(mes).getByRole("link", { name: "Ver as métricas" })).toHaveAttribute("href", "/app/metrics");
+    // O mês é o da organização: começa no dia 1, 00:00 de São Paulo.
+    expect(deps.mes.mock.calls[0]![2].de).toEqual(new Date("2026-09-01T03:00:00Z"));
+  });
+
+  it("fora da clínica, contatos novos", async () => {
+    deps.nicho = "servicos";
+    render(await Inicio({ user: USER, org: ORG, visiveis: PAINEL }));
+    expect(within(bloco("Resultados do mês")).getByText("Contatos novos")).toBeInTheDocument();
+  });
+
+  it("o funil mostra cada etapa com os cards abertos e o total", async () => {
+    render(await Inicio({ user: USER, org: ORG, visiveis: PAINEL }));
+    const funil = bloco("Funil de pacientes");
+    expect(within(funil).getByText("5")).toBeInTheDocument();
+    expect(within(funil).getByRole("link", { name: /Agendou/ })).toHaveTextContent("2");
+  });
+
+  it("o bloco do mês que falha não derruba o funil", async () => {
+    deps.mes.mockRejectedValue(new Error("caiu"));
+    render(await Inicio({ user: USER, org: ORG, visiveis: PAINEL }));
+    expect(within(bloco("Resultados do mês")).getByRole("status")).toHaveTextContent(FALHOU);
+    expect(bloco("Funil de pacientes")).toBeInTheDocument();
+  });
+});
+

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { limitesDoDia, momentoNoDia } from "@/app/app/_convexy/inicio/dia";
+import { limitesDoDia, limitesDoMes, momentoNoDia } from "@/app/app/_convexy/inicio/dia";
 
 /**
  * Convexy — o "hoje" do Início é o da ORGANIZAÇÃO (spec 7). A VPS roda em UTC:
@@ -45,3 +45,23 @@ describe("momentoNoDia", () => {
     expect(momentoNoDia(new Date("2026-09-24T15:00:00Z"), DIA, "America/Sao_Paulo", "pt-BR")).toBe("24/09");
   });
 });
+
+// Painel do Início (29/09). CONVEXY.md, "Menu da clínica".
+describe("o mês da organização", () => {
+  it("do dia 1 ao dia 1 do mês seguinte, no fuso dela", () => {
+    const mes = limitesDoMes(new Date("2026-09-29T15:00:00Z"), "America/Sao_Paulo");
+    expect(mes.de).toEqual(new Date("2026-09-01T03:00:00Z"));
+    expect(mes.ate).toEqual(new Date("2026-10-01T03:00:00Z"));
+  });
+
+  it("31/10 às 23:30 em São Paulo, com o UTC já em novembro: ainda é outubro", () => {
+    const ultimaNoite = limitesDoMes(new Date("2026-11-01T02:30:00Z"), "America/Sao_Paulo");
+    expect(ultimaNoite.de).toEqual(new Date("2026-10-01T03:00:00Z"));
+  });
+
+  it("vira o ano em dezembro", () => {
+    const dezembro = limitesDoMes(new Date("2026-12-15T12:00:00Z"), "UTC");
+    expect(dezembro.ate).toEqual(new Date("2027-01-01T00:00:00Z"));
+  });
+});
+

@@ -99,7 +99,7 @@ describe("telas escondidas pela Convexy", () => {
     expect([...ESCONDIDAS_PARA_TODOS, ...ESCONDIDAS_NA_CLINICA]).not.toContain(destino);
   });
 
-  it("no menu da Convexy, a porta Pacientes da clínica vira link direto para Contatos", () => {
+  it("no menu da Convexy, a clínica não vê Prospecção no CRM nem Chamadas em Conversas", () => {
     const portas = (nicho: Nicho) =>
       montarMenu({
         visiveis: searchable(false, "admin", undefined, ["menu_convexy"], nicho),
@@ -110,14 +110,13 @@ describe("telas escondidas pela Convexy", () => {
     const itens = (nicho: Nicho, id: string) =>
       hrefs(portas(nicho).find((p) => p.id === id)?.itens ?? []);
 
-    const contatosDaClinica = portas("clinica").find((p) => p.id === "contatos");
-    expect(contatosDaClinica?.direta).toBe(true);
-    expect(hrefs(contatosDaClinica?.itens ?? [])).toEqual(["/app/contacts"]);
+    expect(itens("clinica", "crm")).toEqual(["/app/kanban", "/app/tasks"]);
     expect(itens("clinica", "conversas")).not.toContain("/app/calls");
-    expect(itens("clinica", "agenda")).toEqual(["/app/agenda", "/app/settings/tenant/agenda"]);
-    expect(itens("clinica", "resultados")).not.toContain("/app/faturamento");
+    const agendaDaClinica = portas("clinica").find((p) => p.id === "agenda");
+    expect(agendaDaClinica?.direta).toBe(true);
+    expect(hrefs(agendaDaClinica?.itens ?? [])).toEqual(["/app/agenda"]);
 
-    expect(itens("servicos", "contatos")).toEqual(["/app/contacts", "/app/prospecting"]);
+    expect(itens("servicos", "crm")).toEqual(["/app/kanban", "/app/tasks", "/app/prospecting"]);
     expect(itens("servicos", "conversas")).toContain("/app/calls");
   });
 });

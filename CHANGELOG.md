@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0-cvx.4] — 2026-09-29
+
+Menu novo da Convexy reorganizado para a clínica: Início, Conversas, CRM (funil e tarefas), Agenda, Pacientes, Agentes, Fluxos (retornos automáticos, roteadores e fluxos de atendimento), Minha clínica (tratamentos e dados da clínica) e Configurações. O Início vira um painel com os números do mês (conversas, pacientes novos, agendamentos, comparecimentos e faltas) e o funil principal. Métricas, Anúncios, Atividades e Audit Log saem do menu, mas continuam abrindo pelo Início e pela busca. Não é preciso fazer nada na instalação.
+
 ## [1.59.0-cvx.3] — 2026-09-29
 
 Menu mais enxuto: Comandas, Financeiro, Faturamento, Produtos, Nuvemshop, Dados externos e Extensões saem do menu, dos hubs e da busca em todas as organizações. Nas organizações do tipo clínica, Chamadas, Trunk SIP e Prospecção também saem. As telas continuam existindo: quem abrir o endereço direto ainda chega a elas. Não é preciso fazer nada na instalação.

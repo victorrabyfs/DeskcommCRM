@@ -18,14 +18,11 @@ const porta = (portas: PortaDoMenu[], id: PortaDoMenu["id"]) => portas.find((p) 
 const hrefs = (p: PortaDoMenu | undefined) => p?.itens.map((i) => i.href) ?? [];
 
 describe("filtra por searchable()", () => {
-  it("perfil Simplificada da recepção: Início, portas diretas e Configurações", () => {
+  it("perfil Simplificada da recepção: Início, portas diretas, CRM com Funil e Tarefas, e Configurações", () => {
     const portas = montar(searchable(false, "agent", { preset: "simplificada" }, LIGADO));
-    expect(portas.map((p) => p.id)).toEqual([
-      "inicio", "conversas", "agenda", "contatos", "funil", "tarefas", "configuracoes",
-    ]);
-    expect(portas.filter((p) => p.direta).map((p) => p.id)).toEqual([
-      "inicio", "conversas", "agenda", "contatos", "funil", "tarefas",
-    ]);
+    expect(portas.map((p) => p.id)).toEqual(["inicio", "conversas", "crm", "agenda", "contatos", "configuracoes"]);
+    expect(portas.filter((p) => p.direta).map((p) => p.id)).toEqual(["inicio", "conversas", "agenda", "contatos"]);
+    expect(hrefs(porta(portas, "crm"))).toEqual(["/app/kanban", "/app/tasks"]);
   });
 
   it("destinos escolhidos: porta com dois itens tem sub; porta vazia some", () => {
@@ -49,7 +46,7 @@ describe("filtra por searchable()", () => {
 
   it("porta com um item só vira direta", () => {
     const portas = montar(searchable(false, "agent", { preset: "completa", destinos: ["/app/tasks"] }, LIGADO));
-    expect(porta(portas, "tarefas")).toMatchObject({ direta: true, itens: [{ href: "/app/tasks" }] });
+    expect(porta(portas, "crm")).toMatchObject({ direta: true, itens: [{ href: "/app/tasks" }] });
   });
 });
 
@@ -89,12 +86,23 @@ describe("nomes", () => {
     const portas = montar(searchable(false, "admin", undefined, LIGADO), { nicho });
     expect(porta(portas, "contatos")?.rotulo).toBe(contatos);
     expect(porta(portas, "contatos")?.itens[0]).toMatchObject({ href: "/app/contacts", rotulo: contatos });
-    expect(porta(portas, "funil")?.rotulo).toBe(funil);
+    expect(porta(portas, "crm")?.rotulo).toBe("CRM");
+    expect(porta(portas, "crm")?.itens[0]).toMatchObject({ href: "/app/kanban", rotulo: funil });
   });
 
-  it("os dois Meta Ads ficam distintos: Anúncios em Resultados, Meta Ads nas integrações", () => {
+  it("Minha clínica: Tratamentos e Dados da clínica na clínica; Minha empresa nos demais", () => {
+    const clinica = porta(montar(searchable(false, "admin", undefined, LIGADO), { nicho: "clinica" }), "clinica");
+    expect(clinica?.rotulo).toBe("Minha clínica");
+    expect(clinica?.itens.map((i) => i.rotulo)).toEqual(["Tratamentos", "Dados da clínica"]);
+    const empresa = porta(montar(searchable(false, "admin", undefined, LIGADO)), "clinica");
+    expect(empresa?.rotulo).toBe("Minha empresa");
+    expect(empresa?.itens.map((i) => i.rotulo)).toEqual(["Tipos de agendamento", "Dados da empresa"]);
+  });
+
+  it("as telas de análise saem do menu (o Início as abre); Meta Ads segue nas integrações", () => {
     const portas = montar(searchable(false, "admin", undefined, LIGADO));
-    expect(porta(portas, "resultados")?.itens.find((i) => i.href === "/app/ads/meta")?.rotulo).toBe("Anúncios");
+    const todos = portas.flatMap((p) => p.itens.map((i) => i.href));
+    for (const href of ["/app/metrics", "/app/ads/meta", "/app/activities", "/app/audit"]) expect(todos).not.toContain(href);
     expect(porta(portas, "configuracoes")?.itens.find((i) => i.href === "/app/settings/meta-ads")?.rotulo).toBe("Meta Ads");
   });
 
@@ -103,6 +111,6 @@ describe("nomes", () => {
     const templates = porta(portas, "conversas")?.itens.find((i) => i.href === "/app/templates");
     expect(templates?.rotulo).toBe("Respuestas rápidas");
     expect(porta(portas, "contatos")?.rotulo).toBe("Contactos");
-    expect(porta(portas, "funil")?.rotulo).toBe("Embudo");
+    expect(porta(portas, "crm")?.itens.find((i) => i.href === "/app/kanban")?.rotulo).toBe("Embudo");
   });
 });

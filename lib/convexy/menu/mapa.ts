@@ -1,10 +1,10 @@
 import type { NavGroupId } from "@/lib/navigation/catalogo";
 import type { NavDestination } from "@/lib/navigation/registry";
 import {
+  Buildings,
   CalendarBlank,
-  ChartBar,
   ChatCircle,
-  CheckSquare,
+  FlowArrow,
   Funnel,
   GearSix,
   House,
@@ -12,8 +12,11 @@ import {
   Users,
 } from "@/lib/ui/icons";
 import {
+  ROTULO_DA_MINHA_EMPRESA,
   ROTULO_DE_CONTATOS,
   ROTULO_DO_FUNIL,
+  ROTULO_DOS_DADOS_DA_EMPRESA,
+  ROTULO_DOS_TRATAMENTOS,
   TEXTOS,
   type RotuloPorNicho,
   type Texto,
@@ -36,15 +39,17 @@ export const HREF_DO_INICIO = "/app";
 /** Não está no catálogo: aparece com a regra do `VersionFooter` (admin de plataforma fora do suporte). */
 export const HREF_DA_ATUALIZACAO = "/app/settings/atualizacao";
 
+// Menu da clínica (29/09): Funil, Tarefas e Resultados deram lugar a CRM, Fluxos e
+// Minha clínica. CONVEXY.md, "Menu da clínica".
 export type PortaId =
   | "inicio"
   | "conversas"
+  | "crm"
   | "agenda"
   | "contatos"
-  | "funil"
-  | "tarefas"
   | "ia"
-  | "resultados"
+  | "fluxos"
+  | "clinica"
   | "configuracoes";
 
 export type GrupoId =
@@ -95,59 +100,61 @@ export const PORTAS: readonly DefinicaoDePorta[] = [
     ],
   },
   {
+    id: "crm",
+    rotulo: TEXTOS.portas.crm,
+    Icone: Funnel,
+    rodape: false,
+    grupos: [principal(["/app/kanban", "/app/tasks", "/app/prospecting", "/app/products"])],
+  },
+  {
     id: "agenda",
     rotulo: TEXTOS.portas.agenda,
     Icone: CalendarBlank,
     rodape: false,
-    grupos: [principal(["/app/agenda", "/app/comandas", "/app/settings/tenant/agenda"])],
+    grupos: [principal(["/app/agenda", "/app/comandas"])],
   },
   {
     id: "contatos",
     rotulo: ROTULO_DE_CONTATOS,
     Icone: Users,
     rodape: false,
-    grupos: [principal(["/app/contacts", "/app/prospecting", "/app/products"])],
+    grupos: [principal(["/app/contacts"])],
   },
-  { id: "funil", rotulo: ROTULO_DO_FUNIL, Icone: Funnel, rodape: false, grupos: [principal(["/app/kanban"])] },
-  { id: "tarefas", rotulo: TEXTOS.portas.tarefas, Icone: CheckSquare, rodape: false, grupos: [principal(["/app/tasks"])] },
   {
     id: "ia",
-    rotulo: TEXTOS.portas.ia,
+    rotulo: TEXTOS.portas.agentes,
     Icone: Robot,
     rodape: false,
     grupos: [
-      principal([
-        "/app/ai/agents",
-        "/app/ai/followups",
-        "/app/ai/routers",
-        "/app/ai/providers",
-        "/app/ai/knowledge/sources",
-        "/app/ai/atendimento",
-        "/app/ai/inbox",
-      ]),
+      principal(["/app/ai/agents", "/app/ai/knowledge/sources"]),
       {
         id: "acompanhar",
         rotulo: TEXTOS.grupos.acompanhar,
         secundario: true,
-        hrefs: ["/app/ai/cases", "/app/ai/proposals", "/app/ai/runs", "/app/ai/usage", "/app/ai/cases/avisos"],
+        hrefs: ["/app/ai/inbox", "/app/ai/cases", "/app/ai/proposals", "/app/ai/runs", "/app/ai/usage", "/app/ai/cases/avisos"],
       },
       {
         id: "avancado",
         rotulo: TEXTOS.grupos.avancado,
         secundario: true,
-        hrefs: ["/app/ai/credentials", "/app/ai/memory", "/app/ai/skills"],
+        hrefs: ["/app/ai/providers", "/app/ai/credentials", "/app/ai/memory", "/app/ai/skills"],
       },
     ],
   },
   {
-    id: "resultados",
-    rotulo: TEXTOS.portas.resultados,
-    Icone: ChartBar,
+    id: "fluxos",
+    rotulo: TEXTOS.portas.fluxos,
+    Icone: FlowArrow,
     rodape: false,
-    grupos: [
-      principal(["/app/metrics", "/app/ads/meta", "/app/activities", "/app/faturamento"]),
-      { id: "mais", rotulo: TEXTOS.grupos.mais, secundario: true, hrefs: ["/app/ai/evolution", "/app/audit"] },
-    ],
+    grupos: [principal(["/app/ai/followups", "/app/ai/routers", "/app/ai/atendimento"])],
+  },
+  {
+    // Tratamentos, especialistas e dados da clínica, num lugar próprio (29/09).
+    id: "clinica",
+    rotulo: ROTULO_DA_MINHA_EMPRESA,
+    Icone: Buildings,
+    rodape: false,
+    grupos: [principal(["/app/settings/tenant/agenda", "/app/settings/tenant"])],
   },
   {
     id: "configuracoes",
@@ -175,7 +182,6 @@ export const PORTAS: readonly DefinicaoDePorta[] = [
         rotulo: TEXTOS.grupos.organizacao,
         secundario: false,
         hrefs: [
-          "/app/settings/tenant",
           "/app/team",
           "/app/settings/tenant/financeiro",
           "/app/settings/marca",
@@ -203,7 +209,8 @@ export const PORTAS: readonly DefinicaoDePorta[] = [
 ];
 
 interface PosicaoPadrao {
-  readonly porta: PortaId;
+  /** `null`: fora do menu (a tela segue na busca ⌘K e no painel do Início). */
+  readonly porta: PortaId | null;
   readonly principal: GrupoId;
   readonly secundario: GrupoId;
 }
@@ -211,23 +218,37 @@ interface PosicaoPadrao {
 /** Tela sem posição explícita vai para a porta do `group` dela (spec 3.2). */
 export const PADRAO_POR_GRUPO: Readonly<Record<NavGroupId, PosicaoPadrao>> = {
   atendimento: { porta: "conversas", principal: "principal", secundario: "envios" },
-  crm: { porta: "contatos", principal: "principal", secundario: "principal" },
+  crm: { porta: "crm", principal: "principal", secundario: "principal" },
   ia: { porta: "ia", principal: "principal", secundario: "avancado" },
   canais: { porta: "configuracoes", principal: "canais", secundario: "canais" },
-  analise: { porta: "resultados", principal: "principal", secundario: "mais" },
+  // O painel é o Início: telas de análise novas do original ficam fora do menu.
+  analise: { porta: null, principal: "principal", secundario: "principal" },
   organizacao: { porta: "configuracoes", principal: "organizacao", secundario: "organizacao" },
 };
 
 /** Com o módulo ligado, cada página-hub do original vai à primeira tela visível desta porta (spec 3.4). */
 export const PORTA_DO_HUB: Readonly<Partial<Record<NavGroupId, PortaId>>> = {
-  crm: "contatos",
+  crm: "crm",
   ia: "ia",
-  analise: "resultados",
+  analise: "inicio",
   organizacao: "configuracoes",
 };
 
 /** As orientações das extensões (antes no hub `/app/crm`) viram um grupo desta porta. */
-export const PORTA_DAS_ORIENTACOES: PortaId = "contatos";
+export const PORTA_DAS_ORIENTACOES: PortaId = "crm";
+
+/**
+ * Telas de análise que saíram do menu (29/09): o Início é o painel e leva a elas;
+ * a busca ⌘K e os links continuam abrindo. Quem acende é o Início (`DONOS_EXTRAS`).
+ */
+export const FORA_DO_MENU: readonly string[] = [
+  "/app/metrics",
+  "/app/ads/meta",
+  "/app/activities",
+  "/app/faturamento",
+  "/app/ai/evolution",
+  "/app/audit",
+];
 
 /** Páginas de detalhe fora da árvore do seu item, por prefixo (spec 3.3). */
 export const DONOS_EXTRAS: ReadonlyArray<{ readonly prefixo: string; readonly dono: string }> = [
@@ -237,6 +258,8 @@ export const DONOS_EXTRAS: ReadonlyArray<{ readonly prefixo: string; readonly do
   { prefixo: "/app/settings/canal-oficial", dono: "/app/connections" },
   { prefixo: "/app/settings/templates", dono: "/app/connections" },
   { prefixo: "/app/settings/tenant/whatsapp", dono: "/app/connections" },
+  // O painel (Início) é dono das telas de análise fora do menu.
+  ...FORA_DO_MENU.map((prefixo) => ({ prefixo, dono: HREF_DO_INICIO })),
 ];
 
 /** Rótulos próprios da Convexy, por href; os demais usam o rótulo do catálogo, traduzido (spec 6.2). */
@@ -249,9 +272,14 @@ export const ROTULOS_DOS_ITENS: ReadonlyMap<string, RotuloPorNicho> = new Map<st
   ["/app/ai/agents", TEXTOS.itens.assistentes],
   ["/app/ai/inbox", TEXTOS.itens.pedidosDaIa],
   ["/app/ads/meta", TEXTOS.itens.anuncios],
+  ["/app/settings/tenant/agenda", ROTULO_DOS_TRATAMENTOS],
+  ["/app/settings/tenant", ROTULO_DOS_DADOS_DA_EMPRESA],
 ]);
 
-const HREFS_EXPLICITOS: ReadonlySet<string> = new Set(PORTAS.flatMap((p) => p.grupos.flatMap((g) => g.hrefs)));
+const HREFS_EXPLICITOS: ReadonlySet<string> = new Set([
+  ...PORTAS.flatMap((p) => p.grupos.flatMap((g) => g.hrefs)),
+  ...FORA_DO_MENU,
+]);
 
 /** O mínimo que o mapa precisa de uma entrada do catálogo (serve a `NavMetadata` e a `NavDestination`). */
 interface EntradaOrganizavel {
@@ -270,7 +298,7 @@ interface PortaOrganizada<T> {
   readonly grupos: readonly GrupoOrganizado<T>[];
 }
 
-function posicaoPadrao(entrada: EntradaOrganizavel): { porta: PortaId; grupo: GrupoId } {
+function posicaoPadrao(entrada: EntradaOrganizavel): { porta: PortaId | null; grupo: GrupoId } {
   const padrao = PADRAO_POR_GRUPO[entrada.group] as PosicaoPadrao | undefined;
   if (!padrao) {
     throw new Error(
@@ -284,7 +312,7 @@ function posicaoPadrao(entrada: EntradaOrganizavel): { porta: PortaId; grupo: Gr
 /** As entradas que entraram pela posição padrão — o teste as lista para quem revisa o merge. */
 export function posicoesPorPadrao(
   entradas: readonly EntradaOrganizavel[],
-): Array<{ href: string; porta: PortaId; grupo: GrupoId }> {
+): Array<{ href: string; porta: PortaId | null; grupo: GrupoId }> {
   return entradas.filter((e) => !HREFS_EXPLICITOS.has(e.href)).map((e) => ({ href: e.href, ...posicaoPadrao(e) }));
 }
 
@@ -307,6 +335,7 @@ export function organizarPorPortas<T extends EntradaOrganizavel>(entradas: reado
   for (const entrada of entradas) {
     if (HREFS_EXPLICITOS.has(entrada.href)) continue;
     const { porta, grupo } = posicaoPadrao(entrada);
+    if (porta === null) continue;
     const destino = estrutura.find((p) => p.porta.id === porta)?.grupos.find((g) => g.grupo.id === grupo);
     if (!destino) throw new Error(`mapa inconsistente: a porta ${porta} não tem o grupo ${grupo}`);
     destino.itens.push(entrada);

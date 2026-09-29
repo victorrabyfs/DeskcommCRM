@@ -172,10 +172,14 @@ test.afterAll(async () => {
 test.describe("como admin da organização, em tela larga", () => {
   test.use({ storageState: SESSAO_ADMIN, viewport: { width: 1440, height: 900 } });
 
-  test("o Início é a entrada de /app, com os três blocos", async ({ page }) => {
+  test("o Início é a entrada de /app: o painel do mês, o funil e os três blocos do dia", async ({ page }) => {
     await page.goto("/app");
     await expect(page).toHaveURL(/\/app$/);
     await expect(page.getByRole("heading", { level: 1, name: "Início" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Resultados do mês" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Resultados do mês" }).getByText("Pacientes novos")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ver as métricas" })).toHaveAttribute("href", "/app/metrics");
+    await expect(page.getByRole("link", { name: "Abrir o funil" })).toHaveAttribute("href", "/app/kanban");
     for (const bloco of ["Conversas esperando", "Agenda de hoje", "Minhas tarefas"]) {
       await expect(page.getByRole("heading", { level: 2, name: bloco })).toBeVisible();
     }
@@ -188,31 +192,31 @@ test.describe("como admin da organização, em tela larga", () => {
     page.on("console", (mensagem) => {
       if (mensagem.type() === "error") erros.push(mensagem.text());
     });
-    // Na clínica a porta Pacientes virou link direto (Produtos e Prospecção saíram
-    // do menu — CONVEXY.md, "Telas escondidas do menu"); a Agenda segue com duas telas.
-    await page.goto("/app/agenda");
-    const sub = subSidebar(page, "Agenda");
+    // Menu da clínica (29/09): Minha clínica tem Tratamentos e Dados da clínica.
+    // CONVEXY.md, "Menu da clínica".
+    await page.goto("/app/settings/tenant/agenda");
+    const sub = subSidebar(page, "Minha clínica");
     await expect(sub).toBeVisible();
     await expect.poll(() => largura(sub)).toBe(240);
     await expect.poll(() => largura(trilho(page))).toBe(64);
-    await expect(porta(page, "Agenda")).toHaveAttribute("aria-expanded", "true");
-    await expect(sub.getByRole("link", { name: "Agenda", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(porta(page, "Minha clínica")).toHaveAttribute("aria-expanded", "true");
+    await expect(sub.getByRole("link", { name: "Tratamentos", exact: true })).toHaveAttribute("aria-current", "page");
     expect(erros.filter((e) => /hydrat|#418|#423|#425/i.test(e))).toEqual([]);
-    await page.screenshot({ path: evidencia("02-porta-agenda-clinica.png"), fullPage: true });
+    await page.screenshot({ path: evidencia("02-porta-minha-clinica.png"), fullPage: true });
   });
 
   test("medidas do protótipo: porta 38px/14,5px, compacta 40px, item 32px, barra centrada e encostada", async ({ page }) => {
-    await page.goto("/app/kanban");
+    await page.goto("/app/contacts");
     await expect.poll(() => largura(trilho(page))).toBe(236);
     const conversas = porta(page, "Conversas");
     expect(await conversas.evaluate((el) => getComputedStyle(el).height)).toBe("38px");
     expect(await conversas.evaluate((el) => getComputedStyle(el).fontSize)).toBe("14.5px");
 
-    await page.goto("/app/agenda");
+    await page.goto("/app/settings/tenant/agenda");
     await expect.poll(() => largura(trilho(page))).toBe(64);
-    const agenda = porta(page, "Agenda");
+    const agenda = porta(page, "Minha clínica");
     expect(await agenda.evaluate((el) => getComputedStyle(el).height)).toBe("40px");
-    const item = subSidebar(page, "Agenda").getByRole("link", { name: "Tipos de agendamento" });
+    const item = subSidebar(page, "Minha clínica").getByRole("link", { name: "Dados da clínica" });
     expect(await item.evaluate((el) => getComputedStyle(el).minHeight)).toBe("32px");
 
     const barra = await agenda.locator(".convexy-barra").boundingBox();
@@ -225,7 +229,7 @@ test.describe("como admin da organização, em tela larga", () => {
   });
 
   test("abrir uma porta só estreita o conteúdo — a largura nunca volta a crescer no meio", async ({ page }) => {
-    await page.goto("/app/kanban");
+    await page.goto("/app/contacts");
     await expect.poll(() => largura(trilho(page))).toBe(236);
     const larguras = await page.evaluate(
       () =>
@@ -249,13 +253,13 @@ test.describe("como admin da organização, em tela larga", () => {
   });
 
   test("navegar dentro da porta não recria o menu", async ({ page }) => {
-    await page.goto("/app/agenda");
+    await page.goto("/app/settings/tenant/agenda");
     await menu(page).evaluate((el) => {
       (el as HTMLElement & { marcaDoTeste?: string }).marcaDoTeste = "mesmo-no";
     });
-    await subSidebar(page, "Agenda").getByRole("link", { name: "Tipos de agendamento" }).click();
-    await page.waitForURL(/\/app\/settings\/tenant\/agenda$/);
-    await expect(subSidebar(page, "Agenda").getByRole("link", { name: "Tipos de agendamento" })).toHaveAttribute(
+    await subSidebar(page, "Minha clínica").getByRole("link", { name: "Dados da clínica" }).click();
+    await page.waitForURL(/\/app\/settings\/tenant$/);
+    await expect(subSidebar(page, "Minha clínica").getByRole("link", { name: "Dados da clínica" })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -266,17 +270,21 @@ test.describe("como admin da organização, em tela larga", () => {
 
   test("link direto para tela interna abre a porta certa, com um dono só", async ({ page }) => {
     await page.goto("/app/settings/tenant/agenda");
-    const agenda = subSidebar(page, "Agenda");
-    await expect(agenda.getByRole("link", { name: "Tipos de agendamento" })).toHaveAttribute("aria-current", "page");
+    const agenda = subSidebar(page, "Minha clínica");
+    await expect(agenda.getByRole("link", { name: "Tratamentos" })).toHaveAttribute("aria-current", "page");
+    await expect(menu(page).locator('[aria-current="page"]')).toHaveCount(1);
+    // Tela de análise fora do menu: quem acende é o Início, e nada mais.
+    await page.goto("/app/metrics");
+    await expect(menu(page).getByRole("link", { name: "Início", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(menu(page).locator('[aria-current="page"]')).toHaveCount(1);
     await page.goto("/app/ai/cases/avisos");
-    const ia = subSidebar(page, "Assistente de IA");
+    const ia = subSidebar(page, "Agentes");
     await expect(ia.getByRole("link", { name: "Aviso no WhatsApp" })).toHaveAttribute("aria-current", "page");
     await expect(ia.getByRole("link", { name: "Casos" })).not.toHaveAttribute("aria-current", "page");
   });
 
   test("a alça recolhe o menu, e a escolha sobrevive ao recarregar", async ({ page }) => {
-    await page.goto("/app/kanban");
+    await page.goto("/app/contacts");
     await expect.poll(() => largura(trilho(page))).toBe(236);
     await trilho(page).hover();
     await page.getByRole("button", { name: "Recolher sidebar" }).click();
@@ -290,26 +298,26 @@ test.describe("como admin da organização, em tela larga", () => {
 
   test("os hubs levam à primeira tela da porta deles", async ({ page }) => {
     await page.goto("/app/crm");
-    await expect(page).toHaveURL(/\/app\/contacts$/);
+    await expect(page).toHaveURL(/\/app\/kanban$/);
     await page.goto("/app/ai");
     await expect(page).toHaveURL(/\/app\/ai\/agents$/);
     await page.goto("/app/analise");
-    await expect(page).toHaveURL(/\/app\/metrics$/);
+    await expect(page).toHaveURL(/\/app$/);
     await page.goto("/app/settings");
     await expect(page).toHaveURL(/\/app\/connections$/);
   });
 
   test("Esc fecha a sub-sidebar e devolve o foco à porta; clicar de novo reabre", async ({ page }) => {
-    await page.goto("/app/agenda");
-    const sub = subSidebar(page, "Agenda");
-    await sub.getByRole("link", { name: "Tipos de agendamento" }).focus();
+    await page.goto("/app/settings/tenant/agenda");
+    const sub = subSidebar(page, "Minha clínica");
+    await sub.getByRole("link", { name: "Dados da clínica" }).focus();
     await page.keyboard.press("Escape");
     await expect(sub).toHaveCount(0);
-    await expect(porta(page, "Agenda")).toBeFocused();
-    await expect(porta(page, "Agenda")).toHaveAttribute("aria-expanded", "false");
+    await expect(porta(page, "Minha clínica")).toBeFocused();
+    await expect(porta(page, "Minha clínica")).toHaveAttribute("aria-expanded", "false");
     await expect.poll(() => largura(trilho(page))).toBe(236);
-    await porta(page, "Agenda").click();
-    await expect(subSidebar(page, "Agenda")).toBeVisible();
+    await porta(page, "Minha clínica").click();
+    await expect(subSidebar(page, "Minha clínica")).toBeVisible();
   });
 
   test("área escondida na tela de interface some do menu", async ({ page }) => {
@@ -326,17 +334,20 @@ test.describe("como admin da organização, em tela larga", () => {
   });
 
   test("o nicho troca os nomes: clínica × serviços", async ({ page }) => {
-    await page.goto("/app/contacts");
-    // Na clínica, Pacientes é link direto: Prospecção sai do menu pelo nicho.
+    // Na clínica: Pacientes, Funil de pacientes no CRM, sem Prospecção (nicho).
+    await page.goto("/app/kanban");
     await expect(menu(page).getByRole("link", { name: "Pacientes", exact: true })).toBeVisible();
-    await expect(menu(page).getByRole("link", { name: "Funil de pacientes", exact: true })).toBeVisible();
+    await expect(subSidebar(page, "CRM").getByRole("link", { name: "Funil de pacientes", exact: true })).toBeVisible();
+    await expect(subSidebar(page, "CRM").getByRole("link", { name: "Prospecção" })).toHaveCount(0);
+    await expect(porta(page, "Minha clínica")).toBeVisible();
     await gravarNicho("servicos");
     try {
       await page.reload();
-      await expect(porta(page, "Contatos")).toBeVisible();
-      await expect(subSidebar(page, "Contatos").getByRole("link", { name: "Prospecção" })).toBeVisible();
-      await expect(menu(page).getByRole("link", { name: "Funil de vendas", exact: true })).toBeVisible();
-      await page.screenshot({ path: evidencia("05-porta-contatos-servicos.png"), fullPage: true });
+      await expect(menu(page).getByRole("link", { name: "Contatos", exact: true })).toBeVisible();
+      await expect(subSidebar(page, "CRM").getByRole("link", { name: "Prospecção" })).toBeVisible();
+      await expect(subSidebar(page, "CRM").getByRole("link", { name: "Funil de vendas", exact: true })).toBeVisible();
+      await expect(porta(page, "Minha empresa")).toBeVisible();
+      await page.screenshot({ path: evidencia("05-crm-servicos.png"), fullPage: true });
     } finally {
       await gravarNicho("clinica");
     }
@@ -373,8 +384,9 @@ test.describe("como admin da organização, em tela larga", () => {
     ];
     for (const [caminho, nomeDaPorta] of [
       ["/app/inbox", "Conversas"],
-      ["/app/agenda", "Agenda"],
-      ["/app/metrics", "Resultados"],
+      ["/app/kanban", "CRM"],
+      ["/app/ai/agents", "Agentes"],
+      ["/app/settings/tenant/agenda", "Minha clínica"],
       ["/app/settings/profile", "Configurações"],
     ] as const) {
       await page.goto(caminho);
@@ -406,12 +418,12 @@ test.describe("como admin da organização, no tema escuro", () => {
     await expect.poll(() => page.evaluate(() => document.documentElement.getAttribute("data-theme"))).toBe("dark");
     const fundo = await corEToken(trilho(page), "backgroundColor", "--color-surface");
     expect(fundo.real).toBe(fundo.esperado);
-    // Porta ativa com sub-sidebar: a Agenda (Pacientes é link direto na clínica).
-    await page.goto("/app/agenda");
-    const ativa = await corEToken(porta(page, "Agenda"), "color", "--color-accent");
+    // Porta ativa com sub-sidebar: Minha clínica (Tratamentos e Dados da clínica).
+    await page.goto("/app/settings/tenant/agenda");
+    const ativa = await corEToken(porta(page, "Minha clínica"), "color", "--color-accent");
     expect(ativa.real).toBe(ativa.esperado);
     await page.screenshot({ path: evidencia("06-tema-escuro.png"), fullPage: true });
-    // A porta Agenda tem só o grupo principal, que não tem rótulo; Configurações
+    // A porta Minha clínica tem só o grupo principal, que não tem rótulo; Configurações
     // abre com o grupo "Canais", rotulado.
     await page.goto("/app/settings/profile");
     const rotulo = subSidebar(page, "Configurações").locator("h3").first();
@@ -425,13 +437,13 @@ test.describe("como admin da organização, entre md e lg", () => {
   test.use({ storageState: SESSAO_ADMIN, viewport: { width: 900, height: 800 } });
 
   test("a sub-sidebar só aparece por clique, por cima, sem rolagem horizontal; Esc fecha e devolve o foco", async ({ page }) => {
-    await page.goto("/app/agenda");
-    await expect(subSidebar(page, "Agenda")).toBeHidden();
-    await expect(porta(page, "Agenda")).toHaveAttribute("aria-expanded", "false");
-    await porta(page, "Agenda").click();
-    const sub = subSidebar(page, "Agenda");
+    await page.goto("/app/settings/tenant/agenda");
+    await expect(subSidebar(page, "Minha clínica")).toBeHidden();
+    await expect(porta(page, "Minha clínica")).toHaveAttribute("aria-expanded", "false");
+    await porta(page, "Minha clínica").click();
+    const sub = subSidebar(page, "Minha clínica");
     await expect(sub).toBeVisible();
-    await expect(porta(page, "Agenda")).toHaveAttribute("aria-expanded", "true");
+    await expect(porta(page, "Minha clínica")).toHaveAttribute("aria-expanded", "true");
     await expect(sub.getByRole("link").first()).toBeFocused();
     const rolagem = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
@@ -441,7 +453,7 @@ test.describe("como admin da organização, entre md e lg", () => {
     await page.screenshot({ path: evidencia("07-sobreposicao-900.png"), fullPage: true });
     await page.keyboard.press("Escape");
     await expect(sub).toBeHidden();
-    await expect(porta(page, "Agenda")).toBeFocused();
+    await expect(porta(page, "Minha clínica")).toBeFocused();
   });
 });
 
@@ -454,7 +466,7 @@ test.describe("como admin da organização, no celular", () => {
     await expect(menu(page)).toBeHidden();
     await page.getByRole("button", { name: "Abrir navegação" }).click();
     const gaveta = page.getByRole("dialog");
-    await gaveta.getByRole("button", { name: "Assistente de IA", exact: true }).click();
+    await gaveta.getByRole("button", { name: "Agentes", exact: true }).click();
     const voltar = gaveta.getByRole("button", { name: "‹ Voltar" });
     await expect(voltar).toBeVisible();
     expect(Math.round((await voltar.boundingBox())?.height ?? 0)).toBeGreaterThanOrEqual(44);
@@ -470,7 +482,7 @@ test.describe("como agente", () => {
 
   test("o agente não vê os itens de gerente nem de admin", async ({ page }) => {
     await page.goto("/app/ai/cases");
-    const ia = subSidebar(page, "Assistente de IA");
+    const ia = subSidebar(page, "Agentes");
     await expect(ia.getByRole("link", { name: "Casos" })).toHaveAttribute("aria-current", "page");
     for (const nome of ["Assistentes", "Roteadores", "Execuções", "Credenciais"]) {
       await expect(ia.getByRole("link", { name: nome, exact: true })).toHaveCount(0);
