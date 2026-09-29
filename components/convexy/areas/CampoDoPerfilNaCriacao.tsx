@@ -33,7 +33,7 @@ export function CampoDoPerfilNaCriacao({
   const completa = data.find((p) => p.libera_tudo);
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="block text-sm font-medium">
         {texto(TEXTOS.areas.titulo, idioma)}
       </label>
       <select
