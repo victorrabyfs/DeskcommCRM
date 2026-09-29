@@ -7,6 +7,7 @@ import { useEffect, useState, useTransition } from "react";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { MarcaDaBarra } from "@/components/shell/Sidebar";
 import { VersionFooter } from "@/components/shell/VersionFooter";
+import { TesteNoMenu } from "@/components/convexy/teste/TesteNoMenu";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useT } from "@/hooks/i18n/useT";
 import { ativoNoCaminho } from "@/lib/convexy/menu/dono";
@@ -190,6 +191,14 @@ export function MenuConvexy({ recolhido }: { recolhido: boolean }) {
                 ))}
             </ul>
             <div className="border-t border-border p-2">
+              <div className={cn(compactaEmTelaLarga && "lg:hidden")}>
+                <TesteNoMenu collapsed={recolhido} />
+              </div>
+              {compactaEmTelaLarga ? (
+                <div className="hidden lg:block">
+                  <TesteNoMenu collapsed />
+                </div>
+              ) : null}
               <ul className="mb-1 space-y-[3px]">
                 {portas
                   .filter((p) => p.rodape)

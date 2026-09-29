@@ -195,11 +195,11 @@ export const TEXTOS = {
   },
   // Período de teste. CONVEXY.md, "Trial".
   teste: {
-    diasTranquilo: { pt: "Teste grátis · {n} dias", es: "Prueba gratis · {n} días" },
-    faltamDias: { pt: "Faltam {n} dias do seu teste", es: "Faltan {n} días de su prueba" },
-    faltaUmDia: { pt: "Falta 1 dia do seu teste", es: "Falta 1 día de su prueba" },
+    rotulo: { pt: "Teste grátis", es: "Prueba gratis" },
+    diasRestantes: { pt: "{n} dias restantes", es: "{n} días restantes" },
+    umDiaRestante: { pt: "1 dia restante", es: "1 día restante" },
     acabaHoje: { pt: "Seu teste acaba hoje!", es: "¡Su prueba termina hoy!" },
-    termina: { pt: "O teste termina em {data}.", es: "La prueba termina el {data}." },
+    termina: { pt: "Termina em {data}", es: "Termina el {data}" },
     titulo: { pt: "Período de teste", es: "Período de prueba" },
     semTeste: { pt: "Sem teste", es: "Sin prueba" },
     nDias: { pt: "{n} dias", es: "{n} días" },

@@ -9,7 +9,7 @@ import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 // Convexy: CONVEXY.md, "Telas escondidas do menu".
 import { useConvexy } from "@/lib/convexy/contexto";
-import { EtiquetaDoTeste } from "@/components/convexy/teste/EtiquetaDoTeste";
+import { TesteNoMenu } from "@/components/convexy/teste/TesteNoMenu";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
 import { VersionFooter } from "@/components/shell/VersionFooter";
 import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
@@ -231,6 +231,8 @@ export function SidebarContent({
         })}
       </nav>
       <div className="border-t p-2">
+        {/* Convexy: o período de teste, acima de Configurações. CONVEXY.md, "Trial". */}
+        <TesteNoMenu collapsed={collapsed} />
         {rodape && (
           <Link
             href={rodape.href}
@@ -328,7 +330,6 @@ export function MarcaDaBarra({ collapsed }: { collapsed: boolean }) {
   const simbolo = activeOrg?.marca?.logoUrl ? null : brand.simboloUrl;
 
   return (
-    <>
       <div
         className={cn(
           "flex h-14 items-center border-b px-4",
@@ -395,9 +396,6 @@ export function MarcaDaBarra({ collapsed }: { collapsed: boolean }) {
           </span>
         ))}
       </div>
-      {/* Convexy: o período de teste, abaixo da marca. CONVEXY.md, "Trial". */}
-      <EtiquetaDoTeste collapsed={collapsed} />
-    </>
   );
 }
 

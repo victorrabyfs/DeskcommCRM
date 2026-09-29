@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0-cvx.7] — 2026-09-29
+
+O período de teste passa a aparecer num cartão no rodapé do menu, logo acima de Configurações: "Teste grátis", os dias restantes em destaque e a data do fim. Com 7 dias ou menos o cartão fica em tom de aviso, e no último dia mostra "Seu teste acaba hoje!". Com o menu recolhido, aparece um relógio com o número de dias. Não é preciso fazer nada na instalação.
+
 ## [1.59.0-cvx.6] — 2026-09-29
 
 Período de teste: ao criar uma empresa em /admin, escolha um teste de 7, 14 ou 30 dias (14 por padrão); na página da empresa dá para estender ou encerrar. O menu mostra "Teste grátis" com os dias que faltam, e a partir de 7 dias vira aviso ("Faltam N dias do seu teste", "Seu teste acaba hoje!"). Ao terminar, a empresa é suspensa sem apagar nada e volta inteira ao ser reativada. Empresa suspensa — pelo teste ou à mão — deixa de ser atendida pela IA e não envia mensagens, mas continua recebendo e guardando o que chega. A atualização cria a coluna do teste no banco e agenda a conferência de hora em hora, sozinha.
