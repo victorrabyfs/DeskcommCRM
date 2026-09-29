@@ -123,6 +123,9 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "tests/invariants/webhooks-rls.test.ts (\"service_role insere " +
       "automation_rule_runs na org A; manager B não vê, manager A vê\").",
   },
+  // Convexy: Minha clínica (migration 9008). CONVEXY.md, "Minha clínica".
+  { tabela: "clinica_dados", razao: "tests/invariants/convexy-minha-clinica.test.ts — duas organizações reais por JWT: cada uma lê só a própria linha (countAs nos dois sentidos), agent e manager do vizinho não gravam, manager da própria grava." },
+  { tabela: "calendar_event_type_especialistas", razao: "tests/invariants/convexy-minha-clinica.test.ts — duas organizações reais por JWT: leitura 0 cross-org nos dois sentidos, DELETE cruzado sem efeito, e o gatilho recusa tipo ou pessoa de outra organização." },
   {
     tabela: "calendar_event_types",
     razao:
