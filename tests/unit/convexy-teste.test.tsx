@@ -14,7 +14,7 @@ vi.mock("@/lib/audit", () => ({ audit: estado.audit }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn() } }));
 vi.mock("@/hooks/auth/AuthProvider", () => ({ useAuth: () => ({ activeOrg: estado.activeOrg }) }));
 
-import { EtiquetaDoTeste } from "@/components/convexy/teste/EtiquetaDoTeste";
+import { TesteNoMenu } from "@/components/convexy/teste/TesteNoMenu";
 import { organizacaoSuspensa, organizacaoSuspensaNoSupabase } from "@/lib/convexy/suspensao";
 import { MOTIVO_DO_TESTE_ENCERRADO, diasRestantes, encerrarTestesVencidos, fimDoTeste } from "@/lib/convexy/teste";
 import { testeDaOrganizacao } from "@/lib/convexy/teste-na-sessao";
@@ -133,29 +133,34 @@ describe("organização suspensa", () => {
   });
 });
 
-describe("a etiqueta do menu", () => {
+describe("o teste no rodapé do menu", () => {
   const com = (dias: number) => ({ teste: { terminaEm: "x", terminaEmLegivel: "03/10 12:00", dias } });
 
-  it("sem teste ou menu recolhido: nada", () => {
+  it("sem teste: nada", () => {
     estado.activeOrg = {};
-    const { container, rerender } = render(<EtiquetaDoTeste collapsed={false} />);
-    expect(container).toBeEmptyDOMElement();
-    estado.activeOrg = com(10);
-    rerender(<EtiquetaDoTeste collapsed />);
+    const { container } = render(<TesteNoMenu collapsed={false} />);
     expect(container).toBeEmptyDOMElement();
   });
 
   it.each([
-    [12, "Teste grátis · 12 dias"],
-    [7, "Faltam 7 dias do seu teste"],
-    [4, "Faltam 4 dias do seu teste"],
-    [2, "Faltam 2 dias do seu teste"],
-    [1, "Falta 1 dia do seu teste"],
-    [0, "Seu teste acaba hoje!"],
-  ])("%i dias: %s", (dias, texto) => {
+    [12, "12 dias restantes", false],
+    [7, "7 dias restantes", true],
+    [2, "2 dias restantes", true],
+    [1, "1 dia restante", true],
+    [0, "Seu teste acaba hoje!", true],
+  ])("%i dias: %s", (dias, texto, aviso) => {
     estado.activeOrg = com(dias);
-    render(<EtiquetaDoTeste collapsed={false} />);
+    render(<TesteNoMenu collapsed={false} />);
+    expect(screen.getByText("Teste grátis")).toBeInTheDocument();
     expect(screen.getByText(texto)).toBeInTheDocument();
-    expect(screen.queryByRole("status") !== null).toBe(dias <= 7);
+    expect(screen.getByText("Termina em 03/10 12:00")).toBeInTheDocument();
+    expect(screen.queryByRole("status") !== null).toBe(aviso);
+  });
+
+  it("recolhido: o relógio com o número de dias, e o texto para leitor de tela", () => {
+    estado.activeOrg = com(5);
+    render(<TesteNoMenu collapsed />);
+    expect(screen.getByText("5")).toBeInTheDocument();
+    expect(screen.getByText("5 dias restantes")).toHaveClass("sr-only");
   });
 });

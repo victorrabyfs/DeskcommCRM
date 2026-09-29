@@ -488,10 +488,11 @@ nada**, e a empresa volta inteira se contratar.
   `processEvent` do drain não cria turno, o `runJob` do worker cancela qualquer job dela (inclusive os
   já na fila) e a porta de envio (`sendMessageHandler`) recusa com 403 — prospecção, lembretes,
   automações e retornos passam por ela. Leitura em `lib/convexy/suspensao.ts`, com falha aberta.
-- **Etiqueta no menu** (`EtiquetaDoTeste`, abaixo da marca no `MarcaDaBarra`, para todo mundo da
-  empresa): "Teste grátis · N dias"; com 7 dias ou menos vira aviso ("Faltam N dias do seu teste",
-  "Falta 1 dia", "Seu teste acaba hoje!"). Dias de calendário no fuso da organização, calculados no
-  servidor. Menu recolhido: não aparece.
+- **Cartão no rodapé do menu** (`TesteNoMenu`, logo acima de Configurações, nos três menus, para
+  todo mundo da empresa): "Teste grátis", "N dias restantes" e "Termina em …"; com 7 dias ou menos
+  fica em tom de aviso e no último dia "Seu teste acaba hoje!" em tom de erro. Menu recolhido: o
+  relógio com o número de dias. Dias de calendário no fuso da organização, calculados no servidor.
+  (Na `-cvx.6` era uma etiqueta abaixo da marca; o Victor pediu outro visual e outro lugar.)
 - `/account-suspended` ganha a linha "Se o seu período de teste terminou, seus dados continuam guardados".
 - E-mails de aviso de fim de teste ficam para o item 4 do roteiro.
 
@@ -505,7 +506,7 @@ nada**, e a empresa volta inteira se contratar.
 | `app/api/v1/admin/tenants/route.ts`, `hooks/useCreateTenant.ts`, `app/admin/(protected)/tenants/new/_form.tsx` | `teste_dias` na criação (fora do schema do original) | reaplicar |
 | `app/admin/(protected)/tenants/[id]/page.tsx` | `<CartaoDoTeste>` | reaplicar |
 | `app/app/layout.tsx`, `lib/auth/types.ts` | `teste_termina_em` na consulta própria do nicho; `activeOrg.teste` | reaplicar |
-| `components/shell/Sidebar.tsx` | fragmento com `<EtiquetaDoTeste>` depois do cabeçalho do `MarcaDaBarra` | reaplicar |
+| `components/shell/Sidebar.tsx` | `<TesteNoMenu>` no topo do rodapé, antes de Configurações | reaplicar |
 | `app/account-suspended/page.tsx`, `lib/i18n/dicionario.ts` | a linha do teste e as traduções | reaplicar |
 | `docker/scheduler/entrypoint.sh` | `23 * * * *\|60\|api/v1/cron/convexy-teste` | reaplicar |
 | `lib/audit/actions.ts` | `tenant.teste_alterado`, `cron.convexy_teste` no fim | manter no fim |

@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 
 import { MarcaDaBarra } from "@/components/shell/Sidebar";
 import { VersionFooter } from "@/components/shell/VersionFooter";
+import { TesteNoMenu } from "@/components/convexy/teste/TesteNoMenu";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useT } from "@/hooks/i18n/useT";
 import { ativoNoCaminho } from "@/lib/convexy/menu/dono";
@@ -90,6 +91,7 @@ export function GavetaConvexy({ aoNavegar }: { aoNavegar: () => void }) {
               </ul>
             </nav>
             <div className="border-t border-border p-2">
+              <TesteNoMenu collapsed={false} />
               <ul className="mb-1 space-y-[3px]">
                 {portas
                   .filter((p) => p.rodape)
