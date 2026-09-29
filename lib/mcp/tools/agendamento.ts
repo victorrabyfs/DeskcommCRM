@@ -38,6 +38,13 @@ import { ApiError } from "@/lib/api/types";
 import { SITUACOES_DO_AGENDAMENTO } from "@/lib/agenda/tipos";
 import type { McpContext, McpToolDefinition } from "@/lib/mcp/types";
 import { resolveUserNames } from "./_users";
+// Convexy: especialistas e dados da clínica na agenda da IA. CONVEXY.md, "Minha clínica".
+import {
+  donoParaMarcar,
+  extrasDosTipos,
+  horariosComEspecialistas,
+  type SlotComEspecialista,
+} from "@/lib/convexy/clinica/agenda-da-ia";
 
 /** Teto do horizonte pedido — espelha o da rota, e o excesso é erro de chamada. */
 const DIAS_PADRAO = 14;
@@ -113,7 +120,11 @@ export const crmListEventTypes: McpToolDefinition<typeof tiposShape> = {
     "Lista vazia significa que ninguém cadastrou o que a organização atende: não invente atendimento, " +
     "avise que alguém da equipe confirma. " +
     "`precisa_confirmacao: true` muda o que você diz depois de marcar — o horário fica reservado " +
-    "AGUARDANDO a pessoa confirmar, não confirmado.",
+    "AGUARDANDO a pessoa confirmar, não confirmado. " +
+    // Convexy: preço e quem faz. CONVEXY.md, "Minha clínica".
+    "`preco.texto` é o valor cadastrado (null = a clínica não informou: não invente preço). " +
+    "`especialistas` são os profissionais que fazem o atendimento; passe o `id` de um deles como " +
+    "`especialista_id` quando a pessoa escolher com quem.",
   inputSchema: tiposShape,
   category: "read",
   requiresRole: "agent",
@@ -123,6 +134,8 @@ export const crmListEventTypes: McpToolDefinition<typeof tiposShape> = {
     if (!r.ok) {
       return { tipos: [], motivo: r.codigo, mensagem: r.motivoParaCliente };
     }
+    // Convexy: preço e quem faz, lidos à parte e sem derrubar a lista. CONVEXY.md, "Minha clínica".
+    const extras = await extrasDosTipos(ctx.supabase, ctx.organizationId, r.tipos).catch(() => null);
     return {
       tipos: r.tipos.map((t) => ({
         // O SLUG vem primeiro, e o `id` NÃO vem: o slug existe para dar à IA um
@@ -136,6 +149,9 @@ export const crmListEventTypes: McpToolDefinition<typeof tiposShape> = {
         // recebe. `rotuloDoLocal` é o MESMO tradutor que a tela usa.
         onde: rotuloDoLocal(t.localKind, t.localDetalhes) ?? null,
         precisa_confirmacao: t.precisaConfirmacao,
+        ...(extras
+          ? { preco: extras.get(t.slug)?.preco ?? null, especialistas: extras.get(t.slug)?.especialistas ?? [] }
+          : {}),
       })),
     };
   },
@@ -177,6 +193,15 @@ const horariosLivresShape = {
         "(tem precedência sobre dias_a_frente).",
     ),
   owner_user_id: z.string().uuid().optional(),
+  // Convexy: com quem. CONVEXY.md, "Minha clínica".
+  especialista_id: z
+    .string()
+    .uuid()
+    .optional()
+    .describe(
+      "o `id` do profissional que a pessoa escolheu (de `crm_list_specialists` ou de `especialistas` em " +
+        "`crm_list_event_types`). Sem ele, a busca olha todos os que fazem o atendimento e diz de quem é cada horário.",
+    ),
   limite: z
     .number()
     .int()
@@ -326,9 +351,11 @@ export const crmFindFreeSlots: McpToolDefinition<typeof horariosLivresShape> = {
         ? new Date(de.getTime() + (input.dias_a_frente ?? DIAS_PADRAO) * 86_400_000)
         : janela.ate;
 
-    const consulta = await horariosLivresDaOrg(ctx.supabase, ctx.organizationId, {
+    // Convexy: com "quem faz", consulta cada profissional pelo MESMO motor e junta.
+    // Sem lista, é o `horariosLivresDaOrg` do original. CONVEXY.md, "Minha clínica".
+    const consulta = await horariosComEspecialistas(ctx.supabase, ctx.organizationId, {
       eventTypeSlug: input.event_type_slug,
-      ownerUserId: input.owner_user_id ?? null,
+      especialistaId: input.especialista_id ?? input.owner_user_id ?? null,
       de,
       ate,
       agora,
@@ -354,9 +381,29 @@ export const crmFindFreeSlots: McpToolDefinition<typeof horariosLivresShape> = {
       input.dia === undefined
         ? consulta.slots
         : consulta.slots.filter((s) => diaLocalISO(s.inicio, consulta.fusoDaRegra) === input.dia);
-    return payloadDeHorarios(consulta, slotsDoPeriodo, input.limite ?? HORARIOS_PADRAO);
+    return comEspecialista(payloadDeHorarios(consulta, slotsDoPeriodo, input.limite ?? HORARIOS_PADRAO), slotsDoPeriodo);
   },
 };
+
+/**
+ * Convexy: diz de quem é cada horário quando a busca foi por especialista.
+ * `payloadDeHorarios` não muda; o nome entra depois, pelo instante. Sem
+ * especialista (caminho do original), a resposta sai igual. CONVEXY.md, "Minha clínica".
+ */
+function comEspecialista<T extends { horarios: Array<{ inicio: string }> }>(
+  payload: T,
+  slots: readonly SlotComEspecialista[],
+): T {
+  const quem = new Map(slots.filter((s) => s.especialistaId).map((s) => [s.inicio.toISOString(), s]));
+  if (quem.size === 0) return payload;
+  return {
+    ...payload,
+    horarios: payload.horarios.map((h) => {
+      const s = quem.get(h.inicio);
+      return s ? { ...h, especialista: { id: s.especialistaId, nome: s.especialistaNome } } : h;
+    }),
+  };
+}
 
 
 const listarShape = {
@@ -573,6 +620,15 @@ const marcarShape = {
   starts_at: z.string().datetime({ offset: true }).describe("o instante exato do início, vindo de `crm_find_free_slots`"),
   contact_id: z.string().uuid().describe("quem vai ser atendido"),
   owner_user_id: z.string().uuid().optional(),
+  // Convexy: com quem. CONVEXY.md, "Minha clínica".
+  especialista_id: z
+    .string()
+    .uuid()
+    .optional()
+    .describe(
+      "o `id` do profissional do horário escolhido (vem em `especialista.id` de `crm_find_free_slots`). " +
+        "Sem ele, marca com quem faz o atendimento e está livre nesse horário.",
+    ),
   title: z.string().min(1).max(200).optional(),
   notes: z
     .string()
@@ -619,6 +675,15 @@ export const crmBookAppointment: McpToolDefinition<typeof marcarShape> = {
           mensagem: `não existe atendimento chamado "${input.event_type_slug}". Pergunte que tipo de atendimento a pessoa quer.`,
         };
       }
+      // Convexy: com qual profissional. Sem "quem faz", `donoId` fica indefinido e
+      // vale o dono padrão do tipo, como no original. CONVEXY.md, "Minha clínica".
+      const dono = await donoParaMarcar(ctx.supabase, ctx.organizationId, {
+        eventTypeSlug: input.event_type_slug,
+        especialistaId: input.especialista_id ?? input.owner_user_id ?? null,
+        startsAt: new Date(input.starts_at),
+        agora: new Date(),
+      }).catch(() => ({ ok: true as const, donoId: input.especialista_id ?? input.owner_user_id }));
+      if (!dono.ok) return { marcado: false, motivo: dono.codigo, mensagem: dono.mensagem };
       const r = await marcarAgendamentoHandler(
         ctx.supabase,
         {
@@ -633,7 +698,7 @@ export const crmBookAppointment: McpToolDefinition<typeof marcarShape> = {
           event_type_id: tipo.id,
           starts_at: input.starts_at,
           contact_id: input.contact_id,
-          ...(input.owner_user_id ? { owner_user_id: input.owner_user_id } : {}),
+          ...(dono.donoId ? { owner_user_id: dono.donoId } : {}),
           ...(input.title ? { title: input.title } : {}),
           ...(input.notes ? { notes: input.notes } : {}),
           ...(input.description ? { description: input.description } : {}),
@@ -703,6 +768,7 @@ async function marcarHorario(
     startsAt: string;
     contactId: string;
     ownerUserId?: string;
+    especialistaId?: string;
     title?: string;
     notes?: string;
   },
@@ -713,6 +779,7 @@ async function marcarHorario(
       starts_at: args.startsAt,
       contact_id: args.contactId,
       ...(args.ownerUserId !== undefined ? { owner_user_id: args.ownerUserId } : {}),
+      ...(args.especialistaId !== undefined ? { especialista_id: args.especialistaId } : {}),
       ...(args.title !== undefined ? { title: args.title } : {}),
       ...(args.notes !== undefined ? { notes: args.notes } : {}),
     },
@@ -738,6 +805,14 @@ const consultarEMarcarShape = {
     ),
   contact_id: z.string().uuid().describe("quem vai ser atendido"),
   owner_user_id: z.string().uuid().optional(),
+  // Convexy: com quem. CONVEXY.md, "Minha clínica".
+  especialista_id: z
+    .string()
+    .uuid()
+    .optional()
+    .describe(
+      "o `id` do profissional que a pessoa escolheu. Sem ele, marca com quem faz o atendimento e está livre na hora pedida.",
+    ),
   title: z.string().min(1).max(200).optional(),
   notes: z.string().max(2000).optional(),
 };
@@ -785,9 +860,10 @@ export const crmFindAndBookAppointment: McpToolDefinition<typeof consultarEMarca
     const agora = new Date();
     const { de, ate } = faixaAmplaDoDia(input.dia);
 
-    const consulta = await horariosLivresDaOrg(ctx.supabase, ctx.organizationId, {
+    // Convexy: por especialista quando o tratamento tem "quem faz". CONVEXY.md, "Minha clínica".
+    const consulta = await horariosComEspecialistas(ctx.supabase, ctx.organizationId, {
       eventTypeSlug: input.event_type_slug,
-      ownerUserId: input.owner_user_id ?? null,
+      especialistaId: input.especialista_id ?? input.owner_user_id ?? null,
       de,
       ate,
       agora,
@@ -820,7 +896,7 @@ export const crmFindAndBookAppointment: McpToolDefinition<typeof consultarEMarca
 
     if (achado === undefined) {
       return {
-        ...payloadDeHorarios(consulta, slotsDoDia, HORARIOS_PADRAO),
+        ...comEspecialista(payloadDeHorarios(consulta, slotsDoDia, HORARIOS_PADRAO), slotsDoDia),
         marcado: false,
         motivo: "horario_indisponivel",
         // O tom importa: o cliente não fez nada errado, e "não está livre" NÃO é
@@ -838,7 +914,12 @@ export const crmFindAndBookAppointment: McpToolDefinition<typeof consultarEMarca
       // agenda confirmou como livre.
       startsAt: achado.inicio.toISOString(),
       contactId: input.contact_id,
-      ...(input.owner_user_id !== undefined ? { ownerUserId: input.owner_user_id } : {}),
+      // Convexy: o profissional do horário encontrado. CONVEXY.md, "Minha clínica".
+      ...(achado.especialistaId
+        ? { especialistaId: achado.especialistaId }
+        : input.owner_user_id !== undefined
+          ? { ownerUserId: input.owner_user_id }
+          : {}),
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.notes !== undefined ? { notes: input.notes } : {}),
     });
@@ -856,10 +937,13 @@ export const crmFindAndBookAppointment: McpToolDefinition<typeof consultarEMarca
       //
       // ⚠️ A lista vai SEM o horário recusado: ele acabou de ser recusado, e
       // oferecê-lo de volta ao cliente é o começo de um laço.
-      const payload = payloadDeHorarios(
-        consulta,
-        slotsDoDia.filter((s) => s !== achado),
-        HORARIOS_PADRAO,
+      const payload = comEspecialista(
+        payloadDeHorarios(
+          consulta,
+          slotsDoDia.filter((s) => s !== achado),
+          HORARIOS_PADRAO,
+        ),
+        slotsDoDia,
       );
       // ⚠️ E o ensino só é REESCRITO quando a recusa é o horário que ficou
       // indisponível e SOBROU opção no dia. O texto de `ENSINO_POR_CODIGO` para
@@ -893,6 +977,7 @@ export const crmFindAndBookAppointment: McpToolDefinition<typeof consultarEMarca
       // de dentro de `compromisso` o que ele mesmo pediu.
       inicio: achado.inicio.toISOString(),
       quando: rotuloLocal(achado.inicio, consulta.fusoDaRegra),
+      ...(achado.especialistaId ? { especialista: { id: achado.especialistaId, nome: achado.especialistaNome } } : {}),
       agenda_externa_nunca_lida: consulta.agendaExternaNuncaLida,
       // ⚠️ A ressalva vai JUNTO da confirmação, e concatenada — não por cima. O
       // texto que `resultado` traz é o da marcação ("marquei tal dia"), e é ele
