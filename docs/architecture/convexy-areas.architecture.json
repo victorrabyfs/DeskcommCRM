@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Perfis de áreas da Convexy",
+    "subtitle": "O pacote de cada empresa limita menu, busca, Início e telas (fase 1)",
+    "output": "convexy-areas.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "humano", "label": "Pessoa" },
+    { "id": "app", "label": "Aplicativo" },
+    { "id": "db", "label": "Banco" },
+    { "id": "ci", "label": "CI" }
+  ],
+  "mainPath": ["admin", "perfis", "empresa", "sessao", "menu", "guarda"],
+  "nodes": [
+    { "id": "admin", "lane": "humano", "col": 0, "type": "ui", "label": "/admin/perfis-de-areas, criação e página da empresa" },
+    { "id": "rotas", "lane": "app", "col": 1, "type": "service", "label": "rotas admin perfis-de-areas e tenants/[id]/areas (versão lida, 409)" },
+    { "id": "perfis", "lane": "db", "col": 2, "type": "database", "label": "perfis_de_areas (migration 9005, só service role)" },
+    { "id": "empresa", "lane": "db", "col": 2, "type": "database", "label": "organizations.perfil_de_areas_id, areas_a_mais/a_menos" },
+    { "id": "auditoria", "lane": "db", "col": 3, "type": "database", "label": "api_audit_log platform.perfil_de_areas_* · tenant.areas_changed" },
+    { "id": "memo", "lane": "app", "col": 3, "type": "service", "label": "perfisDeAreas() — memo 30 s, geração, último valor bom" },
+    { "id": "sessao", "lane": "app", "col": 4, "type": "service", "label": "loadAuthUser → areasLiberadas → limitarInterface" },
+    { "id": "menu", "lane": "humano", "col": 5, "type": "ui", "label": "Menu, busca ⌘K, hubs e Início só com o pacote" },
+    { "id": "editor", "lane": "humano", "col": 5, "type": "ui", "label": "InterfaceEditor da clínica sem as áreas de fora" },
+    { "id": "guarda", "lane": "humano", "col": 6, "type": "ui", "label": "GuardaDoPacote: aviso na área fora do pacote" },
+    { "id": "gate", "lane": "ci", "col": 2, "type": "service", "label": "convexy-perfis-de-areas (banco) · convexy-areas (cálculo, rotas, cartão)" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "admin", "to": "rotas", "label": "cria, edita, escolhe o perfil da empresa" },
+    { "id": "e2", "from": "rotas", "to": "perfis", "label": "grava perfis" },
+    { "id": "e3", "from": "rotas", "to": "empresa", "label": "grava perfil e ajustes" },
+    { "id": "e4", "from": "rotas", "to": "auditoria", "label": "antes e depois" },
+    { "id": "e5", "from": "rotas", "to": "memo", "label": "invalida ao gravar" },
+    { "id": "e6", "from": "perfis", "to": "memo", "label": "lidos pelo service role" },
+    { "id": "e7", "from": "empresa", "to": "sessao", "label": "embed da membership" },
+    { "id": "e8", "from": "memo", "to": "sessao", "label": "perfil da empresa" },
+    { "id": "e9", "from": "sessao", "to": "menu", "label": "interface_settings já limitada" },
+    { "id": "e10", "from": "sessao", "to": "editor", "label": "areas_liberadas pelo ConvexyProvider" },
+    { "id": "e11", "from": "sessao", "to": "guarda", "label": "areas_liberadas no activeOrg" },
+    { "id": "e12", "from": "gate", "to": "perfis", "label": "RLS, ACL, semente, proteção da Completa" },
+    { "id": "e13", "from": "gate", "to": "sessao", "label": "fecho de dependências e obrigatórias" }
+  ]
+}

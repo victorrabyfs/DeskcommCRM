@@ -87,6 +87,13 @@ export interface UserOrgMembership {
    * então quem usa passa por `fusoValido` e cai em `FUSO_PADRAO`.
    */
   timezone?: string | null;
+  /**
+   * Convexy: as áreas que o pacote da organização libera (perfis de áreas).
+   * AUSENTE = sem limite — só aparece quando a organização tem um perfil que não
+   * libera tudo, ou ajustes. `interface_settings` já chega limitada a elas.
+   * CONVEXY.md, "Perfis de áreas".
+   */
+  areas_liberadas?: readonly string[];
 }
 
 export interface AuthUser {
@@ -149,6 +156,8 @@ export interface AuthUser {
 
 export interface ActiveOrg {
   interface_settings?: InterfaceSettings;
+  /** Convexy: ver `UserOrgMembership.areas_liberadas`. CONVEXY.md, "Perfis de áreas". */
+  areas_liberadas?: readonly string[];
   orgId: string;
   /** Fuso IANA da organização — ver `UserOrgMembership.timezone`. */
   timezone?: string | null;

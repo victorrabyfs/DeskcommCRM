@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type CreateTenantResponse, useCreateTenant } from "@/hooks/useCreateTenant";
+import { CampoDoPerfilNaCriacao } from "@/components/convexy/areas/CampoDoPerfilNaCriacao";
 import { ApiError } from "@/lib/api/types";
 import { useT } from "@/hooks/i18n/useT";
 import { useIdioma } from "@/lib/i18n/IdiomaProvider";
@@ -75,6 +76,8 @@ export function NewTenantForm() {
   const router = useRouter();
   const createTenant = useCreateTenant();
   const [ownerInterface, setOwnerInterface] = useState(INTERFACE_COMPLETA);
+  // Convexy: perfil de áreas da empresa nova. CONVEXY.md, "Perfis de áreas".
+  const [perfilDeAreas, setPerfilDeAreas] = useState<string | null>(null);
   const [slugLocked, setSlugLocked] = useState(false);
   const [created, setCreated] = useState<CreateTenantResponse["data"] | null>(null);
 
@@ -125,6 +128,7 @@ export function NewTenantForm() {
         plan: values.plan,
         owner_email: values.owner_email,
         owner_interface_settings: ownerInterface,
+        perfil_de_areas_id: perfilDeAreas,
       });
 
       toast.success(t("Tenant criado com sucesso!"));
@@ -298,6 +302,9 @@ export function NewTenantForm() {
                 <p className="text-xs text-error-fg">{t(errors.plan.message ?? "")}</p>
               )}
             </div>
+
+            {/* Convexy: perfil de áreas. CONVEXY.md, "Perfis de áreas". */}
+            <CampoDoPerfilNaCriacao valor={perfilDeAreas} aoMudar={setPerfilDeAreas} />
 
             {/* owner_email */}
             <div className="space-y-1.5">

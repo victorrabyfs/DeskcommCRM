@@ -7360,6 +7360,9 @@ export type Database = {
       }
       organizations: {
         Row: {
+          areas_a_mais: string[]
+          areas_a_menos: string[]
+          areas_atualizadas_em: string | null
           ai_budget_cents: number | null
           cnpj: string | null
           created_at: string
@@ -7373,6 +7376,7 @@ export type Database = {
           media_retention_days: number
           nicho: string | null
           onboarded_at: string | null
+          perfil_de_areas_id: string | null
           onboarding_state: Json
           privacy_policy_url: string | null
           rate_limit_rps: number
@@ -7387,6 +7391,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          areas_a_mais?: string[]
+          areas_a_menos?: string[]
+          areas_atualizadas_em?: string | null
           ai_budget_cents?: number | null
           cnpj?: string | null
           created_at?: string
@@ -7400,6 +7407,7 @@ export type Database = {
           media_retention_days?: number
           nicho?: string | null
           onboarded_at?: string | null
+          perfil_de_areas_id?: string | null
           onboarding_state?: Json
           privacy_policy_url?: string | null
           rate_limit_rps?: number
@@ -7414,6 +7422,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          areas_a_mais?: string[]
+          areas_a_menos?: string[]
+          areas_atualizadas_em?: string | null
           ai_budget_cents?: number | null
           cnpj?: string | null
           created_at?: string
@@ -7427,6 +7438,7 @@ export type Database = {
           media_retention_days?: number
           nicho?: string | null
           onboarded_at?: string | null
+          perfil_de_areas_id?: string | null
           onboarding_state?: Json
           privacy_policy_url?: string | null
           rate_limit_rps?: number

@@ -206,6 +206,33 @@ export async function POST(req: NextRequest) {
     }
     return fail("internal_error", "Não foi possível criar a organização", 500, { requestId });
   }
+  // Convexy: o perfil de áreas escolhido na criação, fora do corpo que a função
+  // de criação recebe (e do hash de idempotência dela). Grava só se a empresa
+  // ainda está no padrão — a repetição com a mesma chave não sobrescreve uma
+  // edição posterior. CONVEXY.md, "Perfis de áreas".
+  const perfilDaCriacao = perfilDeAreasDaCriacao(body);
+  if (perfilDaCriacao) {
+    const aplicado = await aplicarPerfilNaCriacao(admin, org.id, perfilDaCriacao);
+    if (aplicado === "erro") {
+      return fail("internal_error", "A organização foi criada, mas o perfil de áreas não foi gravado. Repita com a mesma chave.", 500, {
+        requestId,
+      });
+    }
+    if (aplicado === "gravado") {
+      const organizationId = org.id as string;
+      void audit({
+        action: "tenant.areas_changed",
+        actorUserId: adminCtx.user.id,
+        actingAsPlatformAdmin: true,
+        bypassedRls: true,
+        organizationId,
+        resourceType: "organization",
+        resourceId: organizationId,
+        requestId,
+        metadata: { tenant_slug: org.slug, origem: "criacao", de: { perfil: null }, para: { perfil: perfilDaCriacao } },
+      });
+    }
+  }
   if (org.created) {
     await audit({
       action: "tenant.created_by_platform_admin",
@@ -251,3 +278,35 @@ export async function POST(req: NextRequest) {
     { status: 201, requestId },
   );
 }
+
+// ── Convexy: perfil de áreas na criação (CONVEXY.md, "Perfis de áreas") ──────
+const perfilDaCriacaoSchema = z.object({ perfil_de_areas_id: z.string().uuid().nullable().optional() });
+
+function perfilDeAreasDaCriacao(body: unknown): string | null {
+  const lido = perfilDaCriacaoSchema.safeParse(body);
+  return lido.success ? (lido.data.perfil_de_areas_id ?? null) : null;
+}
+
+async function aplicarPerfilNaCriacao(
+  admin: ReturnType<typeof createAdminClient>,
+  organizationId: string,
+  perfilId: string,
+): Promise<"gravado" | "ja_estava" | "erro"> {
+  const { data: perfil, error: leitura } = await admin
+    .from("perfis_de_areas")
+    .select("id, libera_tudo")
+    .eq("id", perfilId)
+    .maybeSingle();
+  if (leitura || !perfil) return "erro";
+  if ((perfil as { libera_tudo: boolean }).libera_tudo) return "ja_estava";
+  const { data, error } = await admin
+    .from("organizations")
+    .update({ perfil_de_areas_id: perfilId, areas_atualizadas_em: new Date().toISOString() })
+    .eq("id", organizationId)
+    .is("perfil_de_areas_id", null)
+    .is("areas_atualizadas_em", null)
+    .select("id");
+  if (error) return "erro";
+  return data && data.length > 0 ? "gravado" : "ja_estava";
+}
+

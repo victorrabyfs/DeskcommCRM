@@ -155,6 +155,51 @@ export const TEXTOS = {
   prospeccao: {
     baixarPlanilha: { pt: "Baixar planilha (CSV)", es: "Descargar planilla (CSV)" },
   },
+  // Perfis de áreas (fase 1) no /admin. CONVEXY.md, "Perfis de áreas".
+  areas: {
+    titulo: { pt: "Áreas liberadas", es: "Áreas habilitadas" },
+    ajuda: {
+      pt: "O pacote desta empresa. Área fora do pacote some do menu, da busca e do Início, e mostra um aviso se alguém abrir o endereço.",
+      es: "El paquete de esta empresa. Un área fuera del paquete desaparece del menú, de la búsqueda y del Inicio, y muestra un aviso si alguien abre la dirección.",
+    },
+    perfil: { pt: "Perfil", es: "Perfil" },
+    personalizar: { pt: "Personalizar áreas", es: "Personalizar áreas" },
+    contador: { pt: "{n} de {m} áreas", es: "{n} de {m} áreas" },
+    marcarTudo: { pt: "Marcar tudo", es: "Marcar todo" },
+    soObrigatorias: { pt: "Só as obrigatórias", es: "Solo las obligatorias" },
+    obrigatoria: { pt: "obrigatória", es: "obligatoria" },
+    precisaDe: { pt: "precisa de {x}", es: "necesita {x}" },
+    foraDoMenu: { pt: "Fora do menu", es: "Fuera del menú" },
+    salvar: { pt: "Salvar", es: "Guardar" },
+    salvo: { pt: "Áreas salvas.", es: "Áreas guardadas." },
+    erro: { pt: "Não deu para salvar. Recarregue a página e tente de novo.", es: "No se pudo guardar. Recargue la página e intente de nuevo." },
+    erroLeitura: { pt: "Não deu para ler as áreas desta empresa.", es: "No se pudieron leer las áreas de esta empresa." },
+    avisoFase1: {
+      pt: "O que já estiver ativo nas áreas retiradas (assistentes, campanhas, retornos) continua ativo — confira antes.",
+      es: "Lo que ya esté activo en las áreas retiradas (asistentes, campañas, seguimientos) sigue activo — revíselo antes.",
+    },
+    ajustes: { pt: "{n} ajuste(s) sobre o perfil", es: "{n} ajuste(s) sobre el perfil" },
+    paginaTitulo: { pt: "Perfis de áreas", es: "Perfiles de áreas" },
+    paginaAjuda: {
+      pt: "Pacotes de áreas para as empresas. Editar um perfil vale para todas as empresas que o usam, em até 30 segundos.",
+      es: "Paquetes de áreas para las empresas. Editar un perfil vale para todas las empresas que lo usan, en hasta 30 segundos.",
+    },
+    novo: { pt: "Novo perfil", es: "Nuevo perfil" },
+    nome: { pt: "Nome", es: "Nombre" },
+    descricao: { pt: "Descrição", es: "Descripción" },
+    empresas: { pt: "{n} empresa(s)", es: "{n} empresa(s)" },
+    excluir: { pt: "Excluir perfil", es: "Eliminar perfil" },
+    confirmarExclusao: { pt: "Confirmar: excluir {nome}", es: "Confirmar: eliminar {nome}" },
+    liberaTudo: { pt: "Libera todas as áreas, inclusive as que o sistema ganhar depois.", es: "Habilita todas las áreas, incluso las que el sistema gane después." },
+    criar: { pt: "Criar perfil", es: "Crear perfil" },
+  },
+  // Perfis de áreas (fase 1). CONVEXY.md, "Perfis de áreas".
+  pacote: {
+    titulo: { pt: "Esta área não faz parte do pacote da sua empresa.", es: "Esta área no forma parte del paquete de su empresa." },
+    paraAdmin: { pt: "Para incluí-la, fale com a {marca}.", es: "Para incluirla, hable con {marca}." },
+    paraMembro: { pt: "Fale com o administrador da sua empresa.", es: "Hable con el administrador de su empresa." },
+    voltar: { pt: "Voltar ao Início", es: "Volver al Inicio" },
+  },
   simbolo: {
     rotulo: { pt: "Símbolo (menu recolhido)", es: "Símbolo (menú contraído)" },
     ajuda: {
