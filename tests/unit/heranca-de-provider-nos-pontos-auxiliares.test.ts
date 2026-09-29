@@ -80,6 +80,8 @@ const PONTOS_AUXILIARES = [
   "draft_suggestion",
   "automation_ai_message",
   "prospecting_agent_setup_chat",
+  // Convexy: CONVEXY.md, "Prospecção v2".
+  "convexy_prospeccao_resumo_do_site",
   // 0281 — `lib/agent-engine/agent/conversa-do-caso.ts`, o único call site que
   // não vem de `argsAux`: ele monta o par por conta própria a partir da persona
   // do caso, e por isso entra aqui no mesmo commit em que entra no resolver.

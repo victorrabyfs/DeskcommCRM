@@ -180,6 +180,9 @@ export const PONTOS_QUE_HERDAM_DO_AGENTE: ReadonlySet<string> = new Set([
   "draft_suggestion",
   "automation_ai_message",
   "prospecting_agent_setup_chat",
+  // Convexy: escolhe o modelo como a conversa de configuração da prospecção
+  // (`resolveSetupModel`) — CONVEXY.md, "Prospecção v2".
+  "convexy_prospeccao_resumo_do_site",
   // migration 0281 — a consulta interna da equipe sobre um caso herda do agente
   // que ABRIU aquele caso (`lib/agent-engine/agent/conversa-do-caso.ts` passa
   // `model` e `llmOverride` no mesmo objeto). NUNCA em

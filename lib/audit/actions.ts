@@ -938,6 +938,18 @@ export const AUDIT_ACTIONS = [
   // (/api/v1/cron/convexy-teste). CONVEXY.md, "Trial".
   "tenant.teste_alterado",
   "cron.convexy_teste",
+  // Convexy: prospecção v2 — listas (criar, renomear, excluir, itens), abordar
+  // com IA e disparo em massa a partir da lista, pedido de enriquecimento
+  // (/api/v1/convexy/prospeccao/**) e a rodada do cron que grava o resultado
+  // (/api/v1/cron/convexy-prospeccao). CONVEXY.md, "Prospecção v2".
+  "prospecting.lista_criada",
+  "prospecting.lista_alterada",
+  "prospecting.lista_excluida",
+  "prospecting.lista_itens_alterados",
+  "prospecting.lista_abordada",
+  "prospecting.lista_disparo",
+  "prospecting.enriquecimento_pedido",
+  "cron.convexy_prospeccao",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

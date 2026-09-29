@@ -230,6 +230,19 @@ export const PONTOS_DE_IA: readonly PontoDeIa[] = [
     sintomaDeFalha: "A conversa de configuração mostra um erro e preserva o que foi escrito; nenhum agente é criado.",
     registraEm: "llm_calls",
   },
+  // Convexy: resumo do site da empresa prospectada — CONVEXY.md, "Prospecção v2".
+  {
+    id: "convexy_prospeccao_resumo_do_site",
+    rotulo: "Resumir o site da empresa prospectada",
+    oQueFaz:
+      "Lê o site público de uma empresa encontrada na prospecção e escreve uma ficha curta: o que ela faz, os serviços e a pessoa de contato, quando o site cita.",
+    papel: "entender",
+    exige: {},
+    emissor: "lib/convexy/prospeccao/enriquecimento.ts",
+    sintomaDeFalha:
+      "O perfil da empresa na Prospecção fica sem o resumo do site e mostra \"A IA não conseguiu resumir o site\"; os outros dados continuam.",
+    registraEm: "llm_calls",
+  },
   {
     id: "draft_suggestion",
     rotulo: "Sugerir resposta ao atendente",
