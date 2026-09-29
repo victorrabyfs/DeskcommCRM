@@ -360,6 +360,9 @@ intactos: quem digita o endereço abre a tela. Nada é apagado, para o merge com
   plataforma altera (`/admin/tenants/[id]`), e não a interface da organização, que o admin da
   clínica edita e poderia religar. Organização sem nicho vale como genérico e vê as três.
 - Na clínica, a porta Pacientes do menu da Convexy fica só com Contatos e vira link direto.
+- O editor de interface não oferece a tela escondida pelo nicho, mas preserva a escolha já feita
+  sobre ela ao gravar: salvar a interface na clínica e depois mudar o nicho para serviços traz
+  Chamadas, Trunk SIP e Prospecção de volta.
 
 A lista mora em `lib/convexy/telas-escondidas.ts`; quem aplica é `permitidos()`, de onde todas as
 projeções do menu partem. O nicho chega pelo `ConvexyProvider` (cliente) e por
@@ -372,7 +375,7 @@ projeções do menu partem. O nicho chega pelo `ConvexyProvider` (cliente) e por
 | `components/shell/Sidebar.tsx`, `components/shell/CommandPalette.tsx` | `useConvexy()` e `convexy?.nicho` como último argumento | reaplicar |
 | `components/shell/NavHub.tsx` | prop `nicho` (repassada a `destinoDoHub` e `hubSections`) | reaplicar |
 | `app/app/{crm,ai,analise,settings}/page.tsx` | `nicho={await nichoDaOrganizacao(activeOrg?.orgId)}` no `NavHub` | reaplicar |
-| `components/team/InterfaceEditor.tsx` | `convexy?.nicho` em `destinosDaInterface` e `permitidos` | reaplicar |
+| `components/team/InterfaceEditor.tsx` | `convexy?.nicho` em `permitidos` (opções); `guardadas` + `mudar()` no lugar de `onChange` nas duas gravações — a escolha sobre tela escondida pelo nicho segue gravada, para trocar o nicho depois não perder Chamadas/Prospecção | reaplicar |
 | `tests/unit/{nav-hub,navegacao-registry,interface-por-vinculo,interface-por-empresa}.test.*` | `vi.mock` de `telas-escondidas` que desliga o filtro (medem o catálogo do original) | reaplicar |
 | `tests/e2e/navegacao.spec.ts`, `tests/e2e/interface-por-vinculo.spec.ts` | Produtos trocado por Campanhas (outra tela de CRM só do hub) | reaplicar; se o original mudar o caso, refazer a troca |
 | `CHANGELOG.md` | `## [1.59.0-cvx.3]` | ordem de "Base e versões" |
