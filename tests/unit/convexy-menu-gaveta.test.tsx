@@ -56,28 +56,28 @@ beforeEach(() => {
 describe("gaveta com o menu da Convexy", () => {
   it("porta com sub troca a gaveta pela lista dela, com ‹ Voltar; item escolhido fecha a gaveta", async () => {
     const gaveta = montar();
-    fireEvent.click(within(gaveta).getByRole("button", { name: "Assistente de IA" }));
+    fireEvent.click(within(gaveta).getByRole("button", { name: "Agentes" }));
     expect(within(gaveta).getByRole("button", { name: "‹ Voltar" })).toBeInTheDocument();
-    expect(within(gaveta).getByRole("navigation", { name: "Assistente de IA" })).toBeInTheDocument();
+    expect(within(gaveta).getByRole("navigation", { name: "Agentes" })).toBeInTheDocument();
     fireEvent.click(within(gaveta).getByRole("link", { name: "Casos" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
   it("‹ Voltar tem 44px de alvo, volta às portas e devolve o foco à porta de onde veio", () => {
     const gaveta = montar();
-    fireEvent.click(within(gaveta).getByRole("button", { name: "Resultados" }));
+    fireEvent.click(within(gaveta).getByRole("button", { name: "CRM" }));
     const voltar = within(gaveta).getByRole("button", { name: "‹ Voltar" });
     expect(voltar).toHaveClass("min-h-11");
     fireEvent.click(voltar);
-    const porta = within(gaveta).getByRole("button", { name: "Resultados" });
+    const porta = within(gaveta).getByRole("button", { name: "CRM" });
     expect(document.activeElement).toBe(porta);
   });
 
   it("na gaveta a porta não declara aria-expanded, e Configurações fica no rodapé", () => {
     const gaveta = montar();
-    const resultados = within(gaveta).getByRole("button", { name: "Resultados" });
+    const crm = within(gaveta).getByRole("button", { name: "CRM" });
     const configuracoes = within(gaveta).getByRole("button", { name: "Configurações" });
-    expect(resultados).not.toHaveAttribute("aria-expanded");
+    expect(crm).not.toHaveAttribute("aria-expanded");
     expect(configuracoes).not.toHaveAttribute("aria-expanded");
     const principal = within(gaveta).getByRole("navigation", { name: "Navegação principal" });
     expect(within(principal).queryByRole("button", { name: "Configurações" })).toBeNull();
@@ -86,7 +86,7 @@ describe("gaveta com o menu da Convexy", () => {
 
   it("porta direta navega e fecha a gaveta", async () => {
     const gaveta = montar("servicos");
-    fireEvent.click(within(gaveta).getByRole("link", { name: "Funil de vendas" }));
+    fireEvent.click(within(gaveta).getByRole("link", { name: "Contatos" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 });
@@ -97,6 +97,6 @@ describe("sem o módulo", () => {
     estado.auth = { ...COM_O_MODULO, activeOrg: { ...COM_O_MODULO.activeOrg, modulos_ligados: [] } };
     const gaveta = montar("generico", false);
     expect(within(gaveta).getByRole("link", { name: "Funis" })).toHaveAttribute("href", "/app/kanban");
-    expect(within(gaveta).queryByRole("button", { name: "Assistente de IA" })).toBeNull();
+    expect(within(gaveta).queryByRole("button", { name: "Agentes" })).toBeNull();
   });
 });

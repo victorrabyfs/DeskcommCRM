@@ -1,12 +1,22 @@
 import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
-import { TEXTOS, texto } from "@/lib/convexy/textos";
+import { nichoDaOrganizacao } from "@/lib/convexy/nicho-da-organizacao";
+import { ROTULO_DO_FUNIL, ROTULO_DOS_CONTATOS_NOVOS, TEXTOS, rotuloPorNicho, texto } from "@/lib/convexy/textos";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { createClient } from "@/lib/supabase/server";
 import { fusoUtilizavel } from "@/lib/tempo/fusos";
 
-import { agendaDeHoje, carregarBloco, conversasEsperando, minhasTarefas, type ResultadoDoBloco } from "./blocos";
+import {
+  agendaDeHoje,
+  carregarBloco,
+  conversasEsperando,
+  funilDoCrm,
+  minhasTarefas,
+  numerosDoMes,
+  type ResultadoDoBloco,
+} from "./blocos";
+import { CartaoDeNumeros, type NumeroDoCartao } from "./CartaoDeNumeros";
 import { CartaoDoInicio, type LinhaDoCartao } from "./CartaoDoInicio";
-import { limitesDoDia, momentoNoDia } from "./dia";
+import { limitesDoDia, limitesDoMes, momentoNoDia } from "./dia";
 import { RecarregarAoVoltar } from "./RecarregarAoVoltar";
 
 type Bloco = ResultadoDoBloco<{ total: number; linhas: readonly LinhaDoCartao[] }>;
@@ -32,7 +42,12 @@ export async function Inicio({ user, org, visiveis }: { user: AuthUser; org: Act
   const agora = new Date();
   const dia = limitesDoDia(agora, fuso);
   const hora = new Intl.DateTimeFormat(tagDeIdioma(idioma), { timeZone: fuso, hour: "2-digit", minute: "2-digit" });
-  const [conversas, agenda, tarefas] = await Promise.all([
+  // Painel (29/09): números do mês e funil, antes dos blocos do dia. CONVEXY.md, "Menu da clínica".
+  const mes = limitesDoMes(agora, fuso);
+  const [nicho, numeros, funil, conversas, agenda, tarefas] = await Promise.all([
+    nichoDaOrganizacao(org.orgId),
+    visiveis.includes("/app/metrics") ? carregarBloco("mes", org.orgId, () => numerosDoMes(supabase, org.orgId, mes)) : null,
+    visiveis.includes("/app/kanban") ? carregarBloco("funil", org.orgId, () => funilDoCrm(supabase, org.orgId)) : null,
     visiveis.includes("/app/inbox")
       ? carregarBloco("conversas", org.orgId, () => conversasEsperando(supabase, org.orgId, user.id, idioma))
       : null,
@@ -44,6 +59,21 @@ export async function Inicio({ user, org, visiveis }: { user: AuthUser; org: Act
       : null,
   ]);
   const falhou = texto(TEXTOS.inicio.falhou, idioma);
+  const m = TEXTOS.inicio.mes;
+  const numerosDoCartao: ResultadoDoBloco<readonly NumeroDoCartao[]> | null = numeros
+    ? numeros.ok
+      ? {
+          ok: true,
+          dados: [
+            { chave: "conversas", rotulo: texto(m.conversas, idioma), valor: numeros.dados.conversas },
+            { chave: "contatos", rotulo: rotuloPorNicho(ROTULO_DOS_CONTATOS_NOVOS, nicho, idioma), valor: numeros.dados.contatos },
+            { chave: "agendamentos", rotulo: texto(m.agendamentos, idioma), valor: numeros.dados.agendamentos },
+            { chave: "compareceram", rotulo: texto(m.compareceram, idioma), valor: numeros.dados.compareceram },
+            { chave: "faltaram", rotulo: texto(m.faltaram, idioma), valor: numeros.dados.faltaram },
+          ],
+        }
+      : numeros
+    : null;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -54,6 +84,30 @@ export async function Inicio({ user, org, visiveis }: { user: AuthUser; org: Act
         </p>
       </header>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {numerosDoCartao ? (
+          <CartaoDeNumeros
+            id="inicio-mes"
+            titulo={texto(m.titulo, idioma)}
+            resultado={numerosDoCartao}
+            falhou={falhou}
+            atalho={{ href: "/app/metrics", rotulo: texto(m.atalho, idioma) }}
+          />
+        ) : null}
+        {funil ? (
+          <CartaoDoInicio
+            id="inicio-funil"
+            titulo={funil.ok && funil.dados.nome ? funil.dados.nome : rotuloPorNicho(ROTULO_DO_FUNIL, nicho, idioma)}
+            resultado={comLinhas(funil, (e) => ({
+              chave: e.id,
+              texto: e.nome,
+              detalhe: String(e.abertos),
+              href: "/app/kanban",
+            }))}
+            vazio={texto(TEXTOS.inicio.funil.vazio, idioma)}
+            falhou={falhou}
+            atalho={{ href: "/app/kanban", rotulo: texto(TEXTOS.inicio.funil.atalho, idioma) }}
+          />
+        ) : null}
         {conversas ? (
           <CartaoDoInicio
             id="inicio-conversas"

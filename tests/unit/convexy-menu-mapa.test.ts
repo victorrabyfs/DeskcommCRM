@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  FORA_DO_MENU,
   HREF_DA_ATUALIZACAO,
   PADRAO_POR_GRUPO,
   PORTAS,
@@ -31,9 +32,14 @@ function posicaoDe(href: string) {
 }
 
 describe("cobertura", () => {
-  it("todo href do catálogo cai numa porta, exatamente uma vez", () => {
+  it("todo href do catálogo cai numa porta ou fora do menu, exatamente uma vez", () => {
     const vistos = ORGANIZADO.flatMap((p) => p.grupos.flatMap((g) => g.itens.map((i) => i.href)));
-    expect([...vistos].sort()).toEqual(CATALOGO.map((d) => d.href).sort());
+    expect([...vistos, ...FORA_DO_MENU].sort()).toEqual(CATALOGO.map((d) => d.href).sort());
+  });
+
+  it("fora do menu são as telas de análise que o painel do Início abre (29/09)", () => {
+    const catalogo = new Map(CATALOGO.map((d) => [d.href, d]));
+    for (const href of FORA_DO_MENU) expect(catalogo.get(href)?.group, href).toBe("analise");
   });
 
   it("todo href explícito existe no catálogo — a tela de atualização é a única de fora", () => {
@@ -45,9 +51,9 @@ describe("cobertura", () => {
     expect(new Set(EXPLICITOS).size).toBe(EXPLICITOS.length);
   });
 
-  it("as portas são as da spec, nesta ordem, e só Configurações mora no rodapé", () => {
+  it("as portas são as do menu da clínica (29/09), nesta ordem, e só Configurações mora no rodapé", () => {
     expect(PORTAS.map((p) => p.id)).toEqual([
-      "inicio", "conversas", "agenda", "contatos", "funil", "tarefas", "ia", "resultados", "configuracoes",
+      "inicio", "conversas", "crm", "agenda", "contatos", "ia", "fluxos", "clinica", "configuracoes",
     ]);
     expect(PORTAS.filter((p) => p.rodape).map((p) => p.id)).toEqual(["configuracoes"]);
   });
@@ -104,10 +110,18 @@ describe("o uso diário do original fica no primeiro grupo da porta", () => {
     expect(erradas).toEqual([]);
   });
 
-  it("Roteadores, Provedores e Tipos de agendamento estão no grupo principal", () => {
-    for (const href of ["/app/ai/routers", "/app/ai/providers", "/app/settings/tenant/agenda"]) {
-      expect(posicaoDe(href)?.grupo.id, href).toBe("principal");
-    }
+  it("Roteadores (Fluxos) e Tratamentos (Minha clínica) estão no grupo principal; Provedores, no Avançado", () => {
+    expect(posicaoDe("/app/ai/routers")).toMatchObject({ porta: { id: "fluxos" }, grupo: { id: "principal" } });
+    expect(posicaoDe("/app/settings/tenant/agenda")).toMatchObject({ porta: { id: "clinica" }, grupo: { id: "principal" } });
+    expect(posicaoDe("/app/ai/providers")).toMatchObject({ porta: { id: "ia" }, grupo: { id: "avancado" } });
+  });
+
+  it("uma tela de análise nova do original fica fora do menu, sem reprovar", () => {
+    const organizado = organizarPorPortas([{ href: "/app/analise-nova", group: "analise", sidebar: true }]);
+    expect(organizado.flatMap((p) => p.grupos.flatMap((g) => g.itens))).toEqual([]);
+    expect(posicoesPorPadrao([{ href: "/app/analise-nova", group: "analise" }])).toEqual([
+      { href: "/app/analise-nova", porta: null, grupo: "principal" },
+    ]);
   });
 
   it("Canais e integrações, com Conexões, abre Configurações", () => {

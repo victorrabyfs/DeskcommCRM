@@ -21,9 +21,10 @@ const BASE = { isPlatformAdmin: false, title: "Hub", subtitle: "", locale: "pt-B
 
 describe("com o módulo ligado, o hub vai à porta dele", () => {
   it.each([
-    ["crm", "admin", "/app/contacts"],
+    // Menu da clínica (29/09): o CRM abre no Funil, e a Análise no painel do Início.
+    ["crm", "admin", "/app/kanban"],
     ["ia", "admin", "/app/ai/agents"],
-    ["analise", "admin", "/app/metrics"],
+    ["analise", "admin", "/app"],
     ["organizacao", "admin", "/app/connections"],
     ["ia", "agent", "/app/ai/inbox"],
     // Extensões saiu do menu (CONVEXY.md, "Telas escondidas do menu"): a primeira
